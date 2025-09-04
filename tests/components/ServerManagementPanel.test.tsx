@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { ConfigProvider } from 'antd';
-import { ServerManagementPanel } from '../../src/renderer/components/server/ServerManagementPanel';
+import ServerManagementPanel from '../../src/renderer/components/server/ServerManagementPanel';
 import { MCPClient, ResolvedConfiguration } from '../../src/shared/types';
 import { ClientType, ClientStatus, ConfigScope } from '../../src/shared/types/enums';
 
