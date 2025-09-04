@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Layout, Breadcrumb, Space } from 'antd';
-import { useLocation } from 'react-router-dom';
+import { Layout, Breadcrumb } from 'antd';
 import Header from './Header';
 import Sidebar from './Sidebar';
 import useResponsive from '../hooks/useResponsive';
@@ -16,7 +15,6 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [selectedKey, setSelectedKey] = useState('overview');
   const { isMobile } = useResponsive();
-  const location = useLocation();
 
   // Get data from store
   const {
@@ -33,19 +31,8 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
     }
   }, [isMobile]);
 
-  // Update selected key based on route
-  useEffect(() => {
-    const path = location.pathname;
-    if (path === '/' || path === '/dashboard') {
-      setSelectedKey('overview');
-    } else if (path.includes('/apps')) {
-      setSelectedKey('ai-apps');
-    } else if (path.includes('/capabilities')) {
-      setSelectedKey('capabilities');
-    } else if (path.includes('/maintenance')) {
-      setSelectedKey('maintenance');
-    }
-  }, [location]);
+  // For now, we'll manage selected key through the menu selection
+  // TODO: Add proper routing in Phase 3
 
   const handleMenuToggle = () => {
     setSidebarCollapsed(!sidebarCollapsed);
