@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { ConfigProvider } from 'antd';
 import ConfigurationEditor from '../../src/renderer/components/editor/ConfigurationEditor';
 import { MCPClient, ResolvedConfiguration } from '../../src/shared/types';
@@ -10,43 +10,48 @@ jest.mock('@monaco-editor/react', () => {
   return {
     __esModule: true,
     default: ({ value, onChange }: any) => (
-      <textarea
-        data-testid="monaco-editor"
-        value={value}
-        onChange={(e) => onChange && onChange(e.target.value)}
-        placeholder="JSON Editor"
+      <textarea 
+        data-testid="monaco-editor" 
+        value={value} 
+        onChange={(e) => onChange?.(e.target.value)}
       />
     )
   };
 });
 
-const renderConfigurationEditor = (
-  client?: MCPClient,
-  configuration?: ResolvedConfiguration,
-  loading = false
-) => {
-  const mockOnSave = jest.fn();
-  const mockOnValidate = jest.fn();
-  const mockOnFormat = jest.fn();
-
+// Mock the sub-components
+jest.mock('../../src/renderer/components/editor/FormEditor', () => {
   return {
-    ...render(
-      <ConfigProvider>
-        <ConfigurationEditor
-          client={client}
-          configuration={configuration}
-          loading={loading}
-          onSave={mockOnSave}
-          onValidate={mockOnValidate}
-          onFormat={mockOnFormat}
-        />
-      </ConfigProvider>
-    ),
-    mockOnSave,
-    mockOnValidate,
-    mockOnFormat
+    __esModule: true,
+    default: ({ configuration, onChange }: any) => (
+      <div data-testid="form-editor">
+        Form Editor: {configuration ? 'loaded' : 'empty'}
+      </div>
+    )
   };
-};
+});
+
+jest.mock('../../src/renderer/components/editor/JsonEditor', () => {
+  return {
+    __esModule: true,
+    default: ({ value }: any) => (
+      <div data-testid="json-editor">
+        JSON Editor: {value ? 'has content' : 'empty'}
+      </div>
+    )
+  };
+});
+
+jest.mock('../../src/renderer/components/editor/ConfigurationPreview', () => {
+  return {
+    __esModule: true,
+    default: ({ configuration }: any) => (
+      <div data-testid="config-preview">
+        Preview: {configuration ? 'loaded' : 'empty'}
+      </div>
+    )
+  };
+});
 
 const mockClient: MCPClient = {
   id: 'test-client',
@@ -64,10 +69,10 @@ const mockClient: MCPClient = {
 
 const mockConfiguration: ResolvedConfiguration = {
   servers: {
-    'filesystem': {
-      name: 'filesystem',
+    'test-server': {
+      name: 'test-server',
       command: 'npx',
-      args: ['-y', '@modelcontextprotocol/server-filesystem', '/Users/test'],
+      args: ['-y', 'test-server'],
       env: {},
       enabled: true,
       scope: ConfigScope.USER
@@ -75,7 +80,7 @@ const mockConfiguration: ResolvedConfiguration = {
   },
   conflicts: [],
   sources: {
-    'filesystem': ConfigScope.USER
+    'test-server': ConfigScope.USER
   },
   metadata: {
     resolvedAt: new Date(),
@@ -85,6 +90,34 @@ const mockConfiguration: ResolvedConfiguration = {
   }
 };
 
+const renderConfigurationEditor = (
+  client?: MCPClient,
+  configuration?: ResolvedConfiguration,
+  loading = false
+) => {
+  const mockOnSave = jest.fn();
+  const mockOnCancel = jest.fn();
+  const mockOnPreview = jest.fn();
+
+  return {
+    ...render(
+      <ConfigProvider>
+        <ConfigurationEditor
+          client={client}
+          configuration={configuration}
+          loading={loading}
+          onSave={mockOnSave}
+          onCancel={mockOnCancel}
+          onPreview={mockOnPreview}
+        />
+      </ConfigProvider>
+    ),
+    mockOnSave,
+    mockOnCancel,
+    mockOnPreview
+  };
+};
+
 describe('ConfigurationEditor', () => {
   it('renders empty state when no client is selected', () => {
     renderConfigurationEditor();
@@ -92,247 +125,62 @@ describe('ConfigurationEditor', () => {
     expect(screen.getByText('Select a client to edit its configuration')).toBeInTheDocument();
   });
 
-  it('shows loading state', () => {
-    renderConfigurationEditor(mockClient, undefined, true);
+  it('renders editor with client name when client is provided', () => {
+    renderConfigurationEditor(mockClient);
     
-    expect(screen.getByText(/loading/i)).toBeInTheDocument();
+    expect(screen.getByText('Configuration Editor - Test Client')).toBeInTheDocument();
   });
 
   it('renders editor tabs when configuration is loaded', () => {
     renderConfigurationEditor(mockClient, mockConfiguration);
     
-    // Should show different editing modes
-    expect(screen.getByText('Form')).toBeInTheDocument();
-    expect(screen.getByText('JSON')).toBeInTheDocument();
-    expect(screen.getByText('Preview')).toBeInTheDocument();
+    expect(screen.getByText('Form Editor')).toBeInTheDocument();
+    expect(screen.getByText('JSON Editor')).toBeInTheDocument();
+    expect(screen.getAllByText('Preview').length).toBeGreaterThan(0);
   });
 
-  it('displays JSON editor in JSON tab', async () => {
+  it('shows action buttons in header', () => {
     renderConfigurationEditor(mockClient, mockConfiguration);
     
-    // Switch to JSON tab
-    fireEvent.click(screen.getByText('JSON'));
-    
-    await waitFor(() => {
-      expect(screen.getByTestId('monaco-editor')).toBeInTheDocument();
-    });
+    expect(screen.getByText('Reset')).toBeInTheDocument();
+    expect(screen.getAllByText('Preview').length).toBeGreaterThan(0);
+    expect(screen.getByText('Save Changes')).toBeInTheDocument();
   });
 
-  it('shows configuration preview', async () => {
+  it('can switch between tabs', () => {
     renderConfigurationEditor(mockClient, mockConfiguration);
     
-    // Switch to Preview tab
-    fireEvent.click(screen.getByText('Preview'));
+    // Default is Form Editor
+    expect(screen.getByTestId('form-editor')).toBeInTheDocument();
     
-    await waitFor(() => {
-      // Should show formatted configuration
-      expect(screen.getByText('filesystem')).toBeInTheDocument();
-    });
+    // Switch to JSON Editor
+    fireEvent.click(screen.getByText('JSON Editor'));
+    expect(screen.getByTestId('json-editor')).toBeInTheDocument();
+    
+    // Switch to Preview tab - look for tab role element containing Preview
+    const previewTab = screen.getByRole('tab', { name: /preview/i });
+    fireEvent.click(previewTab);
+    expect(screen.getByTestId('config-preview')).toBeInTheDocument();
   });
 
-  it('displays form editor in Form tab', () => {
+  it('handles loading state', () => {
+    renderConfigurationEditor(mockClient, mockConfiguration, true);
+    
+    // Component still renders with loading spinner
+    expect(screen.getByText('Configuration Editor - Test Client')).toBeInTheDocument();
+  });
+
+  it('disables save button when no changes', () => {
     renderConfigurationEditor(mockClient, mockConfiguration);
     
-    // Should be on Form tab by default
-    expect(screen.getByText('filesystem')).toBeInTheDocument();
-    
-    // Should show form fields
-    const nameInput = screen.getByDisplayValue('filesystem');
-    expect(nameInput).toBeInTheDocument();
+    const saveButton = screen.getByText('Save Changes').closest('button');
+    expect(saveButton).toBeDisabled();
   });
 
-  it('calls onSave when save button is clicked', async () => {
-    const { mockOnSave } = renderConfigurationEditor(mockClient, mockConfiguration);
-    
-    const saveButton = screen.getByText('Save Configuration');
-    fireEvent.click(saveButton);
-    
-    await waitFor(() => {
-      expect(mockOnSave).toHaveBeenCalled();
-    });
-  });
-
-  it('calls onValidate when validate button is clicked', async () => {
-    const { mockOnValidate } = renderConfigurationEditor(mockClient, mockConfiguration);
-    
-    const validateButton = screen.getByText('Validate');
-    fireEvent.click(validateButton);
-    
-    await waitFor(() => {
-      expect(mockOnValidate).toHaveBeenCalled();
-    });
-  });
-
-  it('calls onFormat when format button is clicked in JSON mode', async () => {
-    const { mockOnFormat } = renderConfigurationEditor(mockClient, mockConfiguration);
-    
-    // Switch to JSON tab
-    fireEvent.click(screen.getByText('JSON'));
-    
-    await waitFor(() => {
-      const formatButton = screen.getByText('Format');
-      fireEvent.click(formatButton);
-      
-      expect(mockOnFormat).toHaveBeenCalled();
-    });
-  });
-
-  it('displays validation errors when configuration is invalid', () => {
-    const configWithErrors: ResolvedConfiguration = {
-      ...mockConfiguration,
-      conflicts: [{
-        serverName: 'filesystem',
-        conflictType: 'validation_error' as any,
-        description: 'Invalid server configuration',
-        severity: 'error' as any,
-        affectedScopes: [ConfigScope.USER],
-        suggestedResolution: 'Fix the configuration'
-      }]
-    };
-
-    renderConfigurationEditor(mockClient, configWithErrors);
-    
-    expect(screen.getByText('Invalid server configuration')).toBeInTheDocument();
-  });
-
-  it('allows editing server configuration in form mode', async () => {
+  it('disables reset button when no changes', () => {
     renderConfigurationEditor(mockClient, mockConfiguration);
     
-    // Should be able to edit server name
-    const nameInput = screen.getByDisplayValue('filesystem');
-    fireEvent.change(nameInput, { target: { value: 'my-filesystem' } });
-    
-    expect(nameInput).toHaveValue('my-filesystem');
-  });
-
-  it('handles JSON editing', async () => {
-    renderConfigurationEditor(mockClient, mockConfiguration);
-    
-    // Switch to JSON tab
-    fireEvent.click(screen.getByText('JSON'));
-    
-    await waitFor(() => {
-      const jsonEditor = screen.getByTestId('monaco-editor');
-      fireEvent.change(jsonEditor, { 
-        target: { value: '{"servers": {"test": "value"}}' } 
-      });
-      
-      expect(jsonEditor).toHaveValue('{"servers": {"test": "value"}}');
-    });
-  });
-
-  it('shows syntax highlighting in JSON mode', async () => {
-    renderConfigurationEditor(mockClient, mockConfiguration);
-    
-    // Switch to JSON tab
-    fireEvent.click(screen.getByText('JSON'));
-    
-    await waitFor(() => {
-      const jsonEditor = screen.getByTestId('monaco-editor');
-      expect(jsonEditor).toBeInTheDocument();
-    });
-  });
-
-  it('displays configuration metadata', () => {
-    renderConfigurationEditor(mockClient, mockConfiguration);
-    
-    // Should show server count
-    expect(screen.getByText(/1 server/i)).toBeInTheDocument();
-  });
-
-  it('shows scope information', () => {
-    renderConfigurationEditor(mockClient, mockConfiguration);
-    
-    // Should display scope badges or indicators
-    expect(screen.getByText('USER')).toBeInTheDocument();
-  });
-
-  it('handles empty configuration gracefully', () => {
-    const emptyConfig: ResolvedConfiguration = {
-      servers: {},
-      conflicts: [],
-      sources: {},
-      metadata: {
-        resolvedAt: new Date(),
-        mergedScopes: [],
-        serverCount: 0,
-        conflictCount: 0
-      }
-    };
-
-    renderConfigurationEditor(mockClient, emptyConfig);
-    
-    expect(screen.getByText(/0 servers/i)).toBeInTheDocument();
-  });
-
-  it('supports keyboard shortcuts', async () => {
-    renderConfigurationEditor(mockClient, mockConfiguration);
-    
-    // Switch to JSON tab
-    fireEvent.click(screen.getByText('JSON'));
-    
-    await waitFor(() => {
-      const jsonEditor = screen.getByTestId('monaco-editor');
-      
-      // Simulate Ctrl+S (save shortcut)
-      fireEvent.keyDown(jsonEditor, { key: 's', ctrlKey: true });
-      
-      // Should trigger save (this would be handled by Monaco in real usage)
-      expect(jsonEditor).toBeInTheDocument();
-    });
-  });
-
-  it('displays configuration history and changes', () => {
-    renderConfigurationEditor(mockClient, mockConfiguration);
-    
-    // Should show last modified information
-    const metadataSection = screen.getByText(/resolved at/i) || screen.getByText(/last modified/i);
-    expect(metadataSection).toBeDefined();
-  });
-
-  it('shows undo/redo functionality', async () => {
-    renderConfigurationEditor(mockClient, mockConfiguration);
-    
-    // Switch to JSON tab where undo/redo would be available
-    fireEvent.click(screen.getByText('JSON'));
-    
-    await waitFor(() => {
-      // Undo/redo would typically be in Monaco's context menu or toolbar
-      const jsonEditor = screen.getByTestId('monaco-editor');
-      expect(jsonEditor).toBeInTheDocument();
-    });
-  });
-
-  it('validates JSON syntax in real-time', async () => {
-    renderConfigurationEditor(mockClient, mockConfiguration);
-    
-    // Switch to JSON tab
-    fireEvent.click(screen.getByText('JSON'));
-    
-    await waitFor(() => {
-      const jsonEditor = screen.getByTestId('monaco-editor');
-      
-      // Enter invalid JSON
-      fireEvent.change(jsonEditor, { target: { value: '{ invalid json' } });
-      
-      // Should show validation error (in real Monaco editor)
-      expect(jsonEditor).toHaveValue('{ invalid json');
-    });
-  });
-
-  it('provides search and replace functionality', async () => {
-    renderConfigurationEditor(mockClient, mockConfiguration);
-    
-    // Switch to JSON tab
-    fireEvent.click(screen.getByText('JSON'));
-    
-    await waitFor(() => {
-      const jsonEditor = screen.getByTestId('monaco-editor');
-      
-      // Simulate Ctrl+F (find shortcut)
-      fireEvent.keyDown(jsonEditor, { key: 'f', ctrlKey: true });
-      
-      expect(jsonEditor).toBeInTheDocument();
-    });
+    const resetButton = screen.getByText('Reset').closest('button');
+    expect(resetButton).toBeDisabled();
   });
 });

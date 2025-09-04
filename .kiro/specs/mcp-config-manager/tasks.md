@@ -149,3 +149,40 @@
   - Add contextual help and tooltips throughout the UI
   - Create documentation and user guide integration
   - _Requirements: User adoption and ease of use_
+
+## UI Redesign Tasks (Phase 2)
+
+- [ ] 26. Implement responsive layout foundation
+  - Create AppLayout component with header + sidebar + content structure
+  - Implement Header component with branding and global actions
+  - Create responsive Sidebar component with entity navigation
+  - Update routing structure for page-based navigation
+  - _Requirements: Mobile-responsive design, browser width compatibility_
+
+- [ ] 27. Create landing page and dashboard
+  - Build LandingPage component with welcome and guidance
+  - Implement quick action cards for launching wizards
+  - Add system status overview and health monitoring
+  - Create getting started guide for new users
+  - _Requirements: User onboarding, common operations access_
+
+- [ ] 28. Refactor entity pages
+  - Convert existing panels to page-based structure (Clients, Servers, Scopes)
+  - Create dedicated Tools page for utilities
+  - Implement page-specific navigation and actions
+  - Ensure all existing functionality is preserved
+  - _Requirements: Entity type navigation, detail views_
+
+- [ ] 29. Implement wizard framework
+  - Create reusable wizard framework with step navigation
+  - Build ServerSetupWizard for guided server configuration
+  - Implement ClientConfigWizard for initial client setup
+  - Add ImportExportWizard for configuration migration
+  - _Requirements: Common operations wizards, guided workflows_
+
+- [ ] 30. Mobile optimization and accessibility
+  - Optimize touch interactions and mobile forms
+  - Implement responsive breakpoints and layouts
+  - Add accessibility features (keyboard nav, screen reader support)
+  - Performance optimization and testing
+  - _Requirements: Cross-device compatibility, accessibility standards_
