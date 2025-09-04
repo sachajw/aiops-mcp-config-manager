@@ -17,7 +17,7 @@ import {
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import {
-  ExclamationTriangleOutlined,
+  ExclamationCircleOutlined,
   InfoCircleOutlined,
   CheckCircleOutlined,
   WarningOutlined,
@@ -287,7 +287,7 @@ const ScopeConflictDialog: React.FC<ScopeConflictDialogProps> = ({
     <Modal
       title={
         <Space>
-          <ExclamationTriangleOutlined style={{ color: '#faad14' }} />
+          <ExclamationCircleOutlined style={{ color: '#faad14' }} />
           <Title level={4} style={{ margin: 0 }}>
             Resolve Scope Conflicts
           </Title>

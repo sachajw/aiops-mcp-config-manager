@@ -4,3 +4,6 @@ export * from './client';
 export * from './server';
 export * from './dialogs';
 export * from './scope';
+export * from './bulk';
+export * from './error';
+export * from './settings';
