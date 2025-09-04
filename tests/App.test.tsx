@@ -17,11 +17,9 @@ describe('App', () => {
     expect(screen.getByText('MCP Configuration Manager')).toBeInTheDocument()
   })
 
-  it('renders the welcome message', () => {
+  it('renders the server management interface', () => {
     renderApp()
-    expect(screen.getByText('Welcome to MCP Configuration Manager')).toBeInTheDocument()
-    expect(
-      screen.getByText('Your unified interface for managing Model Context Protocol configurations')
-    ).toBeInTheDocument()
+    expect(screen.getByText('Select a client to manage servers')).toBeInTheDocument()
+    expect(screen.getByText('Select a client to edit its configuration')).toBeInTheDocument()
   })
 })

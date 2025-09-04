@@ -117,6 +117,7 @@ export class ValidationEngine {
             field: `mcpServers.${serverName}.command`,
             message: `Did you mean: ${commandValidation.suggestions.join(', ')}?`,
             severity: ValidationSeverity.WARNING,
+            code: 'COMMAND_SUGGESTION',
             suggestion: `Try using one of these commands: ${commandValidation.suggestions.join(', ')}`
           });
         }
@@ -127,6 +128,7 @@ export class ValidationEngine {
           field: `mcpServers.${serverName}.command`,
           message: 'Command file is not executable',
           severity: ValidationSeverity.WARNING,
+          code: 'COMMAND_NOT_EXECUTABLE',
           suggestion: 'Make the command file executable with chmod +x'
         });
       }
@@ -150,6 +152,7 @@ export class ValidationEngine {
             field: `mcpServers.${serverName}.args[${index}]`,
             message: `Potentially dangerous argument: ${arg}`,
             severity: ValidationSeverity.WARNING,
+            code: 'DANGEROUS_ARGUMENT',
             suggestion: 'Review and validate this argument for security'
           });
         }
@@ -185,6 +188,7 @@ export class ValidationEngine {
             field: `mcpServers.${serverName}.env.${key}`,
             message: 'Environment variable may contain sensitive data',
             severity: ValidationSeverity.WARNING,
+            code: 'SENSITIVE_DATA',
             suggestion: 'Consider using environment variable references instead'
           });
         }
@@ -199,6 +203,7 @@ export class ValidationEngine {
           field: `mcpServers.${serverName}.cwd`,
           message: `Working directory does not exist: ${server.cwd}`,
           severity: ValidationSeverity.WARNING,
+          code: 'DIRECTORY_NOT_FOUND',
           suggestion: 'Create the directory or use an existing path'
         });
       }
@@ -230,6 +235,7 @@ export class ValidationEngine {
             field: `mcpServers.${serverName}.autoApprove[${index}]`,
             message: 'Invalid glob pattern in auto-approve tool',
             severity: ValidationSeverity.WARNING,
+            code: 'INVALID_GLOB_PATTERN',
             suggestion: 'Use a valid glob pattern like *.txt'
           });
         }
@@ -270,6 +276,7 @@ export class ValidationEngine {
         field: 'mcpServers',
         message: 'No MCP servers configured',
         severity: ValidationSeverity.WARNING,
+        code: 'EMPTY_CONFIGURATION',
         suggestion: 'Add at least one MCP server to enable functionality'
       });
     }
@@ -327,6 +334,7 @@ export class ValidationEngine {
         field: 'mcpServers',
         message: `Duplicate server names (case-insensitive): ${originalNames.join(', ')}`,
         severity: ValidationSeverity.WARNING,
+        code: 'DUPLICATE_NAMES',
         suggestion: 'Rename servers to have unique names'
       });
     });
@@ -338,6 +346,7 @@ export class ValidationEngine {
         field: 'mcpServers',
         message: `Port conflict detected: ${conflict.servers.join(', ')} use port ${conflict.port}`,
         severity: ValidationSeverity.WARNING,
+        code: 'PORT_CONFLICT',
         suggestion: 'Use different ports for each server'
       });
     });
@@ -369,6 +378,7 @@ export class ValidationEngine {
               field: `mcpServers.${name}.autoApprove`,
               message: 'Claude Desktop may not support autoApprove feature',
               severity: ValidationSeverity.WARNING,
+              code: 'UNSUPPORTED_FEATURE',
               suggestion: 'Remove autoApprove or check client documentation'
             });
           }
@@ -383,6 +393,7 @@ export class ValidationEngine {
               field: `mcpServers.${name}.env`,
               message: 'Codex may have limitations with many environment variables',
               severity: ValidationSeverity.WARNING,
+              code: 'PERFORMANCE_WARNING',
               suggestion: 'Consider reducing the number of servers for better performance'
             });
           }
@@ -396,6 +407,7 @@ export class ValidationEngine {
             field: 'mcpServers',
             message: 'VS Code may have performance issues with many MCP servers',
             severity: ValidationSeverity.WARNING,
+            code: 'PERFORMANCE_WARNING',
             suggestion: 'Consider reducing the number of servers for better performance'
           });
         }
