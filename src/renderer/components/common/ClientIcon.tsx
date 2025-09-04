@@ -5,7 +5,7 @@ import {
   CodeOutlined,
   BugOutlined,
   BlockOutlined,
-  RobotOutlined,
+  ThunderboltOutlined,
   ConsoleSqlOutlined 
 } from '@ant-design/icons';
 import { ClientType } from '../../../shared/types/enums';
@@ -59,7 +59,7 @@ const ClientIcon: React.FC<ClientIconProps> = ({
       
       case ClientType.GEMINI_DESKTOP:
         return {
-          icon: <RobotOutlined />,
+          icon: <ThunderboltOutlined />,
           color: '#4285f4',
           name: 'Gemini Desktop',
           description: 'Google Gemini Desktop Application'

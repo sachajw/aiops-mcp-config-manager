@@ -1,7 +1,7 @@
 import JSON5 from 'json5';
 import { z } from 'zod';
 import { promises as fs } from 'fs';
-import { ClientType } from '../../shared/types/enums';
+import { ClientType, ValidationSeverity, ConfigScope } from '../../shared/types/enums';
 import { Configuration, ConfigurationMetadata } from '../../shared/types/configuration';
 import { MCPServer } from '../../shared/types/server';
 import { ValidationResult, ValidationError } from '../../shared/types/common';
@@ -127,7 +127,7 @@ export class ConfigurationParser {
         errors: [{
           field: 'file',
           message: `Failed to read configuration file: ${error instanceof Error ? error.message : 'Unknown error'}`,
-          severity: 'error' as const,
+          severity: ValidationSeverity.ERROR,
           code: 'FILE_READ_ERROR'
         }],
         warnings: []
@@ -152,7 +152,7 @@ export class ConfigurationParser {
         errors: [{
           field: 'syntax',
           message: `JSON5 parsing error: ${error instanceof Error ? error.message : 'Invalid syntax'}`,
-          severity: 'error' as const,
+          severity: ValidationSeverity.ERROR,
           code: 'SYNTAX_ERROR'
         }],
         warnings: [],
@@ -169,7 +169,7 @@ export class ConfigurationParser {
         errors.push({
           field: issue.path.join('.'),
           message: issue.message,
-          severity: 'error' as const,
+          severity: ValidationSeverity.ERROR,
           code: issue.code
         });
       });
@@ -183,7 +183,7 @@ export class ConfigurationParser {
       errors.push({
         field: 'normalization',
         message: `Failed to normalize configuration: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        severity: 'error' as const,
+        severity: ValidationSeverity.ERROR,
         code: 'NORMALIZATION_ERROR'
       });
       
@@ -238,7 +238,7 @@ export class ConfigurationParser {
     const metadata: ConfigurationMetadata = {
       lastModified: new Date(),
       version: '1.0.0',
-      scope: 'user' as const,
+      scope: ConfigScope.USER,
       sourcePath,
       isDirty: false
     };
@@ -260,7 +260,7 @@ export class ConfigurationParser {
         args: config.args || [],
         env: config.env || {},
         cwd: config.cwd,
-        scope: 'user' as const,
+        scope: ConfigScope.USER,
         enabled: !config.disabled,
         description: config.description,
         autoApprove: config.autoApprove || []
@@ -279,7 +279,7 @@ export class ConfigurationParser {
         args: config.arguments || [],
         env: config.environment || {},
         cwd: config.workingDirectory,
-        scope: 'user' as const,
+        scope: ConfigScope.USER,
         enabled: config.enabled !== false,
         description: config.description
       };
@@ -297,7 +297,7 @@ export class ConfigurationParser {
         args: config.args || [],
         env: config.env || {},
         cwd: config.cwd,
-        scope: 'user' as const,
+        scope: ConfigScope.USER,
         enabled: config.enabled !== false,
         description: config.description
       };
@@ -318,7 +318,7 @@ export class ConfigurationParser {
         errors.push({
           field: `mcpServers.${name}.command`,
           message: 'Command cannot be empty',
-          severity: 'error' as const,
+          severity: ValidationSeverity.ERROR,
           code: 'EMPTY_COMMAND'
         });
       }
@@ -328,7 +328,7 @@ export class ConfigurationParser {
         warnings.push({
           field: `mcpServers.${name}.command`,
           message: 'Command contains relative paths, consider using absolute paths',
-          severity: 'warning' as const,
+          severity: ValidationSeverity.WARNING,
           code: 'RELATIVE_PATH'
         });
       }
@@ -339,7 +339,7 @@ export class ConfigurationParser {
           warnings.push({
             field: `mcpServers.${name}.env.${key}`,
             message: 'Environment variable names should not contain spaces',
-            severity: 'warning' as const,
+            severity: ValidationSeverity.WARNING,
             code: 'ENV_VAR_SPACES'
           });
         }
@@ -348,7 +348,7 @@ export class ConfigurationParser {
           errors.push({
             field: `mcpServers.${name}.env.${key}`,
             message: 'Environment variable values must be strings',
-            severity: 'error' as const,
+            severity: ValidationSeverity.ERROR,
             code: 'ENV_VAR_TYPE'
           });
         }
@@ -360,7 +360,7 @@ export class ConfigurationParser {
           errors.push({
             field: `mcpServers.${name}.args[${index}]`,
             message: 'Arguments must be strings',
-            severity: 'error' as const,
+            severity: ValidationSeverity.ERROR,
             code: 'ARG_TYPE'
           });
         }
@@ -373,7 +373,7 @@ export class ConfigurationParser {
         warnings.push({
           field: `mcpServers.${name}`,
           message: `Server name conflicts with: ${duplicates.join(', ')}`,
-          severity: 'warning' as const,
+          severity: ValidationSeverity.WARNING,
           code: 'DUPLICATE_NAME'
         });
       }
@@ -407,7 +407,7 @@ export class ConfigurationParser {
         errors: [{
           field: 'syntax',
           message: `JSON5 syntax error: ${error instanceof Error ? error.message : 'Invalid syntax'}`,
-          severity: 'error' as const,
+          severity: ValidationSeverity.ERROR,
           code: 'SYNTAX_ERROR'
         }],
         warnings: []

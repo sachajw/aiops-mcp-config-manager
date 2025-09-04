@@ -7,7 +7,7 @@ import {
   BugOutlined,
   CheckCircleOutlined,
   EditOutlined,
-  AutoFixOutlined
+  ToolOutlined
 } from '@ant-design/icons';
 import { ValidationResult, ValidationError } from '../../../shared/types/validation';
 
@@ -119,7 +119,7 @@ const ValidationErrorDisplay: React.FC<ValidationErrorDisplayProps> = ({
                       <Button
                         size="small"
                         type="primary"
-                        icon={<AutoFixOutlined />}
+                        icon={<ToolOutlined />}
                         onClick={() => onFixError(issue)}
                         style={{ fontSize: 11, height: 24 }}
                       >
@@ -171,7 +171,7 @@ const ValidationErrorDisplay: React.FC<ValidationErrorDisplayProps> = ({
         showIcon
         action={
           hasAutoFixableErrors && onFixAll ? (
-            <Button size="small" icon={<AutoFixOutlined />} onClick={onFixAll}>
+            <Button size="small" icon={<ToolOutlined />} onClick={onFixAll}>
               Fix All
             </Button>
           ) : undefined
@@ -201,7 +201,7 @@ const ValidationErrorDisplay: React.FC<ValidationErrorDisplayProps> = ({
             <Space>
               <Button 
                 type="primary" 
-                icon={<AutoFixOutlined />} 
+                icon={<ToolOutlined />} 
                 onClick={onFixAll}
                 size="small"
               >

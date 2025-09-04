@@ -48,7 +48,11 @@ export class ScopeManager {
 
     // Process configurations in priority order (lowest to highest)
     const sortedScopes = Object.entries(scopeConfigurations)
-      .sort(([, a], [, b]) => this.SCOPE_PRIORITIES[a.scope] - this.SCOPE_PRIORITIES[b.scope]);
+      .filter(([, config]) => config !== null)
+      .sort(([, a], [, b]) => {
+        if (!a || !b) return 0;
+        return this.SCOPE_PRIORITIES[a.metadata.scope] - this.SCOPE_PRIORITIES[b.metadata.scope];
+      });
 
     for (const [scopeName, config] of sortedScopes) {
       if (!config || !config.mcpServers) continue;
@@ -121,12 +125,12 @@ export class ScopeManager {
       try {
         if (await FileSystemUtils.fileExists(scopePath)) {
           const parsed = await ConfigurationParser.parseConfiguration(scopePath);
-          if (parsed.success && parsed.configuration) {
+          if (parsed.success && parsed.data) {
             // Ensure metadata has correct scope
             const config: Configuration = {
-              ...parsed.configuration,
+              ...parsed.data,
               metadata: {
-                ...parsed.configuration.metadata,
+                ...parsed.data.metadata,
                 scope,
                 sourcePath: scopePath
               }
@@ -179,11 +183,11 @@ export class ScopeManager {
     }
 
     const sourceResult = await ConfigurationParser.parseConfiguration(sourcePath);
-    if (!sourceResult.success || !sourceResult.configuration) {
+    if (!sourceResult.success || !sourceResult.data) {
       throw new Error(`Failed to parse source configuration: ${sourceResult.errors?.join(', ')}`);
     }
 
-    const sourceConfig = sourceResult.configuration;
+    const sourceConfig = sourceResult.data;
     const serverConfig = sourceConfig.mcpServers[serverName];
 
     if (!serverConfig) {
@@ -195,10 +199,10 @@ export class ScopeManager {
     
     if (await FileSystemUtils.fileExists(targetPath)) {
       const targetResult = await ConfigurationParser.parseConfiguration(targetPath);
-      if (!targetResult.success || !targetResult.configuration) {
+      if (!targetResult.success || !targetResult.data) {
         throw new Error(`Failed to parse target configuration: ${targetResult.errors?.join(', ')}`);
       }
-      targetConfig = targetResult.configuration;
+      targetConfig = targetResult.data;
     } else {
       // Create new configuration
       targetConfig = {
@@ -298,10 +302,10 @@ export class ScopeManager {
     const targetPath = client.configPaths.scopePaths[highestPriorityEntry.scope];
     const configResult = await ConfigurationParser.parseConfiguration(targetPath);
     
-    if (configResult.success && configResult.configuration) {
-      configResult.configuration.mcpServers[conflict.serverName] = mergedConfig;
-      configResult.configuration.metadata.lastModified = new Date();
-      await FileSystemUtils.writeJsonFile(targetPath, configResult.configuration);
+    if (configResult.success && configResult.data) {
+      configResult.data.mcpServers[conflict.serverName] = mergedConfig;
+      configResult.data.metadata.lastModified = new Date();
+      await FileSystemUtils.writeJsonFile(targetPath, configResult.data);
     }
 
     // Remove from lower priority scopes
@@ -348,11 +352,11 @@ export class ScopeManager {
     }
 
     const configResult = await ConfigurationParser.parseConfiguration(configPath);
-    if (!configResult.success || !configResult.configuration) {
+    if (!configResult.success || !configResult.data) {
       throw new Error(`Failed to parse configuration at ${configPath}`);
     }
 
-    const config = configResult.configuration;
+    const config = configResult.data;
     if (config.mcpServers[serverName]) {
       delete config.mcpServers[serverName];
       config.metadata.lastModified = new Date();

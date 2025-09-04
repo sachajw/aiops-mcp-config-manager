@@ -51,6 +51,22 @@ export interface TestResult {
 }
 
 /**
+ * Server test result (for UI compatibility)
+ */
+export interface ServerTestResult {
+  /** Test status */
+  status: TestStatus;
+  /** Whether the test was successful */
+  success: boolean;
+  /** Test duration in milliseconds */
+  duration: number;
+  /** Success/error message */
+  message: string;
+  /** Detailed test information */
+  details: any;
+}
+
+/**
  * Server validation result
  */
 export interface ServerValidationResult {

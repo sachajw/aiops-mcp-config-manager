@@ -11,7 +11,7 @@ import {
   BugOutlined,
   QuestionCircleOutlined,
   PlayCircleOutlined,
-  RobotOutlined
+  ThunderboltOutlined
 } from '@ant-design/icons';
 
 const { Title, Text, Paragraph } = Typography;
@@ -178,7 +178,7 @@ const RecoverySuggestions: React.FC<RecoverySuggestionsProps> = ({
               <Button
                 size="small"
                 type={step.critical ? 'primary' : 'default'}
-                icon={step.automated ? <RobotOutlined /> : <PlayCircleOutlined />}
+                icon={step.automated ? <ThunderboltOutlined /> : <PlayCircleOutlined />}
                 loading={isExecuting}
                 disabled={isCompleted}
                 onClick={() => handleExecuteStep(suggestion.id, step.id)}
@@ -214,7 +214,7 @@ const RecoverySuggestions: React.FC<RecoverySuggestionsProps> = ({
             </Text>
             <Text type="secondary">({suggestion.severity} severity)</Text>
             {hasAutomaticRecovery && (
-              <RobotOutlined style={{ color: '#52c41a' }} title="Automatic recovery available" />
+              <ThunderboltOutlined style={{ color: '#52c41a' }} title="Automatic recovery available" />
             )}
           </Space>
         }
@@ -223,7 +223,7 @@ const RecoverySuggestions: React.FC<RecoverySuggestionsProps> = ({
             <Button
               type="primary"
               size="small"
-              icon={<RobotOutlined />}
+              icon={<ThunderboltOutlined />}
               loading={isAutoRecovering}
               onClick={(e) => {
                 e.stopPropagation();
@@ -245,12 +245,12 @@ const RecoverySuggestions: React.FC<RecoverySuggestionsProps> = ({
               description={suggestion.automaticRecovery!.description}
               type="success"
               showIcon
-              icon={<RobotOutlined />}
+              icon={<ThunderboltOutlined />}
               action={
                 <Button
                   type="primary"
                   size="small"
-                  icon={<RobotOutlined />}
+                  icon={<ThunderboltOutlined />}
                   loading={isAutoRecovering}
                   onClick={() => handleExecuteAutoRecovery(suggestion)}
                 >
@@ -309,11 +309,11 @@ const RecoverySuggestions: React.FC<RecoverySuggestionsProps> = ({
               description="These issues have automated recovery procedures available."
               type="success"
               showIcon
-              icon={<RobotOutlined />}
+              icon={<ThunderboltOutlined />}
               action={
                 <Button
                   type="primary"
-                  icon={<RobotOutlined />}
+                  icon={<ThunderboltOutlined />}
                   onClick={async () => {
                     for (const suggestion of automatedSuggestions) {
                       await handleExecuteAutoRecovery(suggestion);

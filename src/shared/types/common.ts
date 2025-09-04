@@ -25,6 +25,7 @@ export interface ValidationError {
 export interface ValidationWarning {
   field: string;
   message: string;
+  severity: ValidationSeverity;
   suggestion?: string;
 }
 

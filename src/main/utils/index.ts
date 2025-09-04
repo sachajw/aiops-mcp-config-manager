@@ -6,4 +6,4 @@ export {
   FileNotFoundError,
   InvalidJsonError
 } from './fileSystemUtils';
-export { getEnvironmentInfo } from './environment';
+export { isDev, isProduction } from './environment';

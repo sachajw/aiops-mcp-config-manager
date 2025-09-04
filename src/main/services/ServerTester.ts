@@ -560,7 +560,7 @@ export class ServerTester {
   /**
    * Check if environment variable might be sensitive
    */
-  private static isSensitiveEnvironmentVariable(key: string, value: string): boolean {
+  private static isSensitiveEnvironmentVariable(key: string, value: string | null | undefined): boolean {
     const sensitivePatterns = [
       /api[_-]?key/i,
       /secret/i,
@@ -571,7 +571,7 @@ export class ServerTester {
     ];
 
     return sensitivePatterns.some(pattern => pattern.test(key)) || 
-           (value && value.length > 20 && /^[A-Za-z0-9+/=_-]+$/.test(value));
+           Boolean(value && value.length > 20 && /^[A-Za-z0-9+/=_-]+$/.test(value));
   }
 
   /**

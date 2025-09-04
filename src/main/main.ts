@@ -1,6 +1,7 @@
 import { app, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { isDev } from './utils/environment'
+import { setupIpcHandlers } from './ipc/handlers'
 
 let mainWindow: BrowserWindow | null = null
 
@@ -21,7 +22,7 @@ const createWindow = (): void => {
 
   // Load the renderer
   if (isDev()) {
-    mainWindow.loadURL('http://localhost:5173')
+    mainWindow.loadURL('http://localhost:5176')
     mainWindow.webContents.openDevTools()
   } else {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
@@ -39,6 +40,9 @@ const createWindow = (): void => {
 // App event handlers
 app.whenReady().then(() => {
   createWindow()
+  
+  // Setup IPC handlers
+  setupIpcHandlers()
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {

@@ -1,6 +1,6 @@
 // Configuration parsing and validation services
 export { ConfigurationParser, ClientConfigSchemas, type ParseResult } from './ConfigurationParser';
-export { ValidationEngine, type ValidationContext, type CommandValidationResult } from './ValidationEngine';
+export { ValidationEngine, type ValidationContext } from './ValidationEngine';
 export { ConfigurationService } from './ConfigurationService';
 
 // Client discovery and management services

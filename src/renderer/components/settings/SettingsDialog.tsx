@@ -25,7 +25,7 @@ import {
   ReloadOutlined,
   ExclamationCircleOutlined,
   BugOutlined,
-  PaletteOutlined,
+  BgColorsOutlined,
   DatabaseOutlined,
   SyncOutlined,
   BellOutlined,
@@ -220,7 +220,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
 
           {/* Theme Settings */}
           <TabPane 
-            tab={<Space><PaletteOutlined />Appearance</Space>} 
+            tab={<Space><BgColorsOutlined />Appearance</Space>} 
             key="theme"
           >
             <Space direction="vertical" size="large" style={{ width: '100%' }}>

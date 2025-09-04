@@ -51,7 +51,7 @@ const JsonEditor: React.FC<JsonEditorProps> = ({
 
     // Add keyboard shortcuts
     editor.addCommand(
-      editor.KeyMod.CtrlCmd | editor.KeyCode.KeyS,
+      monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS,
       () => {
         // Handle save - could trigger parent save action
         console.log('Save shortcut triggered');
@@ -59,7 +59,7 @@ const JsonEditor: React.FC<JsonEditorProps> = ({
     );
 
     editor.addCommand(
-      editor.KeyMod.CtrlCmd | editor.KeyMod.Shift | editor.KeyCode.KeyF,
+      monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyF,
       () => {
         handleFormat();
       }
@@ -164,7 +164,7 @@ const JsonEditor: React.FC<JsonEditorProps> = ({
   // Configure Monaco Editor options
   const editorOptions: editor.IStandaloneEditorConstructionOptions = {
     theme: 'vs-light',
-    language: getJsonLanguage(),
+    language: 'json',
     readOnly: readonly,
     minimap: { enabled: false },
     scrollBeyondLastLine: false,

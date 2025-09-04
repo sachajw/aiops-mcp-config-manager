@@ -215,7 +215,7 @@ const SynchronizationPanel: React.FC<SynchronizationPanelProps> = ({
           <Space direction="vertical" size="small">
             <Text strong>{client.name}</Text>
             {record.clientId === primaryClientId && (
-              <Tag color="blue" size="small">Primary</Tag>
+              <Tag color="blue" style={{ fontSize: '11px' }}>Primary</Tag>
             )}
           </Space>
         </Space>
