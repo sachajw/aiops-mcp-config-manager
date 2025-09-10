@@ -1,17 +1,36 @@
 import { ipcMain } from 'electron';
 import { MCPClient, Configuration, MCPServer, ServerTestResult } from '../../shared/types';
 import { ConfigScope } from '../../shared/types/enums';
+import { 
+  ClientDetector,
+  ConfigurationManager,
+  ValidationEngine,
+  ServerTester,
+  BackupManager
+} from '../services';
+import { ValidationContext } from '../services/ValidationEngine';
+import { ClientType } from '../../shared/types/enums';
 
 export function setupIpcHandlers(): void {
+  // Services use static methods, no need to instantiate
   // App handlers
   ipcMain.handle('app:getVersion', () => {
     return require('../../../package.json').version;
   });
 
-  // Client discovery handlers (simplified for now)
+  // Client discovery handlers
   ipcMain.handle('clients:discover', async (): Promise<MCPClient[]> => {
     try {
-      // For now return mock data - full implementation would use ConfigurationManager
+      console.log('Discovering clients using real ClientDetector...');
+      const result = await ClientDetector.discoverClients();
+      console.log(`Found ${result.clients.length} clients:`, result.clients.map((c: any) => c.name));
+      if (result.errors.length > 0) {
+        console.warn('Client discovery had errors:', result.errors);
+      }
+      return result.clients;
+    } catch (error) {
+      console.error('Failed to discover clients:', error);
+      // Fallback to mock data if real detection fails
       const mockClients: MCPClient[] = [
         {
           id: 'claude-desktop',
@@ -28,15 +47,12 @@ export function setupIpcHandlers(): void {
         }
       ];
       return mockClients;
-    } catch (error) {
-      console.error('Failed to discover clients:', error);
-      throw error;
     }
   });
 
   ipcMain.handle('clients:validateClient', async (_, clientId: string): Promise<boolean> => {
     try {
-      // Simplified validation
+      // We need a client object, so this is simplified for now
       return clientId === 'claude-desktop' || clientId === 'claude-code';
     } catch (error) {
       console.error('Failed to validate client:', error);
@@ -44,12 +60,18 @@ export function setupIpcHandlers(): void {
     }
   });
 
-  // Configuration handlers (simplified)
+  // Configuration handlers
   ipcMain.handle('config:load', async (_, clientId: string, scope?: ConfigScope) => {
     try {
-      // For now return null - would implement actual loading
       console.log(`Loading config for ${clientId}, scope: ${scope}`);
-      return null;
+      // First get the client object
+      const clientResult = await ClientDetector.discoverClients();
+      const client = clientResult.clients.find((c: any) => c.id === clientId);
+      if (client) {
+        const config = await ConfigurationManager.loadConfiguration(client, scope || ConfigScope.USER);
+        return config;
+      }
+      throw new Error(`Client not found: ${clientId}`);
     } catch (error) {
       console.error('Failed to load configuration:', error);
       throw error;
@@ -59,7 +81,14 @@ export function setupIpcHandlers(): void {
   ipcMain.handle('config:save', async (_, clientId: string, configuration: Configuration, scope?: ConfigScope) => {
     try {
       console.log(`Saving config for ${clientId}, scope: ${scope}`);
-      // For now just log - would implement actual saving
+      // First get the client object
+      const clientResult = await ClientDetector.discoverClients();
+      const client = clientResult.clients.find((c: any) => c.id === clientId);
+      if (client) {
+        await ConfigurationManager.saveConfiguration(client, configuration, scope || ConfigScope.USER);
+        return true;
+      }
+      throw new Error(`Client not found: ${clientId}`);
     } catch (error) {
       console.error('Failed to save configuration:', error);
       throw error;
@@ -69,18 +98,14 @@ export function setupIpcHandlers(): void {
   ipcMain.handle('config:resolve', async (_, clientId: string) => {
     try {
       console.log(`Resolving config for ${clientId}`);
-      // Return mock resolved configuration
-      return {
-        servers: {},
-        conflicts: [],
-        sources: {},
-        metadata: {
-          resolvedAt: new Date(),
-          mergedScopes: [ConfigScope.USER],
-          serverCount: 0,
-          conflictCount: 0
-        }
-      };
+      // We need to get the client first to resolve configuration
+      const clientResult = await ClientDetector.discoverClients();
+      const client = clientResult.clients.find((c: any) => c.id === clientId);
+      if (client) {
+        const resolved = await ConfigurationManager.loadResolvedConfiguration(client);
+        return resolved;
+      }
+      throw new Error(`Client not found: ${clientId}`);
     } catch (error) {
       console.error('Failed to resolve configuration:', error);
       throw error;
@@ -89,12 +114,13 @@ export function setupIpcHandlers(): void {
 
   ipcMain.handle('config:validate', async (_, configuration: Configuration): Promise<any> => {
     try {
-      // Simple validation - just check if it parses
-      return {
-        isValid: !!configuration && !!configuration.mcpServers,
-        errors: [],
-        warnings: []
+      const context: ValidationContext = {
+        clientType: ClientType.CLAUDE_DESKTOP, // Default context
+        checkFileSystem: true,
+        checkCommands: true
       };
+      const validation = await ValidationEngine.validateConfiguration(configuration, context);
+      return validation;
     } catch (error) {
       console.error('Failed to validate configuration:', error);
       throw error;
@@ -110,17 +136,16 @@ export function setupIpcHandlers(): void {
     }
   });
 
-  // Server testing handlers (simplified)
+  // Server testing handlers
   ipcMain.handle('server:test', async (_, serverConfig: MCPServer): Promise<ServerTestResult> => {
     try {
-      // Mock server test
-      return {
-        status: 'success' as any,
-        success: true,
-        duration: 1000,
-        message: 'Server test successful',
-        details: {}
-      };
+      const result = await ServerTester.testServer(serverConfig, {
+        testConnection: false,
+        checkCommand: true,
+        checkWorkingDirectory: true,
+        checkEnvironment: true
+      });
+      return result;
     } catch (error) {
       console.error('Failed to test server:', error);
       throw error;

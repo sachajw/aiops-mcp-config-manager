@@ -5,6 +5,16 @@ import { ConfigScope } from '../shared/types/enums'
 // Expose protected methods that allow the renderer process to use
 // the ipcRenderer without exposing the entire object
 contextBridge.exposeInMainWorld('electronAPI', {
+  // Simplified API methods
+  detectClients: () => ipcRenderer.invoke('config:detect'),
+  readConfig: (clientName: string, scope: string) => 
+    ipcRenderer.invoke('config:read', clientName, scope),
+  writeConfig: (clientName: string, scope: string, servers: any) =>
+    ipcRenderer.invoke('config:write', clientName, scope, servers),
+  backupConfig: (clientName: string, scope: string) =>
+    ipcRenderer.invoke('config:backup', clientName, scope),
+    
+  // Original API methods (keep for backward compatibility)
   // App methods
   getVersion: () => ipcRenderer.invoke('app:getVersion'),
 

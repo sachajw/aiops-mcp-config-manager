@@ -1,0 +1,33 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run type-check:*)",
+      "Bash(git add:*)",
+      "Bash(gh repo create:*)",
+      "Bash(npm run dev:renderer:*)",
+      "Bash(/bashes)",
+      "WebFetch(domain:localhost)",
+      "Bash(curl:*)",
+      "Bash(npm run build:main:*)",
+      "Bash(npx tsc:*)",
+      "Bash(sed:*)",
+      "Bash(/Users/briandawson/workspace/mcp-config-manager/src/main/services/ValidationEngine.ts)",
+      "Bash(npm run electron:dev:*)",
+      "Bash(VITE_PORT=5176 npm run dev:renderer)",
+      "Bash(npm run dev:main:*)",
+      "Bash(git commit:*)",
+      "Bash(npm test)",
+      "Bash(npm test:*)",
+      "Bash(git checkout:*)",
+      "Bash(npm install:*)",
+      "Bash(grep:*)",
+      "Bash(npm run build:*)",
+      "Bash(pkill:*)",
+      "Bash(lsof:*)",
+      "Bash(wait-on:*)",
+      "Bash(VITE_PORT=5175 npm run dev:main)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
