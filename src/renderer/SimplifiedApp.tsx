@@ -253,7 +253,10 @@ export const SimplifiedApp: React.FC = () => {
                   <optgroup label="Installed Clients">
                     {clients.map(client => (
                       <option key={client.name} value={client.name}>
-                        {client.displayName} {client.installed ? '✓' : '✗'}
+                        <div className="flex items-center justify-between w-full">
+                          <span>{client.displayName}</span>
+                          <div className={`w-2 h-2 rounded-full ${client.installed ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                        </div>
                       </option>
                     ))}
                   </optgroup>
@@ -527,7 +530,7 @@ export const SimplifiedApp: React.FC = () => {
                         <td className="py-5 px-4">
                           {server.type === 'remote' ? (
                             <div className="space-y-2">
-                              <div className="text-sm font-medium text-base-content/70">
+                              <div className="text-sm font-medium text-base-content/40">
                                 {server.url ? new URL(server.url).hostname : 'Remote'}
                               </div>
                               <div className="text-xs text-base-content/60 font-mono">
@@ -536,7 +539,7 @@ export const SimplifiedApp: React.FC = () => {
                             </div>
                           ) : (
                             <div className="space-y-2">
-                              <div className="text-sm font-medium text-base-content/70 font-mono">
+                              <div className="text-sm font-medium text-base-content/40 font-mono">
                                 {server.command}
                               </div>
                               {server.args && server.args.length > 0 && (
@@ -1088,12 +1091,54 @@ export const SimplifiedApp: React.FC = () => {
                 <li>Arguments are comma-separated: arg1, arg2, arg3</li>
               </ul>
 
-              <h4 className="text-md font-semibold mt-4 mb-2">Common Server Examples</h4>
+              <h4 className="text-md font-semibold mt-4 mb-2">Official MCP Servers</h4>
+              <p className="text-sm mb-2">
+                Browse the complete list of official MCP servers: 
+                <br />
+                <a 
+                  href="#" 
+                  className="text-blue-400 hover:text-blue-300 underline text-xs"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    window.electronAPI?.openExternal('https://github.com/modelcontextprotocol/servers');
+                  }}
+                >
+                  https://github.com/modelcontextprotocol/servers
+                </a>
+              </p>
               <ul className="text-sm space-y-1 ml-4">
                 <li><strong>File System:</strong> <code className="text-xs">npx @modelcontextprotocol/server-filesystem</code></li>
                 <li><strong>GitHub:</strong> <code className="text-xs">npx @modelcontextprotocol/server-github</code></li>
-                <li><strong>Database:</strong> <code className="text-xs">python -m your-database-server</code></li>
+                <li><strong>Brave Search:</strong> <code className="text-xs">npx @modelcontextprotocol/server-brave-search</code></li>
+                <li><strong>PostgreSQL:</strong> <code className="text-xs">npx @modelcontextprotocol/server-postgres</code></li>
+                <li><strong>SQLite:</strong> <code className="text-xs">npx @modelcontextprotocol/server-sqlite</code></li>
+                <li><strong>Google Drive:</strong> <code className="text-xs">npx @modelcontextprotocol/server-gdrive</code></li>
               </ul>
+
+              <h4 className="text-md font-semibold mt-4 mb-2">Learn More About MCP</h4>
+              <p className="text-sm mb-2">
+                <a 
+                  href="#" 
+                  className="text-blue-400 hover:text-blue-300 underline text-xs"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    window.electronAPI?.openExternal('https://modelcontextprotocol.io/');
+                  }}
+                >
+                  Model Context Protocol Documentation
+                </a>
+                <br />
+                <a 
+                  href="#" 
+                  className="text-blue-400 hover:text-blue-300 underline text-xs"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    window.electronAPI?.openExternal('https://github.com/modelcontextprotocol');
+                  }}
+                >
+                  MCP GitHub Organization
+                </a>
+              </p>
 
               <h4 className="text-md font-semibold mt-4 mb-2">Safety & Backups</h4>
               <p className="text-sm mb-3">

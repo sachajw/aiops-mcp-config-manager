@@ -1,4 +1,4 @@
-import { ipcMain } from 'electron';
+import { ipcMain, shell } from 'electron';
 import { MCPClient, Configuration, MCPServer, ServerTestResult } from '../../shared/types';
 import { ConfigScope } from '../../shared/types/enums';
 import { 
@@ -283,6 +283,17 @@ export function setupIpcHandlers(): void {
       return JSON.stringify(parsed, null, 2);
     } catch (error) {
       throw new Error('Cannot format invalid JSON');
+    }
+  });
+
+  // System utilities
+  ipcMain.handle('system:openExternal', async (_, url: string) => {
+    try {
+      await shell.openExternal(url);
+      return true;
+    } catch (error) {
+      console.error('Failed to open external URL:', error);
+      return false;
     }
   });
 

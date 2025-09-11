@@ -70,6 +70,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Utility methods
   validateJson: (jsonString: string) => ipcRenderer.invoke('utils:validateJson', jsonString),
   formatJson: (jsonString: string) => ipcRenderer.invoke('utils:formatJson', jsonString),
+  
+  // System methods
+  openExternal: (url: string) => ipcRenderer.invoke('system:openExternal', url),
 })
 
 // Type definitions for the exposed API
@@ -111,6 +114,9 @@ export interface ElectronAPI {
   // Utility methods
   validateJson: (jsonString: string) => Promise<{ valid: boolean; errors: string[] }>
   formatJson: (jsonString: string) => Promise<string>
+  
+  // System methods
+  openExternal: (url: string) => Promise<boolean>
 }
 
 declare global {
