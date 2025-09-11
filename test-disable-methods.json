@@ -1,0 +1,60 @@
+{
+  "description": "Testing different methods to disable MCP servers",
+  
+  "method1_custom_field": {
+    "mcpServers": {
+      "test_server": {
+        "command": "node",
+        "args": ["test.js"],
+        "enabled": false,
+        "_comment": "Custom 'enabled' field - not standard"
+      }
+    }
+  },
+  
+  "method2_rename_field": {
+    "mcpServers": {
+      "_disabled_test_server": {
+        "command": "node",
+        "args": ["test.js"],
+        "_comment": "Prefix with underscore to indicate disabled"
+      }
+    }
+  },
+  
+  "method3_comment_out": {
+    "mcpServers": {
+      "//test_server": {
+        "command": "node",
+        "args": ["test.js"],
+        "_comment": "Using // in key name (may break JSON parsers)"
+      }
+    }
+  },
+  
+  "method4_separate_disabled_section": {
+    "mcpServers": {
+      "active_server": {
+        "command": "node",
+        "args": ["active.js"]
+      }
+    },
+    "disabledServers": {
+      "test_server": {
+        "command": "node",
+        "args": ["test.js"],
+        "_comment": "Moved to separate section"
+      }
+    }
+  },
+  
+  "method5_null_command": {
+    "mcpServers": {
+      "test_server": {
+        "command": null,
+        "args": ["test.js"],
+        "_comment": "Setting command to null might disable it"
+      }
+    }
+  }
+}
