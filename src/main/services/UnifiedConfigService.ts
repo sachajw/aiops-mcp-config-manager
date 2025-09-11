@@ -5,10 +5,18 @@ import * as toml from '@iarna/toml';
 import JSON5 from 'json5';
 
 export interface MCPServer {
-  command: string;
+  // Local server config
+  command?: string;
   args?: string[];
   env?: Record<string, string>;
-  type?: string;
+  
+  // Remote server config
+  url?: string;
+  headers?: Record<string, string>;
+  
+  // Common fields
+  type?: 'local' | 'remote' | 'stdio' | 'http' | 'sse';
+  description?: string;
 }
 
 export interface MCPConfig {
@@ -37,9 +45,16 @@ class UnifiedConfigService {
     },
     'claude-code': {
       displayName: 'Claude Code',
-      user: path.join(os.homedir(), '.claude.json'),
-      project: path.join(process.cwd(), '.mcp.json'),
-      format: 'json5' as const
+      user: [
+        path.join(os.homedir(), '.claude.json'), // Primary recommended location
+        path.join(os.homedir(), '.claude_code_config.json'), // Alternative location
+        path.join(os.homedir(), '.claude', 'settings.local.json') // User-specific local
+      ],
+      project: (projectDir?: string) => [
+        path.join(projectDir || process.cwd(), '.mcp.json'), // Project root MCP config
+        path.join(projectDir || process.cwd(), '.claude', 'settings.local.json') // Project-specific
+      ],
+      format: 'json' as const
     },
     'gemini-cli': {
       displayName: 'Gemini CLI',
@@ -55,27 +70,14 @@ class UnifiedConfigService {
     },
     'vscode': {
       displayName: 'VS Code',
-      workspace: path.join(process.cwd(), '.vscode', 'mcp.json'),
-      user: this.getVSCodeSettingsPath(),
+      project: path.join(process.cwd(), '.vscode', 'mcp.json'),
+      user: path.join(os.homedir(), '.vscode', 'mcp.json'),
       format: 'json' as const
     }
   };
 
-  private getVSCodeSettingsPath(): string {
-    const platform = process.platform;
-    const homeDir = os.homedir();
-    
-    switch (platform) {
-      case 'win32':
-        return path.join(process.env.APPDATA || '', 'Code', 'User', 'settings.json');
-      case 'darwin':
-        return path.join(homeDir, 'Library', 'Application Support', 'Code', 'User', 'settings.json');
-      default:
-        return path.join(homeDir, '.config', 'Code', 'User', 'settings.json');
-    }
-  }
 
-  private resolvePath(clientName: string, scope?: ConfigScope): string {
+  private async resolvePath(clientName: string, scope?: ConfigScope, projectDirectory?: string): Promise<string> {
     const client = this.configLocations[clientName as keyof typeof this.configLocations];
     if (!client) throw new Error(`Unknown client: ${clientName}`);
 
@@ -88,7 +90,41 @@ class UnifiedConfigService {
 
     if (clientName === 'vscode') {
       const vscodeClient = client as typeof this.configLocations['vscode'];
-      return scope === 'project' ? vscodeClient.workspace : vscodeClient.user;
+      if (scope === 'project' && projectDirectory) {
+        return path.join(projectDirectory, '.vscode', 'mcp.json');
+      }
+      return scope === 'project' ? vscodeClient.project : vscodeClient.user;
+    }
+
+    // Handle Claude Code with multiple possible paths
+    if (clientName === 'claude-code') {
+      const claudeCodeClient = client as typeof this.configLocations['claude-code'];
+      let paths: string[] = [];
+      
+      if (scope === 'project' && claudeCodeClient.project) {
+        paths = claudeCodeClient.project(projectDirectory);
+      } else if (scope === 'system' && 'system' in claudeCodeClient) {
+        paths = [(claudeCodeClient as any).system];
+      } else {
+        paths = claudeCodeClient.user;
+      }
+      
+      // Check each path and return first existing one
+      for (const p of paths) {
+        if (await fs.pathExists(p)) {
+          return p;
+        }
+      }
+      
+      // If none exist, return the first path (for creating new configs)
+      return paths[0];
+    }
+
+    // Handle other clients with project support
+    if (scope === 'project' && projectDirectory) {
+      if (clientName === 'gemini-cli') {
+        return path.join(projectDirectory, '.gemini', 'settings.json');
+      }
     }
 
     if (scope === 'project' && 'project' in client) {
@@ -111,7 +147,7 @@ class UnifiedConfigService {
 
     for (const [name, config] of Object.entries(this.configLocations)) {
       try {
-        const configPath = this.resolvePath(name, 'user');
+        const configPath = await this.resolvePath(name, 'user');
         const exists = await fs.pathExists(configPath);
         
         console.log(`[UnifiedConfigService] Checking ${name} at ${configPath}: ${exists ? 'FOUND' : 'NOT FOUND'}`);
@@ -170,14 +206,14 @@ class UnifiedConfigService {
     }
   }
 
-  async readConfig(clientName: string, scope: ConfigScope = 'user'): Promise<MCPConfig> {
+  async readConfig(clientName: string, scope: ConfigScope = 'user', projectDirectory?: string): Promise<MCPConfig & { configPath?: string }> {
     try {
-      const configPath = this.resolvePath(clientName, scope);
+      const configPath = await this.resolvePath(clientName, scope, projectDirectory);
       console.log(`[UnifiedConfigService] Reading config for ${clientName} from: ${configPath}`);
       
       if (!await fs.pathExists(configPath)) {
         console.log(`[UnifiedConfigService] Config file does not exist: ${configPath}`);
-        return {};
+        return { configPath };
       }
 
       const content = await fs.readFile(configPath, 'utf-8');
@@ -187,21 +223,48 @@ class UnifiedConfigService {
       const servers = this.normalizeServers(config);
       console.log(`[UnifiedConfigService] Found ${Object.keys(servers).length} MCP servers for ${clientName}`);
       
-      return config;
+      return { ...config, configPath };
     } catch (error) {
       console.error(`Error reading config for ${clientName}:`, error);
       return {};
     }
   }
 
-  async writeConfig(clientName: string, scope: ConfigScope, config: MCPConfig): Promise<void> {
+  async writeConfig(clientName: string, scope: ConfigScope, config: MCPConfig, projectDirectory?: string): Promise<void> {
     try {
-      const configPath = this.resolvePath(clientName, scope);
+      const configPath = await this.resolvePath(clientName, scope, projectDirectory);
       const client = this.configLocations[clientName as keyof typeof this.configLocations];
       
       await fs.ensureDir(path.dirname(configPath));
       
-      const content = this.formatContent(config, client.format);
+      // For VS Code and other clients that may have other settings,
+      // we need to merge, not replace
+      let finalConfig = config;
+      
+      if (await fs.pathExists(configPath)) {
+        const existingContent = await fs.readFile(configPath, 'utf-8');
+        const existingConfig = this.parseContent(existingContent, client.format);
+        
+        // Merge configs - preserve existing settings and only update MCP servers
+        finalConfig = { ...existingConfig };
+        
+        // Update the appropriate MCP server field based on client
+        if (clientName === 'vscode') {
+          // VS Code might use 'mcp.servers' or just 'servers'
+          if ('mcp.servers' in existingConfig) {
+            (finalConfig as any)['mcp.servers'] = config.servers || config.mcpServers;
+          } else {
+            finalConfig.servers = config.servers || config.mcpServers;
+          }
+        } else if (clientName === 'codex-cli') {
+          finalConfig.mcp_servers = config.mcp_servers || config.mcpServers;
+        } else {
+          // Default: update mcpServers
+          finalConfig.mcpServers = config.mcpServers || config.servers;
+        }
+      }
+      
+      const content = this.formatContent(finalConfig, client.format);
       await fs.writeFile(configPath, content, 'utf-8');
     } catch (error) {
       console.error(`Error writing config for ${clientName}:`, error);
@@ -209,16 +272,52 @@ class UnifiedConfigService {
     }
   }
 
-  async backupConfig(clientName: string, scope: ConfigScope = 'user'): Promise<string> {
-    const configPath = this.resolvePath(clientName, scope);
-    const backupPath = `${configPath}.backup.${Date.now()}`;
+  async backupConfig(clientName: string, scope: ConfigScope = 'user', projectDirectory?: string): Promise<string> {
+    const configPath = await this.resolvePath(clientName, scope, projectDirectory);
     
-    if (await fs.pathExists(configPath)) {
-      await fs.copy(configPath, backupPath);
-      return backupPath;
+    if (!await fs.pathExists(configPath)) {
+      console.log(`[UnifiedConfigService] No config file to backup at: ${configPath}`);
+      return '';
     }
     
-    return '';
+    // Create timestamp in format: YYYY-MM-DD_HH-mm-ss
+    const now = new Date();
+    const timestamp = now.getFullYear() + 
+      '-' + String(now.getMonth() + 1).padStart(2, '0') +
+      '-' + String(now.getDate()).padStart(2, '0') +
+      '_' + String(now.getHours()).padStart(2, '0') +
+      '-' + String(now.getMinutes()).padStart(2, '0') +
+      '-' + String(now.getSeconds()).padStart(2, '0');
+    
+    // Create backup directory in user's home
+    const backupDir = path.join(os.homedir(), '.mcp-config-backups', clientName);
+    await fs.ensureDir(backupDir);
+    
+    // Create backup filename with timestamp
+    const configFileName = path.basename(configPath);
+    const backupFileName = `${configFileName}.backup_${timestamp}`;
+    const backupPath = path.join(backupDir, backupFileName);
+    
+    // Copy the file to backup location
+    await fs.copy(configPath, backupPath);
+    console.log(`[UnifiedConfigService] Created backup at: ${backupPath}`);
+    
+    // Clean up old backups (keep only last 10)
+    const backups = await fs.readdir(backupDir);
+    const configBackups = backups
+      .filter(f => f.startsWith(configFileName))
+      .sort()
+      .reverse();
+    
+    if (configBackups.length > 10) {
+      for (const oldBackup of configBackups.slice(10)) {
+        const oldBackupPath = path.join(backupDir, oldBackup);
+        await fs.remove(oldBackupPath);
+        console.log(`[UnifiedConfigService] Removed old backup: ${oldBackup}`);
+      }
+    }
+    
+    return backupPath;
   }
 
   normalizeServers(config: MCPConfig): Record<string, MCPServer> {

@@ -13,6 +13,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke('config:write', clientName, scope, servers),
   backupConfig: (clientName: string, scope: string) =>
     ipcRenderer.invoke('config:backup', clientName, scope),
+  showItemInFolder: (filePath: string) =>
+    ipcRenderer.invoke('shell:showItemInFolder', filePath),
+  selectDirectory: () =>
+    ipcRenderer.invoke('dialog:selectDirectory'),
     
   // Original API methods (keep for backward compatibility)
   // App methods
