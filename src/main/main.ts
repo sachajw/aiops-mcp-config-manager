@@ -42,16 +42,43 @@ const createWindow = (): void => {
     mainWindow.loadURL('http://localhost:5175')
     mainWindow.webContents.openDevTools()
   } else {
+    // In production, when packaged with electron-builder, files are in the asar archive
+    // The renderer files should be directly accessible from __dirname/../renderer/
     const rendererPath = join(__dirname, '../renderer/index.html')
     console.log('[Main] Loading production file:', rendererPath)
-    mainWindow.loadFile(rendererPath).catch(error => {
+    console.log('[Main] __dirname contents:', __dirname)
+    
+    mainWindow.loadFile(rendererPath).catch(async error => {
       console.error('[Main] Failed to load renderer file:', error)
-      // Fallback: try alternative path
-      const altPath = join(__dirname, '../../dist/renderer/index.html')
-      console.log('[Main] Trying alternative path:', altPath)
-      mainWindow?.loadFile(altPath).catch(altError => {
-        console.error('[Main] Alternative path also failed:', altError)
-      })
+      console.error('[Main] Current working directory:', process.cwd())
+      console.error('[Main] Resource path:', process.resourcesPath)
+      
+      // Try multiple fallback paths for different packaging scenarios
+      const fallbackPaths = [
+        join(process.resourcesPath, 'app/dist/renderer/index.html'),
+        join(__dirname, '../../dist/renderer/index.html'),
+        join(__dirname, '../dist/renderer/index.html'),
+        join(process.resourcesPath, 'app.asar/dist/renderer/index.html')
+      ]
+      
+      let loaded = false
+      for (const fallbackPath of fallbackPaths) {
+        if (!loaded) {
+          console.log('[Main] Trying fallback path:', fallbackPath)
+          try {
+            await mainWindow?.loadFile(fallbackPath)
+            console.log('[Main] Successfully loaded from:', fallbackPath)
+            loaded = true
+            break
+          } catch (fallbackError) {
+            console.error('[Main] Fallback path failed:', fallbackPath, fallbackError)
+          }
+        }
+      }
+      
+      if (!loaded) {
+        console.error('[Main] All fallback paths failed')
+      }
     })
   }
 
