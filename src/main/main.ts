@@ -1,5 +1,6 @@
 import { app, BrowserWindow, ipcMain } from 'electron'
-import { join } from 'path'
+import { join, dirname } from 'path'
+import { format } from 'url'
 import { isDev } from './utils/environment'
 import { setupIpcHandlers } from './ipc/handlers'
 import { registerSimplifiedHandlers } from './ipc/simplifiedHandlers'
@@ -24,7 +25,7 @@ const createWindow = (): void => {
     },
     titleBarStyle: 'default',
     show: false,
-    title: 'MCP Configuration Manager'
+    title: 'My MCP Manager'
   })
 
   // Add error handling for renderer loading
@@ -42,23 +43,21 @@ const createWindow = (): void => {
     mainWindow.loadURL('http://localhost:5175')
     mainWindow.webContents.openDevTools()
   } else {
-    // In production, when packaged with electron-builder, files are in the asar archive
-    // The renderer files should be directly accessible from __dirname/../renderer/
-    const rendererPath = join(__dirname, '../renderer/index.html')
-    console.log('[Main] Loading production file:', rendererPath)
-    console.log('[Main] __dirname contents:', __dirname)
+    // In production, files should be loaded from within the ASAR archive
+    console.log('[Main] __dirname:', __dirname)
+    console.log('[Main] process.resourcesPath:', process.resourcesPath)
+    console.log('[Main] App path:', app.getAppPath())
     
-    mainWindow.loadFile(rendererPath).catch(async error => {
-      console.error('[Main] Failed to load renderer file:', error)
-      console.error('[Main] Current working directory:', process.cwd())
-      console.error('[Main] Resource path:', process.resourcesPath)
+    // Load directly from the path relative to the ASAR root
+    // When in ASAR, just use the relative path within the archive
+    mainWindow.loadFile('dist/renderer/index.html').catch(async error => {
+      console.error('[Main] Primary path failed:', error)
       
-      // Try multiple fallback paths for different packaging scenarios
+      // Fallback paths if the primary doesn't work
       const fallbackPaths = [
-        join(process.resourcesPath, 'app/dist/renderer/index.html'),
-        join(__dirname, '../../dist/renderer/index.html'),
-        join(__dirname, '../dist/renderer/index.html'),
-        join(process.resourcesPath, 'app.asar/dist/renderer/index.html')
+        join(__dirname, '../../../renderer/index.html'), // Relative from main.js
+        join(__dirname, '../../renderer/index.html'), // Alternative relative path
+        join(process.resourcesPath, 'app.asar/dist/renderer/index.html'), // Direct ASAR path
       ]
       
       let loaded = false
@@ -71,13 +70,27 @@ const createWindow = (): void => {
             loaded = true
             break
           } catch (fallbackError) {
-            console.error('[Main] Fallback path failed:', fallbackPath, fallbackError)
+            console.error('[Main] Fallback path failed:', fallbackPath, (fallbackError as Error).message)
           }
         }
       }
       
       if (!loaded) {
-        console.error('[Main] All fallback paths failed')
+        console.error('[Main] All paths failed. App structure may be incorrect.')
+        // As a last resort, try to load a simple HTML page to show we can load files
+        const simpleHtml = `
+          <html>
+            <head><title>MCP Configuration Manager - Loading Error</title></head>
+            <body>
+              <h1>Loading Error</h1>
+              <p>Could not load the application interface.</p>
+              <p>App path: ${app.getAppPath()}</p>
+              <p>Resource path: ${process.resourcesPath}</p>
+              <p>__dirname: ${__dirname}</p>
+            </body>
+          </html>
+        `
+        mainWindow?.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(simpleHtml)}`)
       }
     })
   }
