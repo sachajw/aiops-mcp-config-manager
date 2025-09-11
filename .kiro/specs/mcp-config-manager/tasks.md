@@ -150,37 +150,102 @@
   - Create documentation and user guide integration
   - _Requirements: User adoption and ease of use_
 
-## UI Redesign Tasks (Phase 2)
+## New Feature Tasks (High Priority - September 2025)
 
-- [ ] 26. Implement responsive layout foundation
+- [ ] 26. Implement landing page with loading state
+  - Create LandingPage component that displays immediately on launch
+  - Add loading progress indicators while detecting clients/servers
+  - Implement "Get Started" button to enter main interface
+  - Smooth transition animation from landing to main app
+  - _Requirements: Improved perceived performance, better first impression_
+
+- [ ] 27. Fix UI responsiveness - sticky server name column
+  - Make server name column always visible with horizontal scrolling
+  - Implement sticky column headers
+  - Add responsive table layout for different screen sizes
+  - Ensure proper scrolling behavior on all platforms
+  - _Requirements: Core usability improvement for users with many servers_
+
+- [ ] 28. Add server enable/disable toggle
+  - Implement toggle switch UI component for each server
+  - Store enabled/disabled state in configuration (where supported)
+  - Visual indication of disabled servers (grayed out appearance)
+  - Bulk enable/disable operations for multiple servers
+  - _Requirements: Improved workflow for testing and debugging_
+
+- [ ] 29. Add Cursor client support
+  - Research Cursor configuration file location and format
+  - Implement Cursor client detector and configuration handler
+  - Add Cursor to client type enum and interfaces
+  - Full feature parity with existing VS Code implementation
+  - _Requirements: Expand support to popular AI-powered IDE_
+
+- [ ] 30. Add Windsurf and Kiro client support
+  - Research Windsurf configuration location and MCP support
+  - Research Kiro platform MCP integration capabilities
+  - Implement client detectors for both platforms
+  - Add to client discovery system
+  - _Requirements: Broader platform support_
+
+- [ ] 31. Implement featured servers section
+  - Create 2x2 grid component for landing page
+  - Curate list of popular, stable MCP servers
+  - Implement one-click installation flow
+  - Add server cards with icons, descriptions, and install buttons
+  - _Requirements: Help new users get started quickly_
+
+- [ ] 32. Create user guide with screenshots
+  - Build comprehensive help documentation system
+  - Create step-by-step tutorials with screenshots
+  - Document common use cases and workflows
+  - Add troubleshooting section
+  - _Requirements: Improve user onboarding and reduce support burden_
+
+- [ ] 33. Implement custom client support
+  - Create UI for defining custom clients
+  - Allow specification of name, config path, and format
+  - Store custom client definitions in app settings
+  - Ensure full feature parity with built-in clients
+  - _Requirements: Support for proprietary or custom AI tools_
+
+- [ ] 34. Add client management in settings
+  - Create settings page for enabling/disabling client detection
+  - Implement UI to show/hide specific clients
+  - Performance optimization by skipping disabled clients
+  - Persist client preferences across app restarts
+  - _Requirements: User control over client discovery_
+
+## UI Redesign Tasks (Phase 3 - Lower Priority)
+
+- [ ] 35. Implement responsive layout foundation
   - Create AppLayout component with header + sidebar + content structure
   - Implement Header component with branding and global actions
   - Create responsive Sidebar component with entity navigation
   - Update routing structure for page-based navigation
   - _Requirements: Mobile-responsive design, browser width compatibility_
 
-- [ ] 27. Create landing page and dashboard
+- [ ] 36. Create dashboard components
   - Build LandingPage component with welcome and guidance
   - Implement quick action cards for launching wizards
   - Add system status overview and health monitoring
   - Create getting started guide for new users
   - _Requirements: User onboarding, common operations access_
 
-- [ ] 28. Refactor entity pages
+- [ ] 37. Refactor entity pages
   - Convert existing panels to page-based structure (Clients, Servers, Scopes)
   - Create dedicated Tools page for utilities
   - Implement page-specific navigation and actions
   - Ensure all existing functionality is preserved
   - _Requirements: Entity type navigation, detail views_
 
-- [ ] 29. Implement wizard framework
+- [ ] 38. Implement wizard framework
   - Create reusable wizard framework with step navigation
   - Build ServerSetupWizard for guided server configuration
   - Implement ClientConfigWizard for initial client setup
   - Add ImportExportWizard for configuration migration
   - _Requirements: Common operations wizards, guided workflows_
 
-- [ ] 30. Mobile optimization and accessibility
+- [ ] 39. Mobile optimization and accessibility
   - Optimize touch interactions and mobile forms
   - Implement responsive breakpoints and layouts
   - Add accessibility features (keyboard nav, screen reader support)

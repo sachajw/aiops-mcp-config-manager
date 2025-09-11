@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useConfigStore } from './store/simplifiedStore';
 import { MCPServer } from '@/main/services/UnifiedConfigService';
+import { LandingPage, LoadingState } from './pages/Landing/LandingPage';
 
 export const SimplifiedApp: React.FC = () => {
   const { 
@@ -53,11 +54,42 @@ export const SimplifiedApp: React.FC = () => {
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [profileFormData, setProfileFormData] = useState({ name: '', description: '' });
   const [helpModalOpen, setHelpModalOpen] = useState(false);
+  
+  // Landing page state
+  const [showLanding, setShowLanding] = useState(true);
+  const [loadingState, setLoadingState] = useState<LoadingState>({
+    stage: 'initial',
+    progress: 0,
+    message: 'Starting My MCP Manager...'
+  });
 
   useEffect(() => {
-    detectClients().then(() => {
-      loadCatalog();
-    });
+    // Simulate loading progress
+    const loadApp = async () => {
+      setLoadingState({
+        stage: 'detecting_clients',
+        progress: 30,
+        message: 'Detecting AI clients...'
+      });
+      
+      await detectClients();
+      
+      setLoadingState({
+        stage: 'loading_configs',
+        progress: 60,
+        message: 'Loading configurations...'
+      });
+      
+      await loadCatalog();
+      
+      setLoadingState({
+        stage: 'ready',
+        progress: 100,
+        message: 'Ready!'
+      });
+    };
+    
+    loadApp();
   }, []);
 
   const handleSave = async () => {
@@ -209,6 +241,16 @@ export const SimplifiedApp: React.FC = () => {
   };
 
   const activeClientData = clients.find(c => c.name === activeClient);
+
+  // Show landing page if requested
+  if (showLanding) {
+    return (
+      <LandingPage 
+        loadingState={loadingState}
+        onGetStarted={() => setShowLanding(false)}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-base-200" data-theme="corporate">

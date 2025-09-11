@@ -18,14 +18,17 @@ export const ServerList: React.FC = () => {
       dataIndex: 'name',
       key: 'name',
       render: (name: string) => <Text strong>{name}</Text>,
-      width: '25%'
+      width: 200,
+      fixed: 'left' as const,
+      ellipsis: true
     },
     {
       title: 'Command',
       dataIndex: 'command',
       key: 'command',
       render: (command: string) => <Text code>{command}</Text>,
-      width: '25%'
+      width: 300,
+      ellipsis: true
     },
     {
       title: 'Arguments',
@@ -40,7 +43,7 @@ export const ServerList: React.FC = () => {
           </Space>
         ) : '-'
       ),
-      width: '25%'
+      width: 250
     },
     {
       title: 'Environment',
@@ -55,11 +58,13 @@ export const ServerList: React.FC = () => {
           </Space>
         ) : '-'
       ),
-      width: '15%'
+      width: 200
     },
     {
       title: 'Actions',
       key: 'actions',
+      fixed: 'right' as const,
+      width: 150,
       render: (_: any, record: any) => (
         <Space size="small">
           <Button
@@ -90,8 +95,7 @@ export const ServerList: React.FC = () => {
             />
           </Popconfirm>
         </Space>
-      ),
-      width: '10%'
+      )
     }
   ];
 
@@ -120,6 +124,8 @@ export const ServerList: React.FC = () => {
         dataSource={dataSource}
         pagination={false}
         size="small"
+        scroll={{ x: 1100 }}
+        sticky
         locale={{
           emptyText: activeClient ? 'No MCP servers configured' : 'Select a client to view servers'
         }}

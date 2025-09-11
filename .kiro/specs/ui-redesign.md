@@ -1,335 +1,268 @@
-# AI Assistant Manager - UI Redesign Specification
+# My MCP Manager - UI Feature Specification
 
 ## Overview
 
-This document outlines the UI redesign for the AI Assistant Manager (formerly MCP Configuration Manager) to create a user-friendly interface for non-technical users to enhance their AI tools. The focus is on guided workflows, plain language, and safety-first design principles.
+This document outlines the UI features and improvements for My MCP Manager, focusing on enhanced functionality, better user experience, and expanded platform support.
 
-## Current Issues
+## Current Issues to Address
 
-- Left-to-right panel layout doesn't work well on narrow screens
-- Navigation structure is not intuitive for different browser widths
-- **Too technical for non-technical users** - uses jargon like "MCP servers", "configuration files"
-- **Lacks guided workflows** - users don't know what to do or where to start
-- **No safety mechanisms** - users afraid of breaking their setup
-- **Missing plain language explanations** - assumes technical knowledge
+- Server name column not always visible with many servers
+- No loading feedback on app startup
+- Cannot temporarily disable servers for testing
+- Limited client platform support
+- No quick-start options for new users
 
-## Design Requirements
+## New Feature Requirements
 
-### 1. User-Centered Design Principles
+### 1. Server Enable/Disable Toggle
+- Add toggle switch to enable/disable servers without removing configuration
+- Store enabled state in configuration files (where supported by client spec)
+- Visual indication of disabled servers (grayed out)
+- Bulk enable/disable operations
 
-**Plain Language First**
-- Replace "MCP Servers" with "Capabilities" or "Add-ons"
-- Replace "Configuration" with "Settings" 
-- Replace "Client Discovery" with "Find Your AI Apps"
-- Use analogies: "Like adding apps to your phone"
+### 2. Additional Client Support
+- **Cursor**: Popular AI-powered IDE based on VS Code
+- **Windsurf**: AI development environment
+- **Kiro**: AI-assisted coding platform
+- Configuration paths to be determined during implementation
 
-**Guided Workflows**
-- Every action starts with a wizard
-- Show preview/explanation before changes
-- Provide templates and presets
-- Clear success/failure feedback
+### 3. Custom Client Support
+- Allow users to define custom clients with:
+  - Client name
+  - Configuration file path
+  - Configuration format (JSON/JSON5/TOML)
+- Store custom client definitions in app settings
+- Full feature parity with built-in clients
 
-**Safety and Confidence**
-- Automatic backups before changes
-- Easy undo/restore options
-- "What will this do?" explanations
-- Test mode before applying changes
+### 4. Client Management in Settings
+- Settings page to enable/disable client detection
+- Hide disabled clients from UI
+- Performance optimization by skipping disabled clients
+- Persist client preferences
 
-### 2. Responsive Layout Structure
+### 5. UI Responsiveness Fixes
+- Server name column should always be visible
+- Implement horizontal scrolling for additional columns
+- Sticky column headers
+- Responsive table layout for different screen sizes
 
-**Header (Fixed Top)**
-- Friendly app name: "AI Assistant Manager"
-- Status indicator: "Everything is working great ✅"
-- Help button: "?" with contextual assistance
-- Settings: User preferences and backup options
+### 6. Landing Page with Loading State
+- Display landing page immediately on app launch
+- Show loading progress while detecting clients/servers
+- "Get Started" button to enter main interface
+- Smooth transition from landing to main app
 
-**Left Navigation Menu (Collapsible)**
-- User-friendly navigation with plain language
-- Progress indicators for setup tasks
-- Recently used items
-- "Need Help?" always visible
+### 7. Featured Servers Section
+- 2x2 grid of popular MCP servers on landing page
+- One-click installation for featured servers
+- Server cards with:
+  - Icon and name
+  - Brief description
+  - "Install" button
+  - GitHub stars/popularity indicator
+- Curated list of beginner-friendly servers
 
-**Main Content Area**
-- Welcome dashboard with next steps
-- Wizard-driven workflows
-- Success celebrations and confirmations
-
-### 3. Navigation Structure (User-Friendly)
-
-**Primary Navigation (Left Menu)**
-```
-🏠 Home
-   └── Your AI Setup Overview
-
-🤖 Your AI Apps
-   ├── Claude Desktop ✅ (3 capabilities)
-   ├── VS Code ⚠️ (needs attention)
-   └── + Find More Apps
-
-⭐ Available Capabilities
-   ├── 📁 File & Folder Access
-   ├── 🌐 Web Search Tools
-   ├── 📅 Calendar & Email
-   ├── 💻 Developer Tools (Advanced)
-   └── 🔍 Browse All Capabilities
-
-🛠️ Maintenance
-   ├── ❤️ Check Health Status
-   ├── 💾 Backup & Restore
-   ├── 📥 Import/Export Settings
-   └── 📚 Get Help & Learn
-```
-
-### 4. Landing Page Features (User-Friendly)
-
-**Hero Welcome**
-```
-🤖 Welcome to AI Assistant Manager
-
-Make your AI tools more powerful with new capabilities.
-No technical knowledge required - we'll guide you through everything.
-
-[Current Status: ✅ Claude Desktop found and ready]
-```
-
-**Quick Actions (Large, Friendly Cards)**
-1. **🚀 "Add New Powers to Your AI"**
-   - "Give Claude access to your files, search the web, and more"
-   - Shows popular options: File Access, Web Search, Calendar
-   
-2. **🔧 "Fix Issues"** 
-   - "Something not working? We'll help you troubleshoot"
-   - One-click diagnostics and repair
-   
-3. **📋 "See What You Have"**
-   - "View all your AI apps and their current capabilities"
-   - Clear overview of current setup
-   
-4. **📚 "Learn & Get Help"**
-   - "New to this? Start with our beginner's guide"
-   - Videos, tutorials, FAQs
-
-**Your Current Setup**
-- Visual dashboard showing AI apps and their capabilities
-- Health status with friendly explanations
-- "Last checked 2 minutes ago ✅"
-
-### 4. Responsive Breakpoints
-
-**Desktop (≥1200px)**
-- Full sidebar visible
-- Three-column layout possible
-- All features accessible
-
-**Tablet (768px - 1199px)**
-- Collapsible sidebar
-- Two-column layout
-- Touch-friendly controls
-
-**Mobile (≤767px)**
-- Hidden sidebar (hamburger menu)
-- Single-column layout
-- Mobile-optimized forms
+### 8. User Guide with Screenshots
+- Comprehensive user guide accessible from help menu
+- Step-by-step tutorials with screenshots
+- Common use cases and workflows
+- Troubleshooting section
+- Embedded in app or link to web documentation
 
 ## Component Architecture
 
-### Layout Components
-
-**AppLayout.tsx**
-```typescript
-interface AppLayoutProps {
-  children: React.ReactNode;
-}
-
-- Header component
-- Collapsible sidebar
-- Main content area
-- Responsive behavior
-```
-
-**Header.tsx**
-```typescript
-interface HeaderProps {
-  onMenuToggle: () => void;
-  title: string;
-}
-
-- Application title/logo
-- Global actions
-- Menu toggle button
-- User context
-```
-
-**Sidebar.tsx**
-```typescript
-interface SidebarProps {
-  collapsed: boolean;
-  selectedKey: string;
-  onSelect: (key: string) => void;
-}
-
-- Entity navigation tree
-- Quick actions
-- Search functionality
-- Collapse behavior
-```
+### New Components
 
 **LandingPage.tsx**
 ```typescript
 interface LandingPageProps {
-  clients: MCPClient[];
-  onWizardStart: (wizard: WizardType) => void;
+  onGetStarted: () => void;
+  loadingProgress: LoadingState;
+  featuredServers: FeaturedServer[];
 }
-
-- Welcome section
-- Quick action cards
-- System status
-- Getting started guide
 ```
 
-### Page Components
+**ServerToggle.tsx**
+```typescript
+interface ServerToggleProps {
+  server: MCPServer;
+  enabled: boolean;
+  onToggle: (serverId: string, enabled: boolean) => void;
+}
+```
 
-**ClientsPage.tsx**
-- Client list and management
-- Client configuration editor
-- Status monitoring
+**CustomClientDialog.tsx**
+```typescript
+interface CustomClientDialogProps {
+  onSave: (client: CustomClientConfig) => void;
+  onCancel: () => void;
+}
+```
 
-**ServersPage.tsx**
-- Server catalog
-- Server configuration
-- Testing and validation
+**FeaturedServerCard.tsx**
+```typescript
+interface FeaturedServerCardProps {
+  server: FeaturedServer;
+  onInstall: (server: FeaturedServer) => void;
+  installed: boolean;
+}
+```
 
-**ScopesPage.tsx**
-- Scope hierarchy
-- Configuration merging
-- Conflict resolution
+### Updated Components
 
-**DashboardPage.tsx**
-- System overview
-- Recent activity
-- Health monitoring
+**ServerListTable.tsx**
+- Add sticky positioning for name column
+- Implement horizontal scrolling container
+- Add enable/disable toggle column
 
-### Wizard Components
+**ClientDetector.tsx**
+- Add support for Cursor, Windsurf, Kiro
+- Implement custom client detection
+- Add client enable/disable logic
 
-**ServerWizard.tsx**
-- Step-by-step server setup
-- Template selection
-- Configuration validation
+**SettingsPage.tsx**
+- Add client management tab
+- Custom client configuration UI
+- Performance settings
 
-**ClientConfigWizard.tsx**
-- Client discovery
-- Configuration import
-- Initial setup
+## Prioritized Implementation Plan
 
-## Implementation Plan
+### Priority 1: Critical User Experience (Do First)
 
-### Phase 1: Layout Foundation
-1. Create new layout components (AppLayout, Header, Sidebar)
-2. Implement responsive behavior
-3. Update routing structure
+**1. Landing Page with Loading State** (1-2 days)
+- Improves perceived performance
+- Better first impression
+- No dependencies
 
-### Phase 2: Landing Page
-1. Create LandingPage component with wizard cards
-2. Implement getting started guide
-3. Add system status overview
+**2. UI Responsiveness Fix** (0.5-1 day)
+- Critical usability issue
+- High user impact
+- Quick implementation
 
-### Phase 3: Entity Pages
-1. Refactor existing components into page structure
-2. Update ClientsPage, ServersPage, ScopesPage
-3. Implement navigation integration
+### Priority 2: Core Features (Do Second)
 
-### Phase 4: Wizards
-1. Create wizard framework
-2. Implement ServerWizard and ClientConfigWizard
-3. Add guided workflows
+**3. Server Enable/Disable Toggle** (2-3 days)
+- Highly requested feature
+- Improves testing workflow
+- Medium complexity
 
-### Phase 5: Mobile Optimization
-1. Test responsive behavior
-2. Optimize touch interactions
-3. Performance tuning
+**4. Additional Client Support** (3-4 days total)
+- Cursor: 4 hours (VS Code based)
+- Windsurf: 1-2 days
+- Kiro: 1-2 days
 
-## Technology Stack
+### Priority 3: User Engagement (Do Third)
 
-**Layout & Navigation**
-- Ant Design Layout, Menu, Breadcrumb
-- CSS Grid and Flexbox
-- React Router for navigation
+**5. Featured Servers Section** (2-3 days)
+- Helps new users start quickly
+- Requires server curation
+- Depends on landing page
 
-**Responsive Design**
-- Ant Design breakpoint system
-- CSS media queries
-- Mobile-first approach
+**6. User Guide** (3-4 days)
+- Reduces support burden
+- Content-heavy effort
+- Can iterate over time
 
-**State Management**
-- Zustand for global state
-- React Context for layout state
-- Local state for wizards
+### Priority 4: Advanced Features (Do Last)
 
-## File Structure
+**7. Custom Client Support** (3-4 days)
+- Power user feature
+- High complexity
+- Full feature parity needed
+
+**8. Client Management Settings** (1-2 days)
+- Optimization feature
+- Lower priority
+- Nice-to-have
+
+## Technical Considerations
+
+### Server Enable/Disable Implementation
+```typescript
+interface MCPServer {
+  name: string;
+  command: string;
+  enabled?: boolean; // New field
+  // ... other fields
+}
+```
+
+### Client Configuration Paths
+
+**Cursor** (to be verified):
+- macOS: `~/Library/Application Support/Cursor/User/globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json`
+- Windows: `%APPDATA%/Cursor/User/globalStorage/saoudrizwan.claude-dev/settings/`
+- Linux: `~/.config/Cursor/User/globalStorage/saoudrizwan.claude-dev/settings/`
+
+**Windsurf** (to be researched):
+- Configuration location TBD
+- MCP support verification needed
+
+**Kiro** (to be researched):
+- Configuration location TBD
+- API/format documentation needed
+
+### Featured Servers List
+Recommended servers for featured section:
+1. **@modelcontextprotocol/server-filesystem** - File system access
+2. **@modelcontextprotocol/server-fetch** - Web fetching
+3. **@modelcontextprotocol/server-brave-search** - Web search
+4. **@modelcontextprotocol/server-memory** - Conversation memory
+
+### Landing Page Loading States
+```typescript
+enum LoadingState {
+  INITIAL = 'initial',
+  DETECTING_CLIENTS = 'detecting_clients',
+  LOADING_CONFIGS = 'loading_configs',
+  READY = 'ready',
+  ERROR = 'error'
+}
+```
+
+## File Structure Updates
 
 ```
 src/renderer/
-├── layouts/
-│   ├── AppLayout.tsx
-│   ├── Header.tsx
-│   └── Sidebar.tsx
 ├── pages/
-│   ├── Dashboard/
-│   │   ├── DashboardPage.tsx
-│   │   └── LandingPage.tsx
-│   ├── Clients/
-│   │   └── ClientsPage.tsx
-│   ├── Servers/
-│   │   └── ServersPage.tsx
-│   └── Scopes/
-│       └── ScopesPage.tsx
-├── wizards/
-│   ├── WizardFramework.tsx
-│   ├── ServerWizard.tsx
-│   └── ClientConfigWizard.tsx
-└── components/
-    └── [existing components]
+│   ├── Landing/
+│   │   ├── LandingPage.tsx
+│   │   ├── FeaturedServers.tsx
+│   │   └── LoadingProgress.tsx
+│   └── Settings/
+│       ├── ClientManagement.tsx
+│       └── CustomClients.tsx
+├── components/
+│   ├── ServerToggle/
+│   │   └── ServerToggle.tsx
+│   └── Tables/
+│       └── StickyColumnTable.tsx
+└── services/
+    ├── CustomClientService.ts
+    └── FeaturedServersService.ts
 ```
 
-## Design Mockups
+## Implementation Timeline
 
-### Desktop Layout
-```
-┌─────────────────────────────────────────────────┐
-│ Header: MCP Config Manager    [🔄] [⚙️] [❓]    │
-├─────────────────────────────────────────────────┤
-│ 📱 Dashboard  │ Landing Page                    │
-│ 🔧 Clients    │                                 │
-│ ⚙️ Servers    │ Welcome to MCP Config Manager   │
-│ 🎯 Scopes     │                                 │
-│ 🛠️ Tools      │ Quick Actions:                  │
-│              │ [🚀 Add Server] [🔧 Configure]  │
-│              │                                 │
-│              │ Getting Started Guide           │
-│              │ 1. Discover clients             │
-│              │ 2. Add your first server        │
-│              │ 3. Test configuration           │
-└─────────────────────────────────────────────────┘
-```
+### Week 1: Foundation
+- Day 1-2: Landing page with loading state
+- Day 2-3: UI responsiveness fix
+- Day 3-5: Server enable/disable toggle
 
-### Mobile Layout
-```
-┌─────────────────────┐
-│ ☰ MCP Config   [⚙️] │
-├─────────────────────┤
-│ Welcome!            │
-│                     │
-│ Quick Actions:      │
-│ [🚀 Add Server]     │
-│ [🔧 Configure]      │
-│                     │
-│ System Status:      │
-│ ✅ 2 Clients Found  │
-│ ⚠️ 1 Config Issue   │
-│                     │
-│ Getting Started     │
-│ [📖 View Guide]     │
-└─────────────────────┘
-```
+### Week 2: Expansion
+- Day 6-7: Cursor client support
+- Day 7-8: Windsurf and Kiro support
+- Day 9-10: Featured servers section
 
-This specification provides a comprehensive plan for redesigning the UI to be more responsive, intuitive, and user-friendly while maintaining all existing functionality.
+### Week 3: Polish
+- Day 11-13: User guide with screenshots
+- Day 14-15: Custom client support
+- Day 15: Client management settings
+
+## Success Metrics
+
+- App loads with visual feedback in < 100ms
+- Server list remains usable with 50+ servers
+- New users can install first server in < 2 minutes
+- Support for 3+ additional AI platforms
+- 90% of users can complete setup without documentation
