@@ -251,7 +251,7 @@ class UnifiedConfigService {
         // Update the appropriate MCP server field based on client
         if (clientName === 'vscode') {
           // VS Code might use 'mcp.servers' or just 'servers'
-          if ('mcp.servers' in existingConfig) {
+          if ((existingConfig as any)['mcp.servers']) {
             (finalConfig as any)['mcp.servers'] = config.servers || config.mcpServers;
           } else {
             finalConfig.servers = config.servers || config.mcpServers;

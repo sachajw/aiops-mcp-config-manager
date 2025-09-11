@@ -52,6 +52,7 @@ export const SimplifiedApp: React.FC = () => {
   const [copyModalOpen, setCopyModalOpen] = useState<{ serverName: string; server: MCPServer } | null>(null);
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [profileFormData, setProfileFormData] = useState({ name: '', description: '' });
+  const [helpModalOpen, setHelpModalOpen] = useState(false);
 
   useEffect(() => {
     detectClients().then(() => {
@@ -214,7 +215,7 @@ export const SimplifiedApp: React.FC = () => {
       {/* Fixed Header with improved UX layout */}
       <div className="fixed top-0 left-0 right-0 z-50 bg-base-100 shadow-lg">
         {/* Main header bar - single row layout */}
-        <div className="px-4 py-4 border-b border-base-200">
+        <div className="px-4 py-4 shadow-md">
           <div className="flex items-center justify-between gap-6">
             {/* Left: App Identity */}
             <div className="flex items-center gap-3">
@@ -247,7 +248,7 @@ export const SimplifiedApp: React.FC = () => {
                 >
                   <option value="" disabled>Select a client</option>
                   <option value="catalog" className="font-semibold">
-                    📚 Server Catalog ({Object.keys(catalog).length} servers)
+                    Server Catalog ({Object.keys(catalog).length} servers)
                   </option>
                   <optgroup label="Installed Clients">
                     {clients.map(client => (
@@ -286,20 +287,6 @@ export const SimplifiedApp: React.FC = () => {
                 </div>
               )}
 
-              {/* Status Indicator - Compact */}
-              {activeClient && (
-                <div className="flex items-center gap-2 text-sm">
-                  <div className="flex items-center gap-1">
-                    <div className={`w-2 h-2 rounded-full ${activeClient === 'catalog' ? 'bg-blue-500' : 'bg-green-500'}`}></div>
-                    <span className="text-base-content/70">
-                      {activeClient === 'catalog' ? 'Catalog' : activeClientData?.displayName}
-                    </span>
-                    {isDirty && activeClient !== 'catalog' && (
-                      <span className="text-xs text-warning font-medium">● Unsaved</span>
-                    )}
-                  </div>
-                </div>
-              )}
             </div>
 
             {/* Right: Action Buttons */}
@@ -313,6 +300,16 @@ export const SimplifiedApp: React.FC = () => {
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+              </button>
+              
+              <button 
+                className="btn btn-sm btn-ghost"
+                onClick={() => setHelpModalOpen(true)}
+                title="Help & Documentation"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </button>
               
@@ -350,10 +347,17 @@ export const SimplifiedApp: React.FC = () => {
                                 }}
                                 className={activeProfile === profile.name ? 'active' : ''}
                               >
-                                {profile.name}
-                                {profile.description && (
-                                  <span className="text-xs opacity-60 block">{profile.description}</span>
-                                )}
+                                <div className="flex-1 min-w-0">
+                                  <div className="font-medium">{profile.name}</div>
+                                  {profile.description && (
+                                    <div 
+                                      className="text-xs opacity-60 truncate" 
+                                      title={profile.description}
+                                    >
+                                      {profile.description}
+                                    </div>
+                                  )}
+                                </div>
                               </button>
                             </li>
                           ))}
@@ -436,7 +440,7 @@ export const SimplifiedApp: React.FC = () => {
 
         {/* Project Directory Selector - shows when project scope is selected */}
         {activeScope === 'project' && activeClient && activeClient !== 'catalog' && (
-          <div className="px-4 py-4 bg-base-50 border-b border-base-200">
+          <div className="px-4 py-4 bg-base-50 shadow-md">
             <div className="flex items-center justify-between">
               <div className="flex-1">
                 <label className="text-sm font-medium text-base-content/70">Project Directory:</label>
@@ -472,7 +476,7 @@ export const SimplifiedApp: React.FC = () => {
             <div className="flex justify-between items-center mb-4">
               <h2 className="card-title">MCP Servers</h2>
               <button 
-                className={`btn btn-primary ${!activeClient ? 'btn-disabled' : ''}`}
+                className={`btn btn-sm btn-primary ${!activeClient ? 'btn-disabled' : ''}`}
                 onClick={() => setIsAddModalOpen(true)}
                 disabled={!activeClient}
               >
@@ -483,63 +487,74 @@ export const SimplifiedApp: React.FC = () => {
               </button>
             </div>
 
-            {/* Table with fixed Actions column */}
+            {/* Modern Table with Progressive Disclosure */}
             <div className="overflow-x-auto">
-              <table className="table table-zebra w-full">
-                <thead>
-                  <tr>
-                    <th className="min-w-[150px]">Server Name</th>
-                    <th className="min-w-[100px]">Command</th>
-                    <th className="hidden lg:table-cell">Arguments</th>
-                    <th className="hidden xl:table-cell">Environment</th>
-                    <th className="sticky right-0 bg-base-100 shadow-[-2px_0_4px_rgba(0,0,0,0.1)] min-w-[100px]">Actions</th>
+              <table className="w-full">
+                <thead className="sticky top-0 bg-base-100 z-10">
+                  <tr className="border-b border-gray-600">
+                    <th className="text-left py-4 px-6 font-semibold text-base-content/80 text-sm uppercase tracking-wide">Server</th>
+                    <th className="text-left py-4 px-4 font-semibold text-base-content/80 text-sm uppercase tracking-wide">Type & Command</th>
+                    <th className="text-left py-4 px-4 font-semibold text-base-content/80 text-sm uppercase tracking-wide hidden lg:table-cell">Configuration</th>
+                    <th className="sticky right-0 bg-base-100 text-right py-4 px-6 font-semibold text-base-content/80 text-sm uppercase tracking-wide min-w-[120px]">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {Object.entries(servers).length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="text-center text-base-content/60">
+                      <td colSpan={4} className="text-center py-12 text-base-content/60">
                         {activeClient ? 'No MCP servers configured' : 'Select a client to view servers'}
                       </td>
                     </tr>
                   ) : (
                     Object.entries(servers).map(([name, server]) => (
-                      <tr key={name}>
-                        <td className="font-mono font-semibold break-all">
-                          {name}
-                          {server.type === 'remote' && (
-                            <span className="badge badge-xs badge-info ml-2">Remote</span>
-                          )}
-                        </td>
-                        <td>
-                          {server.type === 'remote' ? (
-                            <code className="badge badge-outline badge-info" title={server.url}>
-                              {server.url ? new URL(server.url).hostname : 'Remote'}
-                            </code>
-                          ) : (
-                            <code className="badge badge-outline">{server.command}</code>
-                          )}
-                        </td>
-                        <td className="hidden lg:table-cell">
-                          {server.type === 'remote' ? (
-                            // Show headers for remote servers
-                            server.headers && Object.keys(server.headers).length > 0 ? (
-                              <div className="flex flex-wrap gap-1">
-                                {Object.keys(server.headers).slice(0, 2).map(key => (
-                                  <span key={key} className="badge badge-sm badge-info">{key}</span>
-                                ))}
-                                {Object.keys(server.headers).length > 2 && (
-                                  <span className="badge badge-sm badge-info">+{Object.keys(server.headers).length - 2}</span>
-                                )}
+                      <tr key={name} className="border-b border-gray-700 even:bg-base-300/5 hover:bg-base-300/20 transition-colors group">
+                        {/* Server Column - Progressive Disclosure */}
+                        <td className="py-5 px-6">
+                          <div className="min-w-0 flex-1">
+                            <div className="font-semibold text-base-content text-lg leading-tight">
+                              {name}
+                            </div>
+                            {/* Progressive Disclosure: Show description on hover */}
+                            {server.description && (
+                              <div className="text-xs text-base-content/60 mt-1 group-hover:text-base-content/80 transition-colors">
+                                {server.description}
                               </div>
-                            ) : (
-                              <span className="text-base-content/40 text-sm">No headers</span>
-                            )
-                          ) : editingArgs && editingArgs.name === name ? (
+                            )}
+                          </div>
+                        </td>
+
+                        {/* Type & Command Column - Clean Typography */}
+                        <td className="py-5 px-4">
+                          {server.type === 'remote' ? (
+                            <div className="space-y-2">
+                              <div className="text-sm font-medium text-base-content/70">
+                                {server.url ? new URL(server.url).hostname : 'Remote'}
+                              </div>
+                              <div className="text-xs text-base-content/60 font-mono">
+                                {server.url}
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="space-y-2">
+                              <div className="text-sm font-medium text-base-content/70 font-mono">
+                                {server.command}
+                              </div>
+                              {server.args && server.args.length > 0 && (
+                                <div className="text-xs text-base-content/80">
+                                  {server.args.slice(0, 2).join(' ')}
+                                  {server.args.length > 2 && ' ...'}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </td>
+                        {/* Configuration Column - Minimal Info */}
+                        <td className="py-4 px-4 hidden lg:table-cell">
+                          {editingArgs && editingArgs.name === name ? (
                             <div className="flex items-center gap-2">
                               <input
                                 type="text"
-                                className="input input-sm input-bordered flex-1"
+                                className="input input-sm input-bordered flex-1 text-xs"
                                 value={editingArgs.value}
                                 onChange={(e) => setEditingArgs({ ...editingArgs, value: e.target.value })}
                                 onKeyDown={(e) => {
@@ -549,49 +564,13 @@ export const SimplifiedApp: React.FC = () => {
                                 placeholder="arg1, arg2, arg3"
                                 autoFocus
                               />
-                              <div className="flex gap-1">
-                                <button
-                                  className="btn btn-xs btn-success"
-                                  onClick={handleInlineArgsSave}
-                                  title="Save"
-                                >
-                                  ✓
-                                </button>
-                                <button
-                                  className="btn btn-xs btn-ghost"
-                                  onClick={handleInlineArgsCancel}
-                                  title="Cancel"
-                                >
-                                  ✕
-                                </button>
-                              </div>
+                              <button className="btn btn-xs btn-success" onClick={handleInlineArgsSave}>✓</button>
+                              <button className="btn btn-xs btn-ghost" onClick={handleInlineArgsCancel}>✕</button>
                             </div>
-                          ) : (
-                            <div 
-                              className="flex flex-wrap gap-1 cursor-pointer hover:opacity-70 transition-opacity"
-                              onClick={() => handleInlineArgsEdit(name, server.args)}
-                              title="Click to edit arguments"
-                            >
-                              {server.args && server.args.length > 0 ? (
-                                <>
-                                  {server.args.slice(0, 3).map((arg, i) => (
-                                    <span key={i} className="badge badge-sm">{arg}</span>
-                                  ))}
-                                  {server.args.length > 3 && (
-                                    <span className="badge badge-sm">+{server.args.length - 3}</span>
-                                  )}
-                                </>
-                              ) : (
-                                <span className="text-base-content/40 text-sm">Click to add arguments</span>
-                              )}
-                            </div>
-                          )}
-                        </td>
-                        <td className="hidden xl:table-cell">
-                          {editingEnv && editingEnv.name === name ? (
-                            <div className="flex items-center gap-2">
+                          ) : editingEnv && editingEnv.name === name ? (
+                            <div className="flex items-start gap-2">
                               <textarea
-                                className="textarea textarea-sm textarea-bordered flex-1 h-20 text-xs font-mono"
+                                className="textarea textarea-sm textarea-bordered flex-1 h-16 text-xs font-mono"
                                 value={editingEnv.value}
                                 onChange={(e) => setEditingEnv({ ...editingEnv, value: e.target.value })}
                                 onKeyDown={(e) => {
@@ -605,65 +584,87 @@ export const SimplifiedApp: React.FC = () => {
                                 autoFocus
                               />
                               <div className="flex flex-col gap-1">
-                                <button
-                                  className="btn btn-xs btn-success"
-                                  onClick={handleInlineEnvSave}
-                                  title="Save (Ctrl+Enter)"
-                                >
-                                  ✓
-                                </button>
-                                <button
-                                  className="btn btn-xs btn-ghost"
-                                  onClick={handleInlineEnvCancel}
-                                  title="Cancel (Esc)"
-                                >
-                                  ✕
-                                </button>
+                                <button className="btn btn-xs btn-success" onClick={handleInlineEnvSave}>✓</button>
+                                <button className="btn btn-xs btn-ghost" onClick={handleInlineEnvCancel}>✕</button>
                               </div>
                             </div>
                           ) : (
-                            server.env && Object.keys(server.env).length > 0 ? (
-                              <div 
-                                className="flex flex-wrap gap-1 cursor-pointer hover:opacity-70 transition-opacity"
-                                onClick={() => handleInlineEnvEdit(name, server.env)}
-                                title="Click to edit environment variables"
-                              >
-                                {Object.keys(server.env).slice(0, 2).map(key => (
-                                  <span key={key} className="badge badge-sm badge-info">{key}</span>
-                                ))}
-                                {Object.keys(server.env).length > 2 && (
-                                  <span className="badge badge-sm badge-info">+{Object.keys(server.env).length - 2}</span>
-                                )}
-                              </div>
-                            ) : (
-                              <span 
-                                className="cursor-pointer hover:opacity-70 transition-opacity text-base-content/40"
-                                onClick={() => handleInlineEnvEdit(name, server.env)}
-                                title="Click to add environment variables"
-                              >
-                                -
-                              </span>
-                            )
+                            <div className="space-y-2">
+                              {/* Args - Only show basic info */}
+                              {server.type !== 'remote' && server.args && server.args.length > 0 && (
+                                <div 
+                                  className="text-xs cursor-pointer hover:text-primary transition-colors"
+                                  onClick={() => handleInlineArgsEdit(name, server.args)}
+                                  title="Click to edit arguments"
+                                >
+                                  <span className="font-semibold">Args:</span> {server.args.slice(0, 1).join(' ')}
+                                  {server.args.length > 1 && ` +${server.args.length - 1}`}
+                                </div>
+                              )}
+                              
+                              {/* Environment Variables - Show count only */}
+                              {server.env && Object.keys(server.env).length > 0 ? (
+                                <div 
+                                  className="flex items-center gap-1 cursor-pointer hover:text-primary transition-colors"
+                                  onClick={() => handleInlineEnvEdit(name, server.env)}
+                                  title="Click to edit environment variables"
+                                >
+                                  <span className="text-xs font-semibold">Env:</span>
+                                  <div className="flex gap-1">
+                                    {Object.keys(server.env).slice(0, 2).map(key => (
+                                      <span key={key} className="text-xs bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded">{key}</span>
+                                    ))}
+                                    {Object.keys(server.env).length > 2 && (
+                                      <span className="text-xs text-base-content/60">+{Object.keys(server.env).length - 2}</span>
+                                    )}
+                                  </div>
+                                </div>
+                              ) : server.type === 'remote' && server.headers && Object.keys(server.headers).length > 0 ? (
+                                <div 
+                                  className="flex items-center gap-1 cursor-pointer hover:text-primary transition-colors"
+                                  onClick={() => handleInlineEnvEdit(name, server.env)}
+                                  title="Click to edit headers"
+                                >
+                                  <span className="text-xs font-semibold">Headers:</span>
+                                  <span className="text-xs bg-info text-info-content px-1.5 py-0.5 rounded">
+                                    {Object.keys(server.headers).length}
+                                  </span>
+                                </div>
+                              ) : null}
+                              
+                              {/* Show "No configuration" only if truly empty */}
+                              {(!server.args || server.args.length === 0) && 
+                               (!server.env || Object.keys(server.env).length === 0) && 
+                               (server.type !== 'remote' || !server.headers || Object.keys(server.headers).length === 0) && (
+                                <div className="text-xs text-base-content/40">No configuration</div>
+                              )}
+                            </div>
                           )}
                         </td>
-                        <td className="sticky right-0 bg-base-100 shadow-[-2px_0_4px_rgba(0,0,0,0.1)]">
-                          <div className="flex gap-1">
+
+                        {/* Actions Column - Clean Icons */}
+                        <td className="sticky right-0 bg-base-100 group-even:bg-base-300/5 group-hover:bg-base-300/20 py-5 px-6">
+                          <div className="flex items-center justify-end gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
                             <button 
-                              className="btn btn-sm btn-ghost"
+                              className="btn btn-xs btn-ghost hover:btn-primary"
                               onClick={() => setCopyModalOpen({ serverName: name, server })}
                               title="Copy to another client"
                             >
-                              📋
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                              </svg>
                             </button>
                             <button 
-                              className="btn btn-sm btn-ghost"
+                              className="btn btn-xs btn-ghost hover:btn-warning"
                               onClick={() => handleEdit(name, server)}
                               title="Edit"
                             >
-                              ✏️
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                              </svg>
                             </button>
                             <button 
-                              className="btn btn-sm btn-ghost text-error"
+                              className="btn btn-xs btn-ghost hover:btn-error"
                               onClick={() => {
                                 if (confirm(`Delete server "${name}"?`)) {
                                   deleteServer(name);
@@ -671,7 +672,9 @@ export const SimplifiedApp: React.FC = () => {
                               }}
                               title="Delete"
                             >
-                              🗑️
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
                             </button>
                           </div>
                         </td>
@@ -927,7 +930,7 @@ export const SimplifiedApp: React.FC = () => {
 
       {/* Status Bar - Fixed at bottom */}
       {activeClient && (activeClient === 'catalog' || activeClientData) && (
-        <div className="fixed bottom-0 left-0 right-0 bg-base-300 border-t border-base-content/20 px-4 py-2 flex items-center justify-between text-sm z-40">
+        <div className="fixed bottom-0 left-0 right-0 bg-base-100 px-4 py-2 flex items-center justify-between text-sm z-40" style={{boxShadow: '0 -4px 6px -1px rgba(0, 0, 0, 0.1), 0 -2px 4px -1px rgba(0, 0, 0, 0.06)'}}>
           <div className="flex items-center gap-2">
             {activeClient === 'catalog' ? (
               <>
@@ -1031,6 +1034,80 @@ export const SimplifiedApp: React.FC = () => {
                 disabled={!profileFormData.name}
               >
                 Save Profile
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Help Modal */}
+      {helpModalOpen && (
+        <div className="modal modal-open">
+          <div className="modal-box w-11/12 max-w-4xl max-h-[80vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="font-bold text-lg">MCP Configuration Manager - User Guide</h3>
+              <button 
+                className="btn btn-sm btn-ghost"
+                onClick={() => setHelpModalOpen(false)}
+                title="Close"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className="prose prose-sm max-w-none">
+              <h4 className="text-md font-semibold mt-4 mb-2">Getting Started</h4>
+              <p className="text-sm mb-3">
+                MCP Configuration Manager helps you manage Model Context Protocol (MCP) server configurations 
+                across multiple AI client applications like Claude Desktop, Claude Code, VS Code, and others.
+              </p>
+
+              <h4 className="text-md font-semibold mt-4 mb-2">Basic Usage</h4>
+              <ol className="text-sm space-y-1 ml-4">
+                <li><strong>Select a Client:</strong> Use the Client dropdown to choose which AI client to configure</li>
+                <li><strong>Choose Scope:</strong> Select User (personal), Project (directory-specific), or System (global)</li>
+                <li><strong>Add Servers:</strong> Click "Add Server" to configure new MCP servers</li>
+                <li><strong>Edit Servers:</strong> Click edit icons or configuration badges for quick edits</li>
+                <li><strong>Save Changes:</strong> Click Save to apply your configuration</li>
+              </ol>
+
+              <h4 className="text-md font-semibold mt-4 mb-2">Server Types</h4>
+              <ul className="text-sm space-y-1 ml-4">
+                <li><strong>Local:</strong> Runs commands on your machine (e.g., Python scripts, Node.js)</li>
+                <li><strong>Remote:</strong> Connects to HTTP/SSE servers via URL</li>
+              </ul>
+
+              <h4 className="text-md font-semibold mt-4 mb-2">Quick Tips</h4>
+              <ul className="text-sm space-y-1 ml-4">
+                <li>Click argument or environment badges to edit them inline</li>
+                <li>Use the Server Catalog to manage templates across clients</li>
+                <li>Save Profiles to create reusable server configurations</li>
+                <li>Environment variables should be in JSON format: {"{"}"KEY": "value"{"}"}</li>
+                <li>Arguments are comma-separated: arg1, arg2, arg3</li>
+              </ul>
+
+              <h4 className="text-md font-semibold mt-4 mb-2">Common Server Examples</h4>
+              <ul className="text-sm space-y-1 ml-4">
+                <li><strong>File System:</strong> <code className="text-xs">npx @modelcontextprotocol/server-filesystem</code></li>
+                <li><strong>GitHub:</strong> <code className="text-xs">npx @modelcontextprotocol/server-github</code></li>
+                <li><strong>Database:</strong> <code className="text-xs">python -m your-database-server</code></li>
+              </ul>
+
+              <h4 className="text-md font-semibold mt-4 mb-2">Safety & Backups</h4>
+              <p className="text-sm mb-3">
+                The app automatically creates backups before saving changes. 
+                Backups are stored in <code className="text-xs">~/.mcp-config-backups/</code> and you can restore from them manually if needed.
+              </p>
+            </div>
+
+            <div className="modal-action">
+              <button 
+                className="btn"
+                onClick={() => setHelpModalOpen(false)}
+              >
+                Close
               </button>
             </div>
           </div>
