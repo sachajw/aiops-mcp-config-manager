@@ -1,6 +1,6 @@
 {
   "name": "mcp-config-manager",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A unified desktop application for managing Model Context Protocol server configurations",
   "main": "dist/main/main/main.js",
   "homepage": "./",
@@ -83,7 +83,8 @@
     },
     "files": [
       "dist/**/*",
-      "public/**/*"
+      "public/**/*",
+      "assets/**/*"
     ],
     "mac": {
       "category": "public.app-category.developer-tools",
