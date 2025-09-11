@@ -79,6 +79,20 @@ class UnifiedConfigService {
       user: path.join(os.homedir(), 'Library', 'Application Support', 'Cursor', 'User', 'settings.json'),
       project: path.join(process.cwd(), '.cursor', 'settings.json'),
       format: 'json' as const
+    },
+    'kiro': {
+      displayName: 'Kiro',
+      user: path.join(os.homedir(), '.kiro', 'settings', 'mcp.json'),
+      project: path.join(process.cwd(), '.kiro', 'settings', 'mcp.json'),
+      mac: path.join(os.homedir(), 'Library', 'Application Support', 'Kiro', 'mcp.json'),
+      format: 'json' as const
+    },
+    'windsurf': {
+      displayName: 'Windsurf',
+      user: path.join(os.homedir(), 'Library', 'Application Support', 'Windsurf', 'User', 'settings.json'),
+      project: path.join(process.cwd(), '.windsurf', 'settings.json'),
+      mac: path.join(os.homedir(), '.windsurf', 'settings.json'),
+      format: 'json' as const
     }
   };
 
@@ -108,6 +122,42 @@ class UnifiedConfigService {
         return path.join(projectDirectory, '.cursor', 'settings.json');
       }
       return scope === 'project' ? cursorClient.project : cursorClient.user;
+    }
+
+    if (clientName === 'kiro') {
+      const kiroClient = client as typeof this.configLocations['kiro'];
+      
+      // Handle project scope
+      if (scope === 'project' && projectDirectory) {
+        // Always return the project path for project scope, even if it doesn't exist yet
+        const projectPath = path.join(projectDirectory, '.kiro', 'settings', 'mcp.json');
+        return projectPath;
+      }
+      
+      // Handle user scope
+      const userPath = kiroClient.user;
+      if (await fs.pathExists(userPath)) {
+        return userPath;
+      }
+      return kiroClient.mac || userPath;
+    }
+
+    if (clientName === 'windsurf') {
+      const windsurfClient = client as typeof this.configLocations['windsurf'];
+      
+      // Handle project scope
+      if (scope === 'project' && projectDirectory) {
+        // Always return the project path for project scope, even if it doesn't exist yet
+        const projectPath = path.join(projectDirectory, '.windsurf', 'settings.json');
+        return projectPath;
+      }
+      
+      // Handle user scope
+      const userPath = windsurfClient.user;
+      if (await fs.pathExists(userPath)) {
+        return userPath;
+      }
+      return windsurfClient.mac || userPath;
     }
 
     // Handle Claude Code with multiple possible paths
@@ -222,6 +272,16 @@ class UnifiedConfigService {
 
   async readConfig(clientName: string, scope: ConfigScope = 'user', projectDirectory?: string): Promise<MCPConfig & { configPath?: string }> {
     try {
+      // If project scope is requested but no directory provided, return empty config
+      if (scope === 'project' && !projectDirectory) {
+        console.log(`[UnifiedConfigService] Project scope requested but no projectDirectory provided`);
+        return { 
+          configPath: undefined,
+          servers: {},
+          mcpServers: {}
+        };
+      }
+
       const configPath = await this.resolvePath(clientName, scope, projectDirectory);
       console.log(`[UnifiedConfigService] Reading config for ${clientName} from: ${configPath}`);
       

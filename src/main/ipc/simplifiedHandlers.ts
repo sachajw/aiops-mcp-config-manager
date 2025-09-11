@@ -13,6 +13,7 @@ export function registerSimplifiedHandlers() {
 
   ipcMain.handle('config:read', async (_, clientName: string, scope: string = 'user', projectDirectory?: string) => {
     try {
+      console.log(`[IPC] config:read called with clientName: ${clientName}, scope: ${scope}, projectDirectory: ${projectDirectory}`);
       const config = await configService.readConfig(clientName, scope as any, projectDirectory);
       const { configPath, ...configData } = config;
       const servers = configService.normalizeServers(configData);

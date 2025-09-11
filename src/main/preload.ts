@@ -7,12 +7,12 @@ import { ConfigScope } from '../shared/types/enums'
 contextBridge.exposeInMainWorld('electronAPI', {
   // Simplified API methods
   detectClients: () => ipcRenderer.invoke('config:detect'),
-  readConfig: (clientName: string, scope: string) => 
-    ipcRenderer.invoke('config:read', clientName, scope),
-  writeConfig: (clientName: string, scope: string, servers: any) =>
-    ipcRenderer.invoke('config:write', clientName, scope, servers),
-  backupConfig: (clientName: string, scope: string) =>
-    ipcRenderer.invoke('config:backup', clientName, scope),
+  readConfig: (clientName: string, scope: string, projectDirectory?: string) => 
+    ipcRenderer.invoke('config:read', clientName, scope, projectDirectory),
+  writeConfig: (clientName: string, scope: string, servers: any, projectDirectory?: string) =>
+    ipcRenderer.invoke('config:write', clientName, scope, servers, projectDirectory),
+  backupConfig: (clientName: string, scope: string, projectDirectory?: string) =>
+    ipcRenderer.invoke('config:backup', clientName, scope, projectDirectory),
   showItemInFolder: (filePath: string) =>
     ipcRenderer.invoke('shell:showItemInFolder', filePath),
   selectDirectory: () =>

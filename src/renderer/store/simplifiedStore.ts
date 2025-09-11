@@ -144,6 +144,8 @@ export const useConfigStore = create<AppState>((set, get) => ({
     const { activeScope, projectDirectory } = get();
     set({ isLoading: true, error: null, activeClient: clientName });
     
+    console.log('[Store] selectClient called:', { clientName, activeScope, projectDirectory });
+    
     try {
       const result = await electronAPI.readConfig(
         clientName, 

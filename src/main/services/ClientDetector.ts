@@ -140,6 +140,38 @@ export class ClientDetector {
       ],
       processNames: ['gemini'],
       versionCommands: ['gemini --version']
+    },
+    {
+      type: ClientType.KIRO,
+      name: 'Kiro',
+      executablePaths: [
+        '/Applications/Kiro.app/Contents/MacOS/Kiro',
+        '/usr/local/bin/kiro',
+        '/opt/homebrew/bin/kiro'
+      ],
+      configPaths: [
+        '~/.kiro/settings/mcp.json',
+        '~/Library/Application Support/Kiro/mcp.json'
+      ],
+      processNames: ['Kiro', 'kiro'],
+      bundleIdentifiers: ['com.kiro.app'],
+      versionCommands: ['kiro --version']
+    },
+    {
+      type: ClientType.WINDSURF,
+      name: 'Windsurf',
+      executablePaths: [
+        '/Applications/Windsurf.app/Contents/MacOS/Windsurf',
+        '/usr/local/bin/windsurf',
+        '/opt/homebrew/bin/windsurf'
+      ],
+      configPaths: [
+        '~/Library/Application Support/Windsurf/User/settings.json',
+        '~/.windsurf/settings.json'
+      ],
+      processNames: ['Windsurf', 'windsurf'],
+      bundleIdentifiers: ['com.codeium.windsurf'],
+      versionCommands: ['windsurf --version']
     }
   ];
 

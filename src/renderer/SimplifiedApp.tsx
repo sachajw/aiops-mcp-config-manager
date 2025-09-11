@@ -270,18 +270,17 @@ export const SimplifiedApp: React.FC = () => {
     <div className="min-h-screen bg-base-200" data-theme="corporate">
       {/* Fixed Header with improved UX layout */}
       <div className="fixed top-0 left-0 right-0 z-50 bg-base-100 shadow-lg">
-        {/* Main header bar - single row layout */}
-        <div className="px-4 py-4 shadow-md">
-          <div className="flex items-center justify-between gap-6">
-            {/* Left: App Identity */}
-            <div className="flex items-center gap-3">
-              <div>
-                <h1 className="text-xl font-bold">MCP Configuration Manager</h1>
-              </div>
-            </div>
-
-            {/* Center: Main Controls */}
-            <div className="flex items-center gap-6 flex-1 max-w-4xl">
+        {/* Main header bar - responsive two-row layout */}
+        <div className="px-4 py-3 shadow-md">
+          {/* Title Row */}
+          <div className="mb-2">
+            <h1 className="text-xl font-bold">MCP Configuration Manager</h1>
+          </div>
+          
+          {/* Controls Row */}
+          <div className="flex items-center justify-between gap-4">
+            {/* Main Controls */}
+            <div className="flex items-center gap-4 flex-1">
               {/* Client Selector */}
               <div className="flex items-center gap-3">
                 <label className="text-sm font-medium text-base-content/70 whitespace-nowrap">Client:</label>
@@ -289,15 +288,24 @@ export const SimplifiedApp: React.FC = () => {
                   className="select select-bordered select-sm w-64"
                   value={activeClient || ''}
                   onChange={(e) => {
-                    if (e.target.value === 'catalog') {
+                    const value = e.target.value;
+                    if (value === 'catalog') {
                       useConfigStore.setState({ 
                         activeClient: 'catalog',
                         servers: catalog,
                         currentConfigPath: null,
                         isDirty: false
                       });
+                    } else if (value.startsWith('custom-')) {
+                      // Handle custom client selection
+                      const customClientName = value.replace('custom-', '');
+                      const customClient = appSettings.customClients?.find(c => c.name === customClientName);
+                      if (customClient) {
+                        // TODO: Load custom client config from specified path
+                        selectClient(value);
+                      }
                     } else {
-                      selectClient(e.target.value);
+                      selectClient(value);
                     }
                   }}
                   disabled={isLoading}
@@ -316,6 +324,15 @@ export const SimplifiedApp: React.FC = () => {
                       </option>
                     ))}
                   </optgroup>
+                  {appSettings.customClients && appSettings.customClients.length > 0 && (
+                    <optgroup label="Custom Clients">
+                      {appSettings.customClients.map(client => (
+                        <option key={`custom-${client.name}`} value={`custom-${client.name}`}>
+                          {client.name}
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
                 </select>
               </div>
 
@@ -540,7 +557,7 @@ export const SimplifiedApp: React.FC = () => {
       </div>
 
       {/* Main Content - with proper padding for fixed header and status bar */}
-      <div className="container mx-auto px-4" style={{ paddingTop: activeScope === 'project' && activeClient && activeClient !== 'catalog' ? '160px' : '100px', paddingBottom: activeClient ? '60px' : '20px' }}>
+      <div className="container mx-auto px-4" style={{ paddingTop: activeScope === 'project' && activeClient && activeClient !== 'catalog' ? '180px' : '120px', paddingBottom: activeClient ? '60px' : '20px' }}>
         {/* Servers Table Card */}
         <div className="card bg-base-100 shadow-xl">
           <div className="card-body">

@@ -39,8 +39,11 @@ const createWindow = (): void => {
 
   // Load the renderer
   if (isDev()) {
-    console.log('[Main] Loading development URL: http://localhost:5175')
-    mainWindow.loadURL('http://localhost:5175')
+    // Try to use the VITE_PORT environment variable, or scan for running dev server
+    const vitePort = process.env.VITE_PORT || '5175'
+    const devUrl = `http://localhost:${vitePort}`
+    console.log(`[Main] Loading development URL: ${devUrl}`)
+    mainWindow.loadURL(devUrl)
     mainWindow.webContents.openDevTools()
   } else {
     // In production, files should be loaded from within the ASAR archive
