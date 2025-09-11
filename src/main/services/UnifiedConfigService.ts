@@ -73,6 +73,12 @@ class UnifiedConfigService {
       project: path.join(process.cwd(), '.vscode', 'mcp.json'),
       user: path.join(os.homedir(), '.vscode', 'mcp.json'),
       format: 'json' as const
+    },
+    'cursor': {
+      displayName: 'Cursor',
+      user: path.join(os.homedir(), 'Library', 'Application Support', 'Cursor', 'User', 'settings.json'),
+      project: path.join(process.cwd(), '.cursor', 'settings.json'),
+      format: 'json' as const
     }
   };
 
@@ -94,6 +100,14 @@ class UnifiedConfigService {
         return path.join(projectDirectory, '.vscode', 'mcp.json');
       }
       return scope === 'project' ? vscodeClient.project : vscodeClient.user;
+    }
+
+    if (clientName === 'cursor') {
+      const cursorClient = client as typeof this.configLocations['cursor'];
+      if (scope === 'project' && projectDirectory) {
+        return path.join(projectDirectory, '.cursor', 'settings.json');
+      }
+      return scope === 'project' ? cursorClient.project : cursorClient.user;
     }
 
     // Handle Claude Code with multiple possible paths
@@ -249,8 +263,8 @@ class UnifiedConfigService {
         finalConfig = { ...existingConfig };
         
         // Update the appropriate MCP server field based on client
-        if (clientName === 'vscode') {
-          // VS Code might use 'mcp.servers' or just 'servers'
+        if (clientName === 'vscode' || clientName === 'cursor') {
+          // VS Code and Cursor might use 'mcp.servers' or just 'servers'
           if ((existingConfig as any)['mcp.servers']) {
             (finalConfig as any)['mcp.servers'] = config.servers || config.mcpServers;
           } else {
@@ -342,7 +356,7 @@ class UnifiedConfigService {
     
     if (clientName === 'codex-cli') {
       return { mcp_servers: servers };
-    } else if (clientName === 'vscode') {
+    } else if (clientName === 'vscode' || clientName === 'cursor') {
       return { servers };
     } else {
       return { mcpServers: servers };

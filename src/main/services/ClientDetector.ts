@@ -96,6 +96,22 @@ export class ClientDetector {
       versionCommands: ['code --version']
     },
     {
+      type: ClientType.CURSOR,
+      name: 'Cursor',
+      executablePaths: [
+        '/Applications/Cursor.app/Contents/MacOS/Cursor',
+        '/usr/local/bin/cursor',
+        '/opt/homebrew/bin/cursor'
+      ],
+      configPaths: [
+        '~/Library/Application Support/Cursor/User/settings.json',
+        '~/.cursor/settings.json'
+      ],
+      processNames: ['Cursor', 'cursor'],
+      bundleIdentifiers: ['com.todesktop.230313mzl4w4u92'],
+      versionCommands: ['cursor --version']
+    },
+    {
       type: ClientType.GEMINI_DESKTOP,
       name: 'Gemini Desktop',
       executablePaths: [
