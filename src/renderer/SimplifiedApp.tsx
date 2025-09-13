@@ -1213,10 +1213,59 @@ export const SimplifiedApp: React.FC = () => {
                 <li><strong>Google Drive:</strong> <code className="text-xs">npx @modelcontextprotocol/server-gdrive</code></li>
               </ul>
 
+              <h4 className="text-md font-semibold mt-4 mb-2">Documentation & Support</h4>
+              <p className="text-sm mb-2">
+                <strong>📖 Complete User Guides:</strong>
+                <br />
+                <a
+                  href="#"
+                  className="text-blue-400 hover:text-blue-300 underline text-xs"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    window.electronAPI?.openExternal('https://github.com/itsocialist/mcp-config-manager/blob/main/docs/USER_GUIDE.md');
+                  }}
+                >
+                  📖 Complete User Guide - Step-by-step instructions
+                </a>
+                <br />
+                <a
+                  href="#"
+                  className="text-blue-400 hover:text-blue-300 underline text-xs"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    window.electronAPI?.openExternal('https://github.com/itsocialist/mcp-config-manager/blob/main/docs/QUICK_START.md');
+                  }}
+                >
+                  🚀 Quick Start Guide - Get running in 5 minutes
+                </a>
+                <br />
+                <a
+                  href="#"
+                  className="text-blue-400 hover:text-blue-300 underline text-xs"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    window.electronAPI?.openExternal('https://github.com/itsocialist/mcp-config-manager/blob/main/docs/FEATURES_OVERVIEW.md');
+                  }}
+                >
+                  ✨ Features Overview - Visual tour of all features
+                </a>
+                <br />
+                <a
+                  href="#"
+                  className="text-blue-400 hover:text-blue-300 underline text-xs"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    window.electronAPI?.openExternal('https://github.com/itsocialist/mcp-config-manager/issues');
+                  }}
+                >
+                  🐛 Report Issues & Get Support
+                </a>
+              </p>
+
               <h4 className="text-md font-semibold mt-4 mb-2">Learn More About MCP</h4>
               <p className="text-sm mb-2">
-                <a 
-                  href="#" 
+                <a
+                  href="#"
                   className="text-blue-400 hover:text-blue-300 underline text-xs"
                   onClick={(e) => {
                     e.preventDefault();
@@ -1226,8 +1275,8 @@ export const SimplifiedApp: React.FC = () => {
                   Model Context Protocol Documentation
                 </a>
                 <br />
-                <a 
-                  href="#" 
+                <a
+                  href="#"
                   className="text-blue-400 hover:text-blue-300 underline text-xs"
                   onClick={(e) => {
                     e.preventDefault();

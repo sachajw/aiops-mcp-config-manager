@@ -9,6 +9,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey)](https://github.com/itsocialist/mcp-config-manager)
 [![Release](https://img.shields.io/github/v/release/itsocialist/mcp-config-manager)](https://github.com/itsocialist/mcp-config-manager/releases)
+[![Version](https://img.shields.io/badge/version-0.1.4-blue)](https://github.com/itsocialist/mcp-config-manager/releases/tag/v0.1.4)
 
 [Download](#installation) • [Quick Start](#quick-start) • [Documentation](#documentation) • [Community](#community)
 
@@ -68,7 +69,17 @@
 ### Installation
 
 **Download for your platform:**
-- [macOS (.dmg)](https://github.com/itsocialist/mcp-config-manager/releases/latest)
+- [macOS Apple Silicon (M1/M2/M3)](https://github.com/itsocialist/mcp-config-manager/releases/download/v0.1.4/MCP.Configuration.Manager-0.1.4-arm64.dmg)
+- [macOS Intel](https://github.com/itsocialist/mcp-config-manager/releases/download/v0.1.4/MCP.Configuration.Manager-0.1.4.dmg)
+- [View all releases](https://github.com/itsocialist/mcp-config-manager/releases)
+
+**Important: First Launch on macOS**  
+The app is not yet notarized. On first launch:
+1. Right-click the app in Applications
+2. Select "Open" from the menu
+3. Click "Open" in the dialog
+
+See [Installation Guide](docs/INSTALLATION.md) for detailed instructions.
 
 ### First Run
 
@@ -77,20 +88,37 @@
 3. **Add MCP servers** using the visual interface
 4. **Save and sync** - Your AI tools are immediately updated
 
+👉 **Need help?** Check out our [5-minute Quick Start Guide](docs/QUICK_START.md) or the [complete User Guide](docs/USER_GUIDE.md)
+
 ## Supported AI Clients
 
 | Client | Status | Configuration Scope |
 |--------|--------|---------------------|
 | **Claude Desktop** | Full Support | User, Global |
 | **Claude Code** | Full Support | User, Project |
-| **VS Code (Cursor)** | Full Support | User, Workspace |
+| **VS Code** | Full Support | User, Workspace |
+| **Cursor** | Full Support | User, Workspace |
 | **Codex** | Full Support | User, Project |
+| **Kiro** | Full Support *(v0.1.4)* | User, Project |
+| **Windsurf** | Full Support *(v0.1.4)* | User, Project |
+| **Gemini Desktop** | Full Support | User |
+| **Gemini CLI** | Full Support | User, Project |
+| **Custom Clients** | Full Support | User-defined |
 | **Gemini Desktop** | Full Support | User, Global |
 | **Gemini CLI** | Full Support | User, Global |
 
 ## Documentation
 
-- [User Guide](USER_GUIDE.md) - Complete usage instructions
+📚 **Complete guides to get you started:**
+
+- **[📖 User Guide](docs/USER_GUIDE.md)** - Complete step-by-step documentation
+- **[🚀 Quick Start Guide](docs/QUICK_START.md)** - Get running in 5 minutes
+- **[✨ Features Overview](docs/FEATURES_OVERVIEW.md)** - Visual tour of all features
+- **[💾 Installation Guide](docs/INSTALLATION.md)** - Platform-specific setup instructions
+
+🔗 **Online Documentation:**
+- [GitHub Documentation](https://github.com/itsocialist/mcp-config-manager/tree/main/docs)
+- [User Guide Online](https://github.com/itsocialist/mcp-config-manager/blob/main/docs/USER_GUIDE.md)
 
 ## What Users Are Saying
 
