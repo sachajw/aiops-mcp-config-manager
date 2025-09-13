@@ -117,8 +117,8 @@ See [Installation Guide](docs/INSTALLATION.md) for detailed instructions.
 - **[💾 Installation Guide](docs/INSTALLATION.md)** - Platform-specific setup instructions
 
 🔗 **Online Documentation:**
-- [GitHub Documentation](https://github.com/itsocialist/mcp-config-manager/tree/feature/user-friendly-ui-redesign/docs)
-- [User Guide Online](https://github.com/itsocialist/mcp-config-manager/blob/feature/user-friendly-ui-redesign/docs/USER_GUIDE.md)
+- [GitHub Documentation](https://github.com/itsocialist/mcp-config-manager/tree/main/docs)
+- [User Guide Online](https://github.com/itsocialist/mcp-config-manager/blob/main/docs/USER_GUIDE.md)
 
 ## What Users Are Saying
 

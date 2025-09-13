@@ -1222,7 +1222,7 @@ export const SimplifiedApp: React.FC = () => {
                   className="text-blue-400 hover:text-blue-300 underline text-xs"
                   onClick={(e) => {
                     e.preventDefault();
-                    window.electronAPI?.openExternal('https://github.com/itsocialist/mcp-config-manager/blob/feature/user-friendly-ui-redesign/docs/USER_GUIDE.md');
+                    window.electronAPI?.openExternal('https://github.com/itsocialist/mcp-config-manager/blob/main/docs/USER_GUIDE.md');
                   }}
                 >
                   📖 Complete User Guide - Step-by-step instructions
@@ -1233,7 +1233,7 @@ export const SimplifiedApp: React.FC = () => {
                   className="text-blue-400 hover:text-blue-300 underline text-xs"
                   onClick={(e) => {
                     e.preventDefault();
-                    window.electronAPI?.openExternal('https://github.com/itsocialist/mcp-config-manager/blob/feature/user-friendly-ui-redesign/docs/QUICK_START.md');
+                    window.electronAPI?.openExternal('https://github.com/itsocialist/mcp-config-manager/blob/main/docs/QUICK_START.md');
                   }}
                 >
                   🚀 Quick Start Guide - Get running in 5 minutes
@@ -1244,7 +1244,7 @@ export const SimplifiedApp: React.FC = () => {
                   className="text-blue-400 hover:text-blue-300 underline text-xs"
                   onClick={(e) => {
                     e.preventDefault();
-                    window.electronAPI?.openExternal('https://github.com/itsocialist/mcp-config-manager/blob/feature/user-friendly-ui-redesign/docs/FEATURES_OVERVIEW.md');
+                    window.electronAPI?.openExternal('https://github.com/itsocialist/mcp-config-manager/blob/main/docs/FEATURES_OVERVIEW.md');
                   }}
                 >
                   ✨ Features Overview - Visual tour of all features
