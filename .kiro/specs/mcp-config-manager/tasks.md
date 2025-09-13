@@ -90,37 +90,37 @@
   - Add scope migration functionality between different levels
   - _Requirements: 4.1, 4.3, 4.4, 4.5_
 
-- [ ] 16. Develop bulk operations and synchronization
+- [x] 16. Develop bulk operations and synchronization
   - Implement multi-client server addition/removal
   - Create configuration synchronization between clients
   - Add diff view for comparing configurations before sync
   - _Requirements: 2.1, 2.4, 2.5_
 
-- [ ] 17. Build error handling and user feedback system
+- [x] 17. Build error handling and user feedback system
   - Implement centralized error handling with user-friendly messages
   - Create error recovery suggestions and auto-fix capabilities
   - Add validation error highlighting in forms and editors
   - _Requirements: 7.2, 7.3, 7.4, 7.5_
 
-- [ ] 18. Implement application state management
+- [x] 18. Implement application state management
   - Set up Zustand store for application state
   - Create state management for configurations, clients, and UI state
   - Add persistence for user preferences and window state
   - _Requirements: 1.2, 6.2, 6.3_
 
-- [ ] 19. Add settings and preferences system
+- [x] 19. Add settings and preferences system
   - Create settings dialog for application preferences
   - Implement backup settings and retention policies
   - Add theme selection and UI customization options
   - _Requirements: 8.4, user experience enhancement_
 
-- [ ] 20. Implement Electron main process integration
+- [x] 20. Implement Electron main process integration
   - Set up IPC communication between main and renderer processes
   - Implement file system operations in main process for security
   - Add native menu bar and application lifecycle management
   - _Requirements: Security and platform integration_
 
-- [ ] 21. Create comprehensive test suite
+- [x] 21. Create comprehensive test suite
   - Write unit tests for all core business logic components
   - Implement integration tests for file operations and configuration management
   - Add UI component tests using React Testing Library
@@ -149,3 +149,105 @@
   - Add contextual help and tooltips throughout the UI
   - Create documentation and user guide integration
   - _Requirements: User adoption and ease of use_
+
+## New Feature Tasks (High Priority - September 2025)
+
+- [ ] 26. Implement landing page with loading state
+  - Create LandingPage component that displays immediately on launch
+  - Add loading progress indicators while detecting clients/servers
+  - Implement "Get Started" button to enter main interface
+  - Smooth transition animation from landing to main app
+  - _Requirements: Improved perceived performance, better first impression_
+
+- [ ] 27. Fix UI responsiveness - sticky server name column
+  - Make server name column always visible with horizontal scrolling
+  - Implement sticky column headers
+  - Add responsive table layout for different screen sizes
+  - Ensure proper scrolling behavior on all platforms
+  - _Requirements: Core usability improvement for users with many servers_
+
+- [ ] 28. Add server enable/disable toggle
+  - Implement toggle switch UI component for each server
+  - Store enabled/disabled state in configuration (where supported)
+  - Visual indication of disabled servers (grayed out appearance)
+  - Bulk enable/disable operations for multiple servers
+  - _Requirements: Improved workflow for testing and debugging_
+
+- [ ] 29. Add Cursor client support
+  - Research Cursor configuration file location and format
+  - Implement Cursor client detector and configuration handler
+  - Add Cursor to client type enum and interfaces
+  - Full feature parity with existing VS Code implementation
+  - _Requirements: Expand support to popular AI-powered IDE_
+
+- [ ] 30. Add Windsurf and Kiro client support
+  - Research Windsurf configuration location and MCP support
+  - Research Kiro platform MCP integration capabilities
+  - Implement client detectors for both platforms
+  - Add to client discovery system
+  - _Requirements: Broader platform support_
+
+- [ ] 31. Implement featured servers section
+  - Create 2x2 grid component for landing page
+  - Curate list of popular, stable MCP servers
+  - Implement one-click installation flow
+  - Add server cards with icons, descriptions, and install buttons
+  - _Requirements: Help new users get started quickly_
+
+- [ ] 32. Create user guide with screenshots
+  - Build comprehensive help documentation system
+  - Create step-by-step tutorials with screenshots
+  - Document common use cases and workflows
+  - Add troubleshooting section
+  - _Requirements: Improve user onboarding and reduce support burden_
+
+- [ ] 33. Implement custom client support
+  - Create UI for defining custom clients
+  - Allow specification of name, config path, and format
+  - Store custom client definitions in app settings
+  - Ensure full feature parity with built-in clients
+  - _Requirements: Support for proprietary or custom AI tools_
+
+- [ ] 34. Add client management in settings
+  - Create settings page for enabling/disabling client detection
+  - Implement UI to show/hide specific clients
+  - Performance optimization by skipping disabled clients
+  - Persist client preferences across app restarts
+  - _Requirements: User control over client discovery_
+
+## UI Redesign Tasks (Phase 3 - Lower Priority)
+
+- [ ] 35. Implement responsive layout foundation
+  - Create AppLayout component with header + sidebar + content structure
+  - Implement Header component with branding and global actions
+  - Create responsive Sidebar component with entity navigation
+  - Update routing structure for page-based navigation
+  - _Requirements: Mobile-responsive design, browser width compatibility_
+
+- [ ] 36. Create dashboard components
+  - Build LandingPage component with welcome and guidance
+  - Implement quick action cards for launching wizards
+  - Add system status overview and health monitoring
+  - Create getting started guide for new users
+  - _Requirements: User onboarding, common operations access_
+
+- [ ] 37. Refactor entity pages
+  - Convert existing panels to page-based structure (Clients, Servers, Scopes)
+  - Create dedicated Tools page for utilities
+  - Implement page-specific navigation and actions
+  - Ensure all existing functionality is preserved
+  - _Requirements: Entity type navigation, detail views_
+
+- [ ] 38. Implement wizard framework
+  - Create reusable wizard framework with step navigation
+  - Build ServerSetupWizard for guided server configuration
+  - Implement ClientConfigWizard for initial client setup
+  - Add ImportExportWizard for configuration migration
+  - _Requirements: Common operations wizards, guided workflows_
+
+- [ ] 39. Mobile optimization and accessibility
+  - Optimize touch interactions and mobile forms
+  - Implement responsive breakpoints and layouts
+  - Add accessibility features (keyboard nav, screen reader support)
+  - Performance optimization and testing
+  - _Requirements: Cross-device compatibility, accessibility standards_

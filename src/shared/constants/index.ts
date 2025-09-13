@@ -18,8 +18,12 @@ export const CLIENT_CONFIG_FILES: Record<ClientType, string> = {
   [ClientType.CLAUDE_CODE]: 'claude_code_config.json',
   [ClientType.CODEX]: 'config.json',
   [ClientType.VS_CODE]: 'settings.json',
+  [ClientType.CURSOR]: 'settings.json',
+  [ClientType.KIRO]: 'config.json',
+  [ClientType.WINDSURF]: 'settings.json',
   [ClientType.GEMINI_DESKTOP]: 'config.json',
-  [ClientType.GEMINI_CLI]: 'config.json'
+  [ClientType.GEMINI_CLI]: 'config.json',
+  [ClientType.CUSTOM]: 'config.json'
 } as const;
 
 /**
@@ -41,13 +45,26 @@ export const MACOS_CONFIG_PATHS: Record<ClientType, string[]> = {
     '~/Library/Application Support/Code/User/settings.json',
     '~/.vscode/settings.json'
   ],
+  [ClientType.CURSOR]: [
+    '~/Library/Application Support/Cursor/User/settings.json',
+    '~/.cursor/settings.json'
+  ],
+  [ClientType.KIRO]: [
+    '~/.kiro/settings/mcp.json',
+    '~/Library/Application Support/Kiro/mcp.json'
+  ],
+  [ClientType.WINDSURF]: [
+    '~/Library/Application Support/Windsurf/User/settings.json',
+    '~/.windsurf/settings.json'
+  ],
   [ClientType.GEMINI_DESKTOP]: [
     '~/Library/Application Support/Gemini/config.json'
   ],
   [ClientType.GEMINI_CLI]: [
     '~/.gemini/config.json',
     '~/.config/gemini/config.json'
-  ]
+  ],
+  [ClientType.CUSTOM]: []
 } as const;
 
 /**
@@ -156,6 +173,10 @@ export const CLIENT_DISPLAY_NAMES: Record<ClientType, string> = {
   [ClientType.CLAUDE_CODE]: 'Claude Code',
   [ClientType.CODEX]: 'Codex',
   [ClientType.VS_CODE]: 'VS Code',
+  [ClientType.CURSOR]: 'Cursor',
+  [ClientType.KIRO]: 'Kiro',
+  [ClientType.WINDSURF]: 'Windsurf',
   [ClientType.GEMINI_DESKTOP]: 'Gemini Desktop',
-  [ClientType.GEMINI_CLI]: 'Gemini CLI'
+  [ClientType.GEMINI_CLI]: 'Gemini CLI',
+  [ClientType.CUSTOM]: 'Custom Client'
 } as const;

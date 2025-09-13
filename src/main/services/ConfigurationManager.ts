@@ -470,7 +470,7 @@ export class ConfigurationManager {
   /**
    * Check if environment variable is potentially sensitive
    */
-  private static isSensitiveEnvVar(key: string, value: string): boolean {
+  private static isSensitiveEnvVar(key: string, value: string | null | undefined): boolean {
     const sensitivePatterns = [
       /api[_-]?key/i,
       /secret/i,
@@ -481,7 +481,7 @@ export class ConfigurationManager {
     ];
 
     return sensitivePatterns.some(pattern => pattern.test(key)) || 
-           (value && value.length > 20 && /^[A-Za-z0-9+/=_-]+$/.test(value));
+           Boolean(value && value.length > 20 && /^[A-Za-z0-9+/=_-]+$/.test(value));
   }
 
   /**

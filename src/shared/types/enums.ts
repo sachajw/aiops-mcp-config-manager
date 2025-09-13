@@ -6,8 +6,12 @@ export enum ClientType {
   CLAUDE_CODE = 'claude-code',
   CODEX = 'codex',
   VS_CODE = 'vscode',
+  CURSOR = 'cursor',
+  KIRO = 'kiro',
+  WINDSURF = 'windsurf',
   GEMINI_DESKTOP = 'gemini-desktop',
-  GEMINI_CLI = 'gemini-cli'
+  GEMINI_CLI = 'gemini-cli',
+  CUSTOM = 'custom'
 }
 
 /**

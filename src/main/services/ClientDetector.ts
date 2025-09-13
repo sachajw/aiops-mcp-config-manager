@@ -96,6 +96,22 @@ export class ClientDetector {
       versionCommands: ['code --version']
     },
     {
+      type: ClientType.CURSOR,
+      name: 'Cursor',
+      executablePaths: [
+        '/Applications/Cursor.app/Contents/MacOS/Cursor',
+        '/usr/local/bin/cursor',
+        '/opt/homebrew/bin/cursor'
+      ],
+      configPaths: [
+        '~/Library/Application Support/Cursor/User/settings.json',
+        '~/.cursor/settings.json'
+      ],
+      processNames: ['Cursor', 'cursor'],
+      bundleIdentifiers: ['com.todesktop.230313mzl4w4u92'],
+      versionCommands: ['cursor --version']
+    },
+    {
       type: ClientType.GEMINI_DESKTOP,
       name: 'Gemini Desktop',
       executablePaths: [
@@ -124,6 +140,38 @@ export class ClientDetector {
       ],
       processNames: ['gemini'],
       versionCommands: ['gemini --version']
+    },
+    {
+      type: ClientType.KIRO,
+      name: 'Kiro',
+      executablePaths: [
+        '/Applications/Kiro.app/Contents/MacOS/Kiro',
+        '/usr/local/bin/kiro',
+        '/opt/homebrew/bin/kiro'
+      ],
+      configPaths: [
+        '~/.kiro/settings/mcp.json',
+        '~/Library/Application Support/Kiro/mcp.json'
+      ],
+      processNames: ['Kiro', 'kiro'],
+      bundleIdentifiers: ['com.kiro.app'],
+      versionCommands: ['kiro --version']
+    },
+    {
+      type: ClientType.WINDSURF,
+      name: 'Windsurf',
+      executablePaths: [
+        '/Applications/Windsurf.app/Contents/MacOS/Windsurf',
+        '/usr/local/bin/windsurf',
+        '/opt/homebrew/bin/windsurf'
+      ],
+      configPaths: [
+        '~/Library/Application Support/Windsurf/User/settings.json',
+        '~/.windsurf/settings.json'
+      ],
+      processNames: ['Windsurf', 'windsurf'],
+      bundleIdentifiers: ['com.codeium.windsurf'],
+      versionCommands: ['windsurf --version']
     }
   ];
 

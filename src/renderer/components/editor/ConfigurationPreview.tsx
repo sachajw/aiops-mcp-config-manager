@@ -201,8 +201,7 @@ const ConfigurationPreview: React.FC<ConfigurationPreviewProps> = ({
                       }
                       type="warning"
                       showIcon
-                      size="small"
-                      style={{ marginTop: '12px' }}
+                      style={{ marginTop: '12px', fontSize: '12px' }}
                     />
                   )}
                 </Card>

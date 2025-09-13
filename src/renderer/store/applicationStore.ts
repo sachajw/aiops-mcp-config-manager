@@ -118,46 +118,48 @@ export const useApplicationStore = create<ApplicationState>()(
       setSidebarCollapsed: (sidebarCollapsed) => set({ sidebarCollapsed }),
       setActiveTab: (activeTab) => set({ activeTab }),
       
-      // Composite actions (these would integrate with Electron IPC in a real app)
+      // Composite actions (integrated with Electron IPC)
       refreshClients: async () => {
         const { setClients, setClientsLoading } = get();
         setClientsLoading(true);
         
         try {
-          // TODO: Call Electron IPC to discover clients
-          // const clients = await window.electronAPI.discoverClients();
-          // setClients(clients);
-          
-          // Mock data for now
-          const mockClients: MCPClient[] = [
-            {
-              id: 'claude-desktop',
-              name: 'Claude Desktop',
-              type: 'claude-desktop' as any,
-              configPaths: {
-                primary: '/Users/user/Library/Application Support/Claude/claude_desktop_config.json',
-                alternatives: [],
-                scopePaths: {} as any
+          // Use Electron API if available, otherwise fall back to mock data
+          if (window.electronAPI) {
+            const clients = await window.electronAPI.discoverClients();
+            setClients(clients);
+          } else {
+            // Fallback to mock data for development (browser mode)
+            const mockClients: MCPClient[] = [
+              {
+                id: 'claude-desktop',
+                name: 'Claude Desktop',
+                type: 'claude-desktop' as any,
+                configPaths: {
+                  primary: '/Users/user/Library/Application Support/Claude/claude_desktop_config.json',
+                  alternatives: [],
+                  scopePaths: {} as any
+                },
+                status: ClientStatus.ACTIVE,
+                isActive: true,
+                version: '1.0.0'
               },
-              status: ClientStatus.ACTIVE,
-              isActive: true,
-              version: '1.0.0'
-            },
-            {
-              id: 'claude-code',
-              name: 'Claude Code',
-              type: 'claude-code' as any,
-              configPaths: {
-                primary: '/Users/user/.claude/claude_code_config.json',
-                alternatives: [],
-                scopePaths: {} as any
-              },
-              status: ClientStatus.INACTIVE,
-              isActive: false,
-              version: '0.9.1'
-            }
-          ];
-          setClients(mockClients);
+              {
+                id: 'claude-code',
+                name: 'Claude Code',
+                type: 'claude-code' as any,
+                configPaths: {
+                  primary: '/Users/user/.claude/claude_code_config.json',
+                  alternatives: [],
+                  scopePaths: {} as any
+                },
+                status: ClientStatus.INACTIVE,
+                isActive: false,
+                version: '0.9.1'
+              }
+            ];
+            setClients(mockClients);
+          }
           
         } catch (error) {
           console.error('Failed to refresh clients:', error);
@@ -171,17 +173,18 @@ export const useApplicationStore = create<ApplicationState>()(
         setConfigurationsLoading(true);
         
         try {
-          // TODO: Call Electron IPC to load configuration
-          // const config = await window.electronAPI.loadConfiguration(clientId);
-          // setConfiguration(clientId, config);
-          
-          // Mock data for now
-          const mockConfig: ResolvedConfiguration = {
+          // Use Electron API if available, otherwise fall back to mock data
+          if (window.electronAPI) {
+            const config = await window.electronAPI.resolveConfiguration(clientId);
+            setConfiguration(clientId, config);
+          } else {
+            // Fallback to mock data for development (browser mode)
+            const mockConfig: ResolvedConfiguration = {
             servers: {
               'filesystem': {
                 name: 'filesystem',
-                command: '/usr/local/bin/mcp-server-filesystem',
-                args: ['--path', '/Users/user/Documents'],
+                command: 'npx',
+                args: ['-y', '@modelcontextprotocol/server-filesystem', '/Users/user/Documents'],
                 env: {},
                 enabled: true,
                 scope: ConfigScope.USER
@@ -189,25 +192,104 @@ export const useApplicationStore = create<ApplicationState>()(
               'git': {
                 name: 'git',
                 command: 'npx',
-                args: ['@modelcontextprotocol/server-git'],
+                args: ['-y', '@modelcontextprotocol/server-git', '--repository', '/Users/user/workspace'],
+                env: {},
+                enabled: true,
+                scope: ConfigScope.USER
+              },
+              'brave-search': {
+                name: 'brave-search',
+                command: 'npx',
+                args: ['-y', '@modelcontextprotocol/server-brave-search'],
+                env: {
+                  BRAVE_API_KEY: 'your-api-key-here'
+                },
+                enabled: true,
+                scope: ConfigScope.USER
+              },
+              'sqlite': {
+                name: 'sqlite',
+                command: 'npx',
+                args: ['-y', '@modelcontextprotocol/server-sqlite', '--db-path', '/Users/user/databases/example.db'],
+                env: {},
+                enabled: true,
+                scope: ConfigScope.USER
+              },
+              'postgres': {
+                name: 'postgres',
+                command: 'npx',
+                args: ['-y', '@modelcontextprotocol/server-postgres'],
+                env: {
+                  POSTGRES_CONNECTION_STRING: 'postgresql://user:password@localhost:5432/database'
+                },
+                enabled: false,
+                scope: ConfigScope.USER
+              },
+              'memory': {
+                name: 'memory',
+                command: 'npx',
+                args: ['-y', '@modelcontextprotocol/server-memory'],
                 env: {},
                 enabled: true,
                 scope: ConfigScope.PROJECT
+              },
+              'fetch': {
+                name: 'fetch',
+                command: 'npx',
+                args: ['-y', '@modelcontextprotocol/server-fetch'],
+                env: {},
+                enabled: true,
+                scope: ConfigScope.USER
+              },
+              'puppeteer': {
+                name: 'puppeteer',
+                command: 'npx',
+                args: ['-y', '@modelcontextprotocol/server-puppeteer'],
+                env: {},
+                enabled: false,
+                scope: ConfigScope.USER
+              },
+              'github': {
+                name: 'github',
+                command: 'npx',
+                args: ['-y', '@modelcontextprotocol/server-github'],
+                env: {
+                  GITHUB_PERSONAL_ACCESS_TOKEN: 'your-github-token'
+                },
+                enabled: true,
+                scope: ConfigScope.USER
+              },
+              'gmail': {
+                name: 'gmail',
+                command: 'npx',
+                args: ['-y', '@modelcontextprotocol/server-gmail'],
+                env: {},
+                enabled: false,
+                scope: ConfigScope.USER
               }
             },
             conflicts: [],
             sources: {
               'filesystem': ConfigScope.USER,
-              'git': ConfigScope.PROJECT
+              'git': ConfigScope.USER,
+              'brave-search': ConfigScope.USER,
+              'sqlite': ConfigScope.USER,
+              'postgres': ConfigScope.USER,
+              'memory': ConfigScope.PROJECT,
+              'fetch': ConfigScope.USER,
+              'puppeteer': ConfigScope.USER,
+              'github': ConfigScope.USER,
+              'gmail': ConfigScope.USER
             },
             metadata: {
               resolvedAt: new Date(),
               mergedScopes: [ConfigScope.USER, ConfigScope.PROJECT],
-              serverCount: 2,
+              serverCount: 10,
               conflictCount: 0
             }
           };
           setConfiguration(clientId, mockConfig);
+          }
           
         } catch (error) {
           console.error('Failed to refresh configuration:', error);
@@ -233,24 +315,27 @@ export const useApplicationStore = create<ApplicationState>()(
             throw new Error('Server not found');
           }
           
-          // TODO: Call Electron IPC to test server
-          // const result = await window.electronAPI.testServer(server);
-          // setServerTestResult(serverName, result);
-          
-          // Mock test result
-          setTimeout(() => {
-            const mockResult: ServerTestResult = {
-              status: 'success' as any,
-              success: true,
-              message: 'Server configuration is valid',
-              duration: 1250,
-              details: {
-                command: { passed: true, message: 'Command is executable', duration: 250 }
-              }
-            };
-            setServerTestResult(serverName, mockResult);
+          // Use Electron API if available, otherwise fall back to mock data
+          if (window.electronAPI) {
+            const result = await window.electronAPI.testServer(server);
+            setServerTestResult(serverName, result);
             setTestingServer(serverName, false);
-          }, 2000);
+          } else {
+            // Fallback to mock data for development (browser mode)
+            setTimeout(() => {
+              const mockResult: ServerTestResult = {
+                status: 'success' as any,
+                success: true,
+                message: 'Server configuration is valid',
+                duration: 1250,
+                details: {
+                  command: { passed: true, message: 'Command is executable', duration: 250 }
+                }
+              };
+              setServerTestResult(serverName, mockResult);
+              setTestingServer(serverName, false);
+            }, 2000);
+          }
           
         } catch (error) {
           console.error('Failed to test server:', error);

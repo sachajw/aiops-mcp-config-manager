@@ -248,7 +248,7 @@ export class FileMonitor extends EventEmitter {
           try {
             const parseResult = await ConfigurationParser.parseConfiguration(path);
             if (parseResult.success) {
-              currentConfig = parseResult.configuration;
+              currentConfig = parseResult.data;
             }
           } catch (error) {
             console.warn(`Failed to parse changed configuration: ${path}`, error);
