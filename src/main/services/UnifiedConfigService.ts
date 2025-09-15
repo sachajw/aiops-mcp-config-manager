@@ -246,13 +246,30 @@ class UnifiedConfigService {
         case 'json5':
           return JSON5.parse(content);
         case 'toml':
-          const parsed = toml.parse(content);
-          return parsed as MCPConfig;
+          // TOML parsing requires special handling
+          try {
+            const parsed = toml.parse(content);
+            // Convert TOML structure to expected MCPConfig format
+            // TOML may have different structure than JSON
+            if (parsed.mcp_servers || parsed.servers || parsed.mcpServers) {
+              return parsed as MCPConfig;
+            }
+            // Wrap in expected structure if needed
+            return { mcpServers: parsed } as MCPConfig;
+          } catch (tomlError) {
+            console.error(`TOML parse error: ${tomlError}`);
+            // Try to provide helpful error message
+            if (tomlError instanceof Error) {
+              throw new Error(`Invalid TOML format: ${tomlError.message}`);
+            }
+            throw tomlError;
+          }
         default:
           throw new Error(`Unsupported format: ${format}`);
       }
     } catch (error) {
       console.error(`Error parsing ${format}:`, error);
+      // Return empty config instead of crashing
       return {};
     }
   }
@@ -264,7 +281,23 @@ class UnifiedConfigService {
       case 'json5':
         return JSON5.stringify(config, null, 2);
       case 'toml':
-        return toml.stringify(config as any);
+        try {
+          // Ensure config is in a format that TOML can handle
+          // Remove undefined values and functions
+          const cleanConfig = JSON.parse(JSON.stringify(config));
+
+          // TOML requires proper structure
+          if (!cleanConfig.mcpServers && !cleanConfig.servers && !cleanConfig.mcp_servers) {
+            console.warn('Config may not have expected structure for TOML');
+          }
+
+          return toml.stringify(cleanConfig as any);
+        } catch (tomlError) {
+          console.error('TOML stringify error:', tomlError);
+          // Fallback to JSON if TOML fails
+          console.warn('Falling back to JSON format due to TOML error');
+          return JSON.stringify(config, null, 2);
+        }
       default:
         throw new Error(`Unsupported format: ${format}`);
     }

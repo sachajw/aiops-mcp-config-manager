@@ -192,13 +192,38 @@ export const useConfigStore = create<AppState>((set, get) => ({
   // Add new MCP server
   addServer: (name: string, server: MCPServer) => {
     const { servers, catalog } = get();
-    
-    // Check for duplicate
+
+    // Check for exact duplicate
     if (servers[name]) {
-      set({ error: `Server "${name}" already exists` });
+      set({ error: `Server "${name}" already exists. Please use a different name.` });
       return;
     }
-    
+
+    // Check for similar names (case-insensitive)
+    const similarName = Object.keys(servers).find(
+      key => key.toLowerCase() === name.toLowerCase()
+    );
+    if (similarName) {
+      set({ error: `A server with a similar name "${similarName}" already exists. Please use a more distinct name.` });
+      return;
+    }
+
+    // Check if command/URL already exists (for duplicate functionality)
+    const duplicateServer = Object.entries(servers).find(([_, srv]) => {
+      if (server.type === 'local' && srv.type === 'local') {
+        return srv.command === server.command;
+      } else if (server.type === 'remote' && srv.type === 'remote') {
+        return srv.url === server.url;
+      }
+      return false;
+    });
+
+    if (duplicateServer) {
+      const [dupName] = duplicateServer;
+      set({ error: `A server "${dupName}" with the same ${server.type === 'local' ? 'command' : 'URL'} already exists.` });
+      return;
+    }
+
     // Add to current client's servers
     const newServers = { ...servers, [name]: server };
     
