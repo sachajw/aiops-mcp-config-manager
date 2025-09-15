@@ -13,6 +13,7 @@ export const DiscoveryPage: React.FC = () => {
     catalogLoading,
     catalogError,
     fetchCatalog,
+    fetchInstalledServers,
     getFilteredServers,
     selectedServer,
     showServerDetails,
@@ -41,6 +42,9 @@ export const DiscoveryPage: React.FC = () => {
     if (!catalog && !catalogLoading) {
       fetchCatalog();
     }
+
+    // Also fetch installed servers
+    fetchInstalledServers();
   }, []); // Empty dependency array - only run once on mount
 
   useEffect(() => {
@@ -144,7 +148,7 @@ export const DiscoveryPage: React.FC = () => {
       </div>
 
       {/* Server Grid */}
-      <div className="overflow-y-auto px-6 py-4">
+      <div className="flex-1 overflow-y-auto px-6 py-4">
         {filteredServers.length === 0 ? (
           <div className="text-center py-12">
             <svg className="w-16 h-16 mx-auto text-base-content/30 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -153,7 +157,7 @@ export const DiscoveryPage: React.FC = () => {
             <p className="text-base-content/60">No servers found matching your criteria</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start content-start">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 items-start">
             {filteredServers.map((server) => (
               <ServerCard
                 key={server.id}
