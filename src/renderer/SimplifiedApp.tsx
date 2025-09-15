@@ -81,7 +81,7 @@ export const SimplifiedApp: React.FC = () => {
         console.error('Failed to load settings:', e);
       }
     }
-    
+
     // Simulate loading progress
     const loadApp = async () => {
       setLoadingState({
@@ -89,25 +89,40 @@ export const SimplifiedApp: React.FC = () => {
         progress: 30,
         message: 'Detecting AI clients...'
       });
-      
+
       await detectClients();
-      
+
       setLoadingState({
         stage: 'loading_configs',
         progress: 60,
         message: 'Loading configurations...'
       });
-      
+
       await loadCatalog();
-      
+
       setLoadingState({
         stage: 'ready',
         progress: 100,
         message: 'Ready!'
       });
     };
-    
+
     loadApp();
+
+    // Listen for catalog updates from Discovery page
+    const handleCatalogUpdate = (event: CustomEvent) => {
+      const { serverName, server } = event.detail;
+      console.log('[SimplifiedApp] Catalog updated from Discovery:', serverName);
+
+      // Reload the catalog to get the latest servers
+      loadCatalog();
+    };
+
+    window.addEventListener('catalog-updated', handleCatalogUpdate as EventListener);
+
+    return () => {
+      window.removeEventListener('catalog-updated', handleCatalogUpdate as EventListener);
+    };
   }, []);
 
   const handleSave = async () => {

@@ -141,6 +141,36 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
       state.installationStates.set(serverId, installState);
       set({ installationStates: new Map(state.installationStates) });
 
+      // Add the installed server to the configuration catalog
+      // Convert Discovery server format to config format
+      const configServer = {
+        command: server.config?.command || server.installation?.command?.replace('npm install -g ', '').replace('npx ', ''),
+        args: server.config?.args || [],
+        env: server.config?.env || {},
+        type: 'local' as const,
+        description: server.description
+      };
+
+      // Get the catalog from localStorage and add this server
+      try {
+        const catalogStr = localStorage.getItem('mcp-server-catalog');
+        const catalog = catalogStr ? JSON.parse(catalogStr) : {};
+
+        // Use server name or id as the key
+        const serverName = server.name || server.id;
+        catalog[serverName] = configServer;
+
+        // Save back to localStorage
+        localStorage.setItem('mcp-server-catalog', JSON.stringify(catalog));
+
+        // Emit an event to notify the main app about the catalog update
+        window.dispatchEvent(new CustomEvent('catalog-updated', {
+          detail: { serverName, server: configServer }
+        }));
+      } catch (err) {
+        console.error('Failed to add server to catalog:', err);
+      }
+
       // Refresh installed servers
       await get().fetchInstalledServers();
     } catch (error) {
@@ -159,13 +189,36 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
   // Uninstall a server
   uninstallServer: async (serverId: string) => {
     try {
+      const state = get();
+      const server = state.catalog?.servers.find(s => s.id === serverId);
+
       await window.electronAPI.discovery.uninstallServer(serverId);
+
+      // Remove the server from the configuration catalog
+      if (server) {
+        try {
+          const catalogStr = localStorage.getItem('mcp-server-catalog');
+          const catalog = catalogStr ? JSON.parse(catalogStr) : {};
+
+          const serverName = server.name || server.id;
+          delete catalog[serverName];
+
+          // Save back to localStorage
+          localStorage.setItem('mcp-server-catalog', JSON.stringify(catalog));
+
+          // Emit an event to notify the main app about the catalog update
+          window.dispatchEvent(new CustomEvent('catalog-updated', {
+            detail: { serverName, server: null, removed: true }
+          }));
+        } catch (err) {
+          console.error('Failed to remove server from catalog:', err);
+        }
+      }
 
       // Refresh installed servers
       await get().fetchInstalledServers();
 
       // Clear installation state
-      const state = get();
       state.installationStates.delete(serverId);
       set({ installationStates: new Map(state.installationStates) });
     } catch (error) {
