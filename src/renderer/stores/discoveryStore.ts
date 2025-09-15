@@ -210,16 +210,22 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
 
     // Apply category filter
     if (state.filter.categories && state.filter.categories.length > 0) {
-      servers = servers.filter(s =>
-        s.category.some(c => state.filter.categories?.includes(c))
-      );
+      servers = servers.filter(s => {
+        // Handle both category (array) and categories (array) properties
+        const serverCategories = s.category || s.categories || [];
+        // Check if server has at least one of the selected categories
+        return Array.isArray(serverCategories) &&
+               serverCategories.some(c => state.filter.categories?.includes(c));
+      });
     }
 
     // Apply tag filter
     if (state.filter.tags && state.filter.tags.length > 0) {
-      servers = servers.filter(s =>
-        s.tags?.some(t => state.filter.tags?.includes(t))
-      );
+      servers = servers.filter(s => {
+        const serverTags = s.tags || [];
+        return Array.isArray(serverTags) &&
+               serverTags.some(t => state.filter.tags?.includes(t));
+      });
     }
 
     // Apply installed filter
@@ -228,7 +234,7 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
       servers = servers.filter(s => installedIds.includes(s.id));
     }
 
-    // Apply sorting
+    // Apply sorting with null safety
     const sortBy = state.filter.sortBy || 'downloads';
     const sortOrder = state.filter.sortOrder || 'desc';
 
@@ -237,16 +243,18 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
 
       switch (sortBy) {
         case 'name':
-          comparison = a.name.localeCompare(b.name);
+          comparison = (a.name || '').localeCompare(b.name || '');
           break;
         case 'downloads':
-          comparison = a.stats.downloads - b.stats.downloads;
+          comparison = (a.stats?.downloads || 0) - (b.stats?.downloads || 0);
           break;
         case 'stars':
-          comparison = a.stats.stars - b.stats.stars;
+          comparison = (a.stats?.stars || 0) - (b.stats?.stars || 0);
           break;
         case 'date':
-          comparison = new Date(a.stats.lastUpdated).getTime() - new Date(b.stats.lastUpdated).getTime();
+          const aDate = a.stats?.lastUpdated ? new Date(a.stats.lastUpdated).getTime() : 0;
+          const bDate = b.stats?.lastUpdated ? new Date(b.stats.lastUpdated).getTime() : 0;
+          comparison = aDate - bDate;
           break;
       }
 
