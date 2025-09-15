@@ -7,7 +7,7 @@ interface CustomClient {
   configPath: string;
 }
 
-interface AppSettings {
+export interface AppSettings {
   enabledClients: Record<ClientType, boolean>;
   autoRefresh: boolean;
   refreshInterval: number;
@@ -17,6 +17,10 @@ interface AppSettings {
   customClients?: CustomClient[];
   experimental?: {
     enableMcpDiscovery: boolean;
+    visualWorkspaceEnabled?: boolean;
+    visualWorkspaceDefault?: boolean;
+    animationLevel?: 'full' | 'reduced' | 'none';
+    canvasRenderer?: 'svg' | 'canvas' | 'webgl' | 'auto';
   };
 }
 
@@ -288,6 +292,122 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onClose, onSave, cur
                 </div>
               </div>
 
+              {/* Visual Workspace Mode */}
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <label className="label">
+                    <span className="label-text font-semibold">🎯 Visual Workspace Mode</span>
+                  </label>
+                  <p className="text-sm text-base-content/60">
+                    Enable drag-and-drop interface for managing MCP server connections
+                  </p>
+                  <div className="flex gap-2 mt-1">
+                    <div className="badge badge-warning badge-sm">Experimental</div>
+                    <div className="badge badge-info badge-sm">New!</div>
+                  </div>
+                </div>
+                <div className="ml-4">
+                  <input
+                    type="checkbox"
+                    className="toggle toggle-primary"
+                    checked={settings.experimental?.visualWorkspaceEnabled || false}
+                    onChange={(e) => setSettings(prev => ({
+                      ...prev,
+                      experimental: {
+                        ...prev.experimental,
+                        visualWorkspaceEnabled: e.target.checked
+                      }
+                    }))}
+                  />
+                </div>
+              </div>
+
+              {/* Visual Workspace Settings - Only show if enabled */}
+              {settings.experimental?.visualWorkspaceEnabled && (
+                <>
+                  <div className="pl-8 space-y-4 border-l-2 border-base-300 ml-4">
+                    {/* Set as default */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <label className="label">
+                          <span className="label-text">Set as default view</span>
+                        </label>
+                        <p className="text-xs text-base-content/50">
+                          Open in visual mode by default
+                        </p>
+                      </div>
+                      <div className="ml-4">
+                        <input
+                          type="checkbox"
+                          className="toggle toggle-sm"
+                          checked={settings.experimental?.visualWorkspaceDefault || false}
+                          onChange={(e) => setSettings(prev => ({
+                            ...prev,
+                            experimental: {
+                              ...prev.experimental,
+                              visualWorkspaceDefault: e.target.checked
+                            }
+                          }))}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Animation Level */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <label className="label">
+                          <span className="label-text">Animation level</span>
+                        </label>
+                      </div>
+                      <div className="ml-4">
+                        <select
+                          className="select select-bordered select-sm w-32"
+                          value={settings.experimental?.animationLevel || 'full'}
+                          onChange={(e) => setSettings(prev => ({
+                            ...prev,
+                            experimental: {
+                              ...prev.experimental,
+                              animationLevel: e.target.value as 'full' | 'reduced' | 'none'
+                            }
+                          }))}
+                        >
+                          <option value="full">Full</option>
+                          <option value="reduced">Reduced</option>
+                          <option value="none">None</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Canvas Renderer */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <label className="label">
+                          <span className="label-text">Canvas renderer</span>
+                        </label>
+                      </div>
+                      <div className="ml-4">
+                        <select
+                          className="select select-bordered select-sm w-32"
+                          value={settings.experimental?.canvasRenderer || 'auto'}
+                          onChange={(e) => setSettings(prev => ({
+                            ...prev,
+                            experimental: {
+                              ...prev.experimental,
+                              canvasRenderer: e.target.value as 'svg' | 'canvas' | 'webgl' | 'auto'
+                            }
+                          }))}
+                        >
+                          <option value="auto">Auto</option>
+                          <option value="svg">SVG</option>
+                          <option value="canvas">Canvas</option>
+                          <option value="webgl">WebGL</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+
               <div className="divider">Custom Client Configuration</div>
 
               {/* Custom client path configuration */}
@@ -403,6 +523,10 @@ export const getDefaultSettings = (): AppSettings => ({
   theme: 'system',
   customClients: [],
   experimental: {
-    enableMcpDiscovery: false
+    enableMcpDiscovery: false,
+    visualWorkspaceEnabled: false,
+    visualWorkspaceDefault: false,
+    animationLevel: 'full',
+    canvasRenderer: 'auto'
   }
 });

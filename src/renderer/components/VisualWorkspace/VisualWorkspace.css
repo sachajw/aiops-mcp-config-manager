@@ -1,0 +1,73 @@
+/* Visual Workspace Custom Styles */
+
+/* React Flow Controls - Dark Mode */
+.react-flow__controls {
+  background: var(--b3, #1d232a) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3) !important;
+  z-index: 15 !important;
+}
+
+.react-flow__controls-button {
+  background: var(--b3, #1d232a) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: var(--bc, #a6adba) !important;
+}
+
+.react-flow__controls-button:hover {
+  background: var(--b2, #191e24) !important;
+}
+
+.react-flow__controls-button svg {
+  fill: currentColor;
+}
+
+/* React Flow MiniMap - Dark Mode */
+.react-flow__minimap {
+  background: var(--b3, #1d232a) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  z-index: 15 !important;
+}
+
+.react-flow__minimap-mask {
+  fill: rgba(0, 0, 0, 0.7);
+}
+
+/* Remove React Flow attribution */
+.react-flow__attribution {
+  display: none !important;
+}
+
+/* Fix layout to prevent bottom space */
+.visual-workspace {
+  display: flex;
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Remove any gaps between panels */
+.visual-workspace > * {
+  margin: 0;
+}
+
+/* Ensure canvas fills available space */
+.react-flow {
+  height: 100% !important;
+  width: 100% !important;
+}
+
+.react-flow__renderer {
+  height: 100% !important;
+  width: 100% !important;
+}
+
+.react-flow__viewport {
+  height: 100% !important;
+  width: 100% !important;
+}
+
+/* Ensure performance panel doesn't create extra space */
+.react-flow__container {
+  height: 100% !important;
+}

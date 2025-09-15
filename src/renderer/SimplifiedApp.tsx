@@ -2,10 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { useConfigStore } from './store/simplifiedStore';
 import { MCPServer } from '@/main/services/UnifiedConfigService';
 import { LandingPage, LoadingState } from './pages/Landing/LandingPage';
-import { SettingsPage, getDefaultSettings } from './pages/Settings/SettingsPage';
+import { SettingsPage, getDefaultSettings, AppSettings } from './pages/Settings/SettingsPage';
 import { DiscoveryPage } from './pages/Discovery/DiscoveryPage';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { LoadingSpinner } from './components/common/LoadingSpinner';
+import { VisualWorkspace } from './components/VisualWorkspace';
 
 export const SimplifiedApp: React.FC = () => {
   const { 
@@ -59,9 +60,12 @@ export const SimplifiedApp: React.FC = () => {
   const [profileFormData, setProfileFormData] = useState({ name: '', description: '' });
   const [helpModalOpen, setHelpModalOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [appSettings, setAppSettings] = useState(getDefaultSettings());
+  const [appSettings, setAppSettings] = useState<AppSettings>(getDefaultSettings());
   const [discoveryOpen, setDiscoveryOpen] = useState(false);
-  
+
+  // View mode state
+  const [viewMode, setViewMode] = useState<'classic' | 'visual'>('classic');
+
   // Landing page state
   const [showLanding, setShowLanding] = useState(true);
   const [loadingState, setLoadingState] = useState<LoadingState>({
@@ -77,6 +81,11 @@ export const SimplifiedApp: React.FC = () => {
       try {
         const parsed = JSON.parse(savedSettings);
         setAppSettings(parsed);
+
+        // Set view mode based on settings
+        if (parsed.experimental?.visualWorkspaceEnabled && parsed.experimental?.visualWorkspaceDefault) {
+          setViewMode('visual');
+        }
       } catch (e) {
         console.error('Failed to load settings:', e);
       }
@@ -111,10 +120,17 @@ export const SimplifiedApp: React.FC = () => {
 
     // Listen for catalog updates from Discovery page
     const handleCatalogUpdate = (event: CustomEvent) => {
-      const { serverName, server } = event.detail;
-      console.log('[SimplifiedApp] Catalog updated from Discovery:', serverName);
+      const { serverName, server, removed } = event.detail;
+      console.log('[SimplifiedApp] Catalog updated from Discovery:', serverName, removed ? '(removed)' : '');
 
-      // Reload the catalog to get the latest servers
+      // Directly update the catalog in the store
+      if (removed) {
+        removeFromCatalog(serverName);
+      } else if (server) {
+        addToCatalog(serverName, server);
+      }
+
+      // Also reload the catalog to ensure consistency
       loadCatalog();
     };
 
@@ -403,6 +419,32 @@ export const SimplifiedApp: React.FC = () => {
                 </svg>
               </button>
               
+              {/* View Mode Switcher - Only show if visual workspace is enabled */}
+              {appSettings.experimental?.visualWorkspaceEnabled && (
+                <div className="flex items-center gap-1 p-1 bg-base-200 rounded-lg">
+                  <button
+                    className={`btn btn-xs ${viewMode === 'classic' ? 'btn-primary' : 'btn-ghost'}`}
+                    onClick={() => setViewMode('classic')}
+                    title="Classic View"
+                  >
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                    <span className="ml-1 hidden sm:inline">Classic</span>
+                  </button>
+                  <button
+                    className={`btn btn-xs ${viewMode === 'visual' ? 'btn-primary' : 'btn-ghost'}`}
+                    onClick={() => setViewMode('visual')}
+                    title="Visual Workspace"
+                  >
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+                    </svg>
+                    <span className="ml-1 hidden sm:inline">Visual</span>
+                  </button>
+                </div>
+              )}
+
               {/* Discovery Button - Only show if experimental feature is enabled */}
               {appSettings.experimental?.enableMcpDiscovery && (
                 <button
@@ -594,14 +636,19 @@ export const SimplifiedApp: React.FC = () => {
         )}
       </div>
 
-      {/* Main Content - with proper padding for fixed header and status bar */}
-      <div className="container mx-auto px-4" style={{ paddingTop: activeScope === 'project' && activeClient && activeClient !== 'catalog' ? '180px' : '120px', paddingBottom: activeClient ? '60px' : '20px' }}>
-        {/* Servers Table Card */}
-        <div className="card bg-base-100 shadow-xl">
+      {/* Main Content - Conditional rendering based on view mode */}
+      {viewMode === 'visual' && appSettings.experimental?.visualWorkspaceEnabled ? (
+        <div style={{ paddingTop: '100px', height: 'calc(100vh - 100px)', overflow: 'hidden' }}>
+          <VisualWorkspace />
+        </div>
+      ) : (
+        <div className="container mx-auto px-4" style={{ paddingTop: activeScope === 'project' && activeClient && activeClient !== 'catalog' ? '180px' : '120px', paddingBottom: activeClient ? '60px' : '20px' }}>
+          {/* Servers Table Card */}
+          <div className="card bg-base-100 shadow-xl">
           <div className="card-body">
             <div className="flex justify-between items-center mb-4">
               <h2 className="card-title">MCP Servers</h2>
-              <button 
+              <button
                 className={`btn btn-sm btn-primary ${!activeClient ? 'btn-disabled' : ''}`}
                 onClick={() => setIsAddModalOpen(true)}
                 disabled={!activeClient}
@@ -610,6 +657,9 @@ export const SimplifiedApp: React.FC = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                 </svg>
                 Add Server
+                {Object.keys(catalog).length > 0 && (
+                  <div className="badge badge-secondary badge-xs ml-1">{Object.keys(catalog).length}</div>
+                )}
               </button>
             </div>
 
@@ -832,6 +882,7 @@ export const SimplifiedApp: React.FC = () => {
         {/* Spacer for bottom padding */}
         <div className="h-8"></div>
       </div>
+      )}
 
       {/* Add/Edit Modal */}
       {(isAddModalOpen || editingServer) && (
@@ -840,7 +891,47 @@ export const SimplifiedApp: React.FC = () => {
             <h3 className="font-bold text-lg mb-6">
               {editingServer ? 'Edit Server' : 'Add New Server'}
             </h3>
-            
+
+            {/* Catalog Quick Select (only for Add mode) */}
+            {!editingServer && Object.keys(catalog).length > 0 && (
+              <div className="alert alert-info mb-6">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div className="flex-1">
+                  <span className="text-sm">Quick Add from Catalog</span>
+                  <select
+                    className="select select-bordered select-sm w-full mt-2 bg-base-100 text-base-content"
+                    value=""
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        const [serverName, ...rest] = e.target.value.split('|');
+                        const serverData = catalog[serverName];
+                        if (serverData) {
+                          setFormData({
+                            name: serverName,
+                            type: serverData.type || 'local',
+                            command: serverData.command || '',
+                            args: serverData.args?.join(', ') || '',
+                            env: serverData.env ? JSON.stringify(serverData.env, null, 2) : '',
+                            url: serverData.url || '',
+                            headers: serverData.headers ? JSON.stringify(serverData.headers, null, 2) : ''
+                          });
+                        }
+                      }
+                    }}
+                  >
+                    <option value="">Select a server from catalog...</option>
+                    {Object.entries(catalog).map(([name, server]) => (
+                      <option key={name} value={name}>
+                        {name} ({server.type || 'local'}) - {server.description || server.command || server.url || 'No description'}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            )}
+
             <div className="space-y-6">
               {/* Server Name */}
               <div className="form-control w-full">

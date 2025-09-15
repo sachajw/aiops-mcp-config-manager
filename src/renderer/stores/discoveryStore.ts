@@ -143,9 +143,38 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
 
       // Add the installed server to the configuration catalog
       // Convert Discovery server format to config format
+      let command = server.config?.command || '';
+      let args = server.config?.args || [];
+
+      // If no config.command, try to extract from installation command
+      if (!command && server.installation?.command) {
+        const installCmd = server.installation.command;
+
+        // Handle different installation patterns
+        if (installCmd.startsWith('npm install -g ')) {
+          // For global npm packages, use npx to run them
+          const packageName = installCmd.replace('npm install -g ', '');
+          command = 'npx';
+          args = [packageName, ...args];
+        } else if (installCmd.startsWith('npx ')) {
+          // For npx commands, keep as is
+          const parts = installCmd.replace('npx ', '').split(' ');
+          command = 'npx';
+          args = [...parts, ...args];
+        } else if (installCmd.startsWith('pip install ')) {
+          // For Python packages
+          const packageName = installCmd.replace('pip install ', '');
+          command = 'python';
+          args = ['-m', packageName, ...args];
+        } else {
+          // Default: use the installation command as is
+          command = installCmd;
+        }
+      }
+
       const configServer = {
-        command: server.config?.command || server.installation?.command?.replace('npm install -g ', '').replace('npx ', ''),
-        args: server.config?.args || [],
+        command,
+        args,
         env: server.config?.env || {},
         type: 'local' as const,
         description: server.description
@@ -162,6 +191,7 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
 
         // Save back to localStorage
         localStorage.setItem('mcp-server-catalog', JSON.stringify(catalog));
+        console.log('[Discovery Store] Added server to catalog:', serverName, configServer);
 
         // Emit an event to notify the main app about the catalog update
         window.dispatchEvent(new CustomEvent('catalog-updated', {
@@ -205,6 +235,7 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
 
           // Save back to localStorage
           localStorage.setItem('mcp-server-catalog', JSON.stringify(catalog));
+          console.log('[Discovery Store] Removed server from catalog:', serverName);
 
           // Emit an event to notify the main app about the catalog update
           window.dispatchEvent(new CustomEvent('catalog-updated', {
