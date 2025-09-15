@@ -38,7 +38,7 @@ export const ServerCard: React.FC<ServerCardProps> = ({ server, onClick }) => {
 
   return (
     <div
-      className="card bg-base-200 hover:bg-base-300 cursor-pointer transition-all duration-200 hover:shadow-lg relative overflow-hidden h-full min-h-[280px] flex flex-col"
+      className="card bg-base-200 hover:bg-base-300 cursor-pointer transition-all duration-200 hover:shadow-lg relative overflow-hidden h-[320px] flex flex-col"
       onClick={onClick}
     >
       {isInstalled && (
