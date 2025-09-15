@@ -507,7 +507,7 @@ export class McpDiscoveryService {
 
       switch (server.installation.type) {
         case 'npm':
-          await this.installViaNum(server, installDir);
+          await this.installViaNpm(server, installDir);
           break;
         case 'git':
           await this.installViaGit(server, installDir);
@@ -548,41 +548,71 @@ export class McpDiscoveryService {
   /**
    * Install server via npm
    */
-  private async installViaNum(server: McpServerEntry, installDir: string): Promise<void> {
+  private async installViaNpm(server: McpServerEntry, installDir: string): Promise<void> {
     return new Promise((resolve, reject) => {
       const serverDir = path.join(installDir, server.id);
       fs.ensureDirSync(serverDir);
 
       // Extract the correct package name from the installation command or npmPackage field
       let packageToInstall = server.npmPackage;
+
       if (!packageToInstall && server.installation.command) {
         // Parse from command like "npm install -g package-name" or "npx package-name"
-        const parts = server.installation.command.split(' ');
-        packageToInstall = parts[parts.length - 1];
+        const npmMatch = server.installation.command.match(/npm\s+install\s+(?:-g\s+)?(.+)$/);
+        const npxMatch = server.installation.command.match(/npx\s+(.+)$/);
+
+        if (npmMatch) {
+          packageToInstall = npmMatch[1].trim();
+        } else if (npxMatch) {
+          packageToInstall = npxMatch[1].trim();
+        } else {
+          // Fallback to last word
+          const parts = server.installation.command.split(' ');
+          packageToInstall = parts[parts.length - 1];
+        }
       }
 
+      // If still no package, try to get it from the server id or name
       if (!packageToInstall) {
-        throw new Error('No package name available for installation');
+        if (server.id.startsWith('@')) {
+          packageToInstall = server.id;
+        } else if (server.name && server.name.toLowerCase().includes('mcp')) {
+          // Try to construct package name from server name
+          packageToInstall = server.name.toLowerCase().replace(/\s+/g, '-');
+        } else {
+          reject(new Error(`Cannot determine npm package name for server: ${server.name}`));
+          return;
+        }
       }
+
+      console.log(`[McpDiscovery] Installing npm package: ${packageToInstall} in ${serverDir}`);
 
       const npmProcess = spawn('npm', ['install', packageToInstall], {
         cwd: serverDir,
         shell: true
       });
 
+      let output = '';
+      let errorOutput = '';
+
       npmProcess.stdout.on('data', (data) => {
+        output += data.toString();
         console.log('[McpDiscovery] npm:', data.toString());
       });
 
       npmProcess.stderr.on('data', (data) => {
+        errorOutput += data.toString();
         console.error('[McpDiscovery] npm error:', data.toString());
       });
 
       npmProcess.on('close', (code) => {
         if (code === 0) {
+          console.log(`[McpDiscovery] Successfully installed ${packageToInstall}`);
           resolve();
         } else {
-          reject(new Error(`npm install failed with code ${code}`));
+          const errorMessage = `npm install failed with code ${code}. Package: ${packageToInstall}\nError output: ${errorOutput}`;
+          console.error('[McpDiscovery]', errorMessage);
+          reject(new Error(errorMessage));
         }
       });
     });

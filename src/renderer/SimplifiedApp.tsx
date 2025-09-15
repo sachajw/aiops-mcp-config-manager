@@ -4,6 +4,8 @@ import { MCPServer } from '@/main/services/UnifiedConfigService';
 import { LandingPage, LoadingState } from './pages/Landing/LandingPage';
 import { SettingsPage, getDefaultSettings } from './pages/Settings/SettingsPage';
 import { DiscoveryPage } from './pages/Discovery/DiscoveryPage';
+import { ErrorBoundary } from './components/common/ErrorBoundary';
+import { LoadingSpinner } from './components/common/LoadingSpinner';
 
 export const SimplifiedApp: React.FC = () => {
   const { 
@@ -269,7 +271,8 @@ export const SimplifiedApp: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-base-200" data-theme="corporate">
+    <ErrorBoundary>
+      <div className="min-h-screen bg-base-200" data-theme="corporate">
       {/* Fixed Header with improved UX layout */}
       <div className="fixed top-0 left-0 right-0 z-50 bg-base-100 shadow-lg">
         {/* Main header bar - responsive two-row layout */}
@@ -1348,5 +1351,6 @@ export const SimplifiedApp: React.FC = () => {
         </div>
       )}
     </div>
+    </ErrorBoundary>
   );
 };

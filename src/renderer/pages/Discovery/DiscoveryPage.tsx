@@ -5,6 +5,7 @@ import { ServerDetailsModal } from './components/ServerDetailsModal';
 import { SearchAndFilter } from './components/SearchAndFilter';
 import { DiscoverySettings } from './components/DiscoverySettings';
 import { McpServerEntry } from '@/shared/types/mcp-discovery';
+import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 
 export const DiscoveryPage: React.FC = () => {
   const {
@@ -75,14 +76,7 @@ export const DiscoveryPage: React.FC = () => {
   };
 
   if (catalogLoading && !catalog) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-center">
-          <div className="loading loading-spinner loading-lg"></div>
-          <p className="mt-4 text-base-content/60">Loading MCP server catalog...</p>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner message="Loading MCP server catalog..." size="lg" fullScreen />;
   }
 
   if (catalogError) {
