@@ -3,6 +3,7 @@ import { useConfigStore } from './store/simplifiedStore';
 import { MCPServer } from '@/main/services/UnifiedConfigService';
 import { LandingPage, LoadingState } from './pages/Landing/LandingPage';
 import { SettingsPage, getDefaultSettings } from './pages/Settings/SettingsPage';
+import { DiscoveryPage } from './pages/Discovery/DiscoveryPage';
 
 export const SimplifiedApp: React.FC = () => {
   const { 
@@ -57,6 +58,7 @@ export const SimplifiedApp: React.FC = () => {
   const [helpModalOpen, setHelpModalOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [appSettings, setAppSettings] = useState(getDefaultSettings());
+  const [discoveryOpen, setDiscoveryOpen] = useState(false);
   
   // Landing page state
   const [showLanding, setShowLanding] = useState(true);
@@ -315,14 +317,18 @@ export const SimplifiedApp: React.FC = () => {
                     Server Catalog ({Object.keys(catalog).length} servers)
                   </option>
                   <optgroup label="Installed Clients">
-                    {clients.map(client => (
-                      <option key={client.name} value={client.name}>
-                        <div className="flex items-center justify-between w-full">
-                          <span>{client.displayName}</span>
-                          <div className={`w-2 h-2 rounded-full ${client.installed ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                        </div>
-                      </option>
-                    ))}
+                    {clients
+                      .filter(client => {
+                        // Filter based on enabled status in settings
+                        if (!appSettings.enabledClients) return true; // Show all if no settings
+                        // The client.name is the same as the type (e.g., 'claude-desktop', 'claude-code')
+                        return appSettings.enabledClients[client.name] !== false;
+                      })
+                      .map(client => (
+                        <option key={client.name} value={client.name}>
+                          {client.displayName} {client.installed ? '✓' : ''}
+                        </option>
+                      ))}
                   </optgroup>
                   {appSettings.customClients && appSettings.customClients.length > 0 && (
                     <optgroup label="Custom Clients">
@@ -379,8 +385,22 @@ export const SimplifiedApp: React.FC = () => {
                 </svg>
               </button>
               
+              {/* Discovery Button - Only show if experimental feature is enabled */}
+              {appSettings.experimental?.enableMcpDiscovery && (
+                <button
+                  className="btn btn-sm btn-ghost"
+                  onClick={() => setDiscoveryOpen(true)}
+                  title="MCP Discovery"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                  <span className="ml-1 hidden sm:inline">Discover</span>
+                </button>
+              )}
+
               {/* Settings Button */}
-              <button 
+              <button
                 className="btn btn-sm btn-ghost"
                 onClick={() => setSettingsOpen(true)}
                 title="Settings"
@@ -1139,6 +1159,28 @@ export const SimplifiedApp: React.FC = () => {
           }}
           currentSettings={appSettings}
         />
+      )}
+
+      {/* Discovery Modal */}
+      {discoveryOpen && (
+        <div className="fixed inset-0 z-50 bg-base-100">
+          <div className="h-full flex flex-col">
+            <div className="border-b border-base-300 px-4 py-3 flex items-center justify-between">
+              <h2 className="text-xl font-bold">MCP Server Discovery</h2>
+              <button
+                onClick={() => setDiscoveryOpen(false)}
+                className="btn btn-sm btn-ghost btn-circle"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="flex-1 overflow-hidden">
+              <DiscoveryPage />
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Help Modal */}

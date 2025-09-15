@@ -73,6 +73,26 @@ contextBridge.exposeInMainWorld('electronAPI', {
   
   // System methods
   openExternal: (url: string) => ipcRenderer.invoke('system:openExternal', url),
+
+  // MCP Discovery methods
+  discovery: {
+    fetchCatalog: (forceRefresh?: boolean, settings?: any) =>
+      ipcRenderer.invoke('discovery:fetchCatalog', forceRefresh, settings),
+    getInstalledServers: () =>
+      ipcRenderer.invoke('discovery:getInstalledServers'),
+    isServerInstalled: (serverId: string) =>
+      ipcRenderer.invoke('discovery:isServerInstalled', serverId),
+    installServer: (serverId: string) =>
+      ipcRenderer.invoke('discovery:installServer', serverId),
+    uninstallServer: (serverId: string) =>
+      ipcRenderer.invoke('discovery:uninstallServer', serverId),
+    getInstallationState: (serverId: string) =>
+      ipcRenderer.invoke('discovery:getInstallationState', serverId),
+    updateSettings: (settings: any) =>
+      ipcRenderer.invoke('discovery:updateSettings', settings),
+    getSettings: () =>
+      ipcRenderer.invoke('discovery:getSettings'),
+  }
 })
 
 // Type definitions for the exposed API

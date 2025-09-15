@@ -15,6 +15,9 @@ interface AppSettings {
   preserveDisabledServers: boolean;
   theme: 'light' | 'dark' | 'system';
   customClients?: CustomClient[];
+  experimental?: {
+    enableMcpDiscovery: boolean;
+  };
 }
 
 interface SettingsPageProps {
@@ -256,6 +259,35 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onClose, onSave, cur
                 </div>
               </div>
 
+              <div className="divider">Experimental Features</div>
+
+              {/* MCP Discovery Feature Flag */}
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <label className="label">
+                    <span className="label-text font-semibold">Enable MCP Discovery & Download</span>
+                  </label>
+                  <p className="text-sm text-base-content/60">
+                    Access a catalog of community MCP servers for discovery and installation
+                  </p>
+                  <div className="badge badge-warning badge-sm mt-1">Experimental</div>
+                </div>
+                <div className="ml-4">
+                  <input
+                    type="checkbox"
+                    className="toggle toggle-primary"
+                    checked={settings.experimental?.enableMcpDiscovery || false}
+                    onChange={(e) => setSettings(prev => ({
+                      ...prev,
+                      experimental: {
+                        ...prev.experimental,
+                        enableMcpDiscovery: e.target.checked
+                      }
+                    }))}
+                  />
+                </div>
+              </div>
+
               <div className="divider">Custom Client Configuration</div>
 
               {/* Custom client path configuration */}
@@ -369,5 +401,8 @@ export const getDefaultSettings = (): AppSettings => ({
   showHiddenFiles: false,
   preserveDisabledServers: false,
   theme: 'system',
-  customClients: []
+  customClients: [],
+  experimental: {
+    enableMcpDiscovery: false
+  }
 });

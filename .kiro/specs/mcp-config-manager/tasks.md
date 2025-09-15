@@ -194,26 +194,88 @@
   - Add server cards with icons, descriptions, and install buttons
   - _Requirements: Help new users get started quickly_
 
-- [ ] 32. Create user guide with screenshots
+- [X] 32. Create user guide with screenshots
   - Build comprehensive help documentation system
   - Create step-by-step tutorials with screenshots
   - Document common use cases and workflows
   - Add troubleshooting section
   - _Requirements: Improve user onboarding and reduce support burden_
 
-- [ ] 33. Implement custom client support
+- [X] 33. Implement custom client support
   - Create UI for defining custom clients
   - Allow specification of name, config path, and format
   - Store custom client definitions in app settings
   - Ensure full feature parity with built-in clients
   - _Requirements: Support for proprietary or custom AI tools_
 
-- [ ] 34. Add client management in settings
+- [!] 34. Add client management in settings
   - Create settings page for enabling/disabling client detection
   - Implement UI to show/hide specific clients
   - Performance optimization by skipping disabled clients
   - Persist client preferences across app restarts
   - _Requirements: User control over client discovery_
+
+## MCP Discovery Feature (Experimental)
+
+- [x] 40. Add experimental feature flag for MCP discovery
+  - Update AppSettings interface with experimental features
+  - Add UI toggle in Advanced Settings > Experimental section
+  - Persist feature flag state to local storage
+  - _Requirements: Feature flag control, experimental features_
+
+- [x] 41. Create MCP Discovery service
+  - Implement catalog fetching logic with API integration
+  - Add local caching mechanism for offline browsing
+  - Handle API errors and network failures gracefully
+  - _Requirements: Server catalog access, data fetching_
+
+- [x] 42. Design catalog data models
+  - Define TypeScript interfaces for McpServerEntry, Catalog
+  - Create Zustand store for catalog state management
+  - Implement data validation and sanitization
+  - _Requirements: Type safety, state management_
+
+- [x] 43. Build Discovery UI components
+  - Create Discovery tab/page component (conditionally rendered)
+  - Design server card components with visual appeal
+  - Implement server details modal with full information
+  - _Requirements: User interface, server browsing_
+
+- [x] 44. Integrate Discovery with main navigation
+  - Add Discovery option to navigation when feature enabled
+  - Handle routing and page transitions
+  - Update menu items dynamically based on feature flag
+  - _Requirements: Navigation integration, conditional rendering_
+
+- [ ] 45. Implement server browsing functionality
+  - Display paginated server catalog with lazy loading
+  - Show server metadata (author, version, downloads)
+  - Add category-based organization
+  - _Requirements: Browse and discover servers_
+
+- [ ] 46. Add search and filtering capabilities
+  - Implement text-based server search
+  - Add category and tag filters
+  - Sort by popularity, name, or date
+  - _Requirements: Find specific servers quickly_
+
+- [ ] 47. Create installation workflow
+  - Download server packages from registry
+  - Extract and place files in correct locations
+  - Update client configurations automatically
+  - _Requirements: One-click installation_
+
+- [ ] 48. Add installation progress tracking
+  - Show real-time download progress
+  - Display installation steps and status
+  - Handle cancellation and cleanup
+  - _Requirements: User feedback, progress visibility_
+
+- [ ] 49. Implement comprehensive error handling
+  - Network error recovery with retry logic
+  - Installation failure rollback
+  - User-friendly error messages and recovery paths
+  - _Requirements: Reliability, error recovery_
 
 ## UI Redesign Tasks (Phase 3 - Lower Priority)
 
@@ -245,9 +307,3 @@
   - Add ImportExportWizard for configuration migration
   - _Requirements: Common operations wizards, guided workflows_
 
-- [ ] 39. Mobile optimization and accessibility
-  - Optimize touch interactions and mobile forms
-  - Implement responsive breakpoints and layouts
-  - Add accessibility features (keyboard nav, screen reader support)
-  - Performance optimization and testing
-  - _Requirements: Cross-device compatibility, accessibility standards_

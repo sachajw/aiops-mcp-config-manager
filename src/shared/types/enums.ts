@@ -4,7 +4,7 @@
 export enum ClientType {
   CLAUDE_DESKTOP = 'claude-desktop',
   CLAUDE_CODE = 'claude-code',
-  CODEX = 'codex',
+  CODEX = 'codex-cli',  // Fixed to match actual client name
   VS_CODE = 'vscode',
   CURSOR = 'cursor',
   KIRO = 'kiro',

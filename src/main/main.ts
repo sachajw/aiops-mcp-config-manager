@@ -4,6 +4,7 @@ import { format } from 'url'
 import { isDev } from './utils/environment'
 import { setupIpcHandlers } from './ipc/handlers'
 import { registerSimplifiedHandlers } from './ipc/simplifiedHandlers'
+import { registerDiscoveryHandlers } from './ipc/discoveryHandlers'
 
 let mainWindow: BrowserWindow | null = null
 
@@ -50,10 +51,15 @@ const createWindow = (): void => {
     console.log('[Main] __dirname:', __dirname)
     console.log('[Main] process.resourcesPath:', process.resourcesPath)
     console.log('[Main] App path:', app.getAppPath())
-    
-    // Load directly from the path relative to the ASAR root
-    // When in ASAR, just use the relative path within the archive
-    mainWindow.loadFile('dist/renderer/index.html').catch(async error => {
+
+    // Determine the correct path for the renderer files
+    const appPath = app.getAppPath()
+    // When built, the main.js is in dist/main, so we need to go up to find dist/renderer
+    const basePath = appPath.endsWith('dist/main') ? join(appPath, '..') : appPath
+    const rendererPath = join(basePath, 'renderer/index.html')
+    console.log('[Main] Trying to load renderer from:', rendererPath)
+
+    mainWindow.loadFile(rendererPath).catch(async error => {
       console.error('[Main] Primary path failed:', error)
       
       // Fallback paths if the primary doesn't work
@@ -115,9 +121,12 @@ app.whenReady().then(() => {
   
   // Setup IPC handlers
   setupIpcHandlers()
-  
+
   // Register simplified handlers
   registerSimplifiedHandlers()
+
+  // Register discovery handlers
+  registerDiscoveryHandlers()
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {

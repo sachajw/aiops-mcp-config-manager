@@ -1,0 +1,851 @@
+import { app } from 'electron';
+import * as fs from 'fs-extra';
+import * as path from 'path';
+import { spawn } from 'child_process';
+import axios from 'axios';
+import {
+  McpServerCatalog,
+  McpServerEntry,
+  InstallationState,
+  InstalledServer,
+  McpDiscoverySettings,
+  DEFAULT_MCP_DISCOVERY_SETTINGS
+} from '../../shared/types/mcp-discovery';
+
+export class McpDiscoveryService {
+  private settings: McpDiscoverySettings;
+  private catalogCache: McpServerCatalog | null = null;
+  private cacheTimestamp: Date | null = null;
+  private installedServers: Map<string, InstalledServer> = new Map();
+  private installationStates: Map<string, InstallationState> = new Map();
+
+  constructor(settings?: Partial<McpDiscoverySettings>) {
+    this.settings = { ...DEFAULT_MCP_DISCOVERY_SETTINGS, ...settings };
+    this.loadInstalledServers();
+  }
+
+  /**
+   * Get current discovery settings
+   */
+  getSettings(): McpDiscoverySettings {
+    return { ...this.settings };
+  }
+
+  /**
+   * Fetch the MCP server catalog from the remote repository
+   */
+  async fetchCatalogFromAPI(forceRefresh = false): Promise<any> {
+    // Fetch raw data from the API
+    const response = await axios.get(this.settings.catalogUrl);
+    return response.data;
+  }
+
+  /**
+   * Fetch catalog from GitHub repository as alternative source
+   */
+  async fetchCatalogFromGitHub(): Promise<any> {
+    console.log('[McpDiscovery] Fetching from GitHub repository...');
+
+    try {
+      const servers: any[] = [];
+
+      // First, fetch the main README to get third-party servers
+      console.log('[McpDiscovery] Fetching repository README for third-party servers...');
+      const readmeResponse = await axios.get(
+        'https://raw.githubusercontent.com/modelcontextprotocol/servers/main/README.md'
+      );
+      const readmeContent = readmeResponse.data;
+
+      // Parse third-party servers from README
+      const thirdPartyServers = this.parseThirdPartyServersFromReadme(readmeContent);
+      servers.push(...thirdPartyServers);
+
+      // Then fetch official servers from the src directory
+      console.log('[McpDiscovery] Fetching official servers from src directory...');
+      const response = await axios.get(
+        'https://api.github.com/repos/modelcontextprotocol/servers/contents/src',
+        {
+          headers: {
+            'Accept': 'application/vnd.github.v3+json'
+          }
+        }
+      );
+
+      const directories = response.data.filter((item: any) => item.type === 'dir');
+
+      // For each directory, try to fetch its README.md to get server information
+      for (const dir of directories) {
+        try {
+          // Try to fetch README.md for description
+          let description = `MCP ${dir.name} server`;
+          let serverName = `mcp-server-${dir.name}`;
+
+          try {
+            const dirReadmeResponse = await axios.get(
+              `https://raw.githubusercontent.com/modelcontextprotocol/servers/main/src/${dir.name}/README.md`
+            );
+            const dirReadmeContent = dirReadmeResponse.data;
+
+            // Extract title from README (first # heading)
+            const titleMatch = dirReadmeContent.match(/^#\s+(.+)$/m);
+            if (titleMatch) {
+              serverName = titleMatch[1].toLowerCase().replace(/\s+/g, '-');
+            }
+
+            // Extract description (first paragraph after title)
+            const descMatch = dirReadmeContent.match(/^#\s+.+\n\n(.+?)(?:\n\n|$)/m);
+            if (descMatch) {
+              description = descMatch[1].replace(/\n/g, ' ');
+            }
+          } catch (err) {
+            console.log(`[McpDiscovery] Could not fetch README for ${dir.name}`);
+          }
+
+          // Check what type of server it is
+          let installationType = 'manual';
+          let installCommand = '';
+          let npmPackage = '';
+
+          // Check if it's a Python server (has pyproject.toml)
+          try {
+            await axios.get(
+              `https://raw.githubusercontent.com/modelcontextprotocol/servers/main/src/${dir.name}/pyproject.toml`
+            );
+            installationType = 'python';
+            installCommand = `uv tool install "mcp-server-${dir.name}"`;
+          } catch {
+            // Check if it's a Node.js server (has package.json)
+            try {
+              const pkgResponse = await axios.get(
+                `https://raw.githubusercontent.com/modelcontextprotocol/servers/main/src/${dir.name}/package.json`
+              );
+              const pkgData = pkgResponse.data;
+              const pkgName = typeof pkgData === 'string' ? JSON.parse(pkgData).name : pkgData.name;
+              npmPackage = pkgName || `@modelcontextprotocol/server-${dir.name}`;
+              installationType = 'npm';
+              installCommand = `npx ${npmPackage}`;
+            } catch {
+              // It's a manual installation
+            }
+          }
+
+          servers.push({
+            name: serverName,
+            description: description,
+            version: '1.0.0',
+            status: 'active',
+            repository: {
+              url: `https://github.com/modelcontextprotocol/servers/tree/main/src/${dir.name}`,
+              source: 'github-official'
+            },
+            packages: [{
+              registry_type: installationType === 'python' ? 'pypi' : installationType === 'npm' ? 'npm' : 'manual',
+              identifier: npmPackage || serverName,
+              version: '1.0.0',
+              transport: { type: 'stdio' }
+            }],
+            installation_command: installCommand,
+            _meta: {
+              'io.modelcontextprotocol.registry/official': {
+                id: `github-official-${dir.name}`,
+                published_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+                is_latest: true,
+                is_official: true
+              }
+            }
+          });
+        } catch (err) {
+          console.log(`[McpDiscovery] Error processing ${dir.name}:`, err instanceof Error ? err.message : String(err));
+        }
+      }
+
+      console.log(`[McpDiscovery] Found ${servers.length} total servers from GitHub (${thirdPartyServers.length} third-party, ${servers.length - thirdPartyServers.length} official)`);
+      return { servers };
+    } catch (error) {
+      console.error('[McpDiscovery] Failed to fetch from GitHub:', error);
+      throw error;
+    }
+  }
+
+  async fetchCatalog(forceRefresh = false): Promise<McpServerCatalog> {
+    // Check cache validity
+    if (!forceRefresh && this.catalogCache && this.cacheTimestamp) {
+      const cacheAge = Date.now() - this.cacheTimestamp.getTime();
+      const maxAge = this.settings.cacheExpiry * 60 * 1000; // Convert to milliseconds
+
+      if (cacheAge < maxAge) {
+        return this.catalogCache;
+      }
+    }
+
+    try {
+      let apiResponse;
+      const source = this.settings.catalogSource || 'registry';
+
+      // Use the configured source - no fallbacks
+      if (source === 'github') {
+        console.log('[McpDiscovery] Fetching catalog from GitHub repository...');
+        apiResponse = await this.fetchCatalogFromGitHub();
+      } else {
+        console.log('[McpDiscovery] Fetching catalog from Registry API:', this.settings.catalogUrl);
+        apiResponse = await this.fetchCatalogFromAPI(forceRefresh);
+      }
+
+      const transformedCatalog = this.transformAPIResponse(apiResponse);
+
+      this.catalogCache = transformedCatalog;
+      this.cacheTimestamp = new Date();
+
+      // Save cache to disk
+      await this.saveCatalogCache(transformedCatalog);
+
+      return transformedCatalog;
+    } catch (error) {
+      console.error('[McpDiscovery] Failed to fetch catalog:', error);
+
+      // Try to load from disk cache
+      const diskCache = await this.loadCatalogCache();
+      if (diskCache) {
+        console.log('[McpDiscovery] Using cached catalog from disk');
+        return diskCache;
+      }
+
+      throw new Error(`Failed to fetch MCP catalog: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+
+  /**
+   * Transform API response to our catalog format
+   */
+  private transformAPIResponse(apiResponse: any): McpServerCatalog {
+    const servers: McpServerEntry[] = [];
+    const categoriesSet = new Set<string>();
+
+    if (apiResponse.servers && Array.isArray(apiResponse.servers)) {
+      for (const server of apiResponse.servers) {
+        // Only include active servers
+        if (server.status !== 'active') continue;
+
+        // Extract package information
+        const npmPackage = server.packages?.find((p: any) => p.registry_type === 'npm');
+        const pypiPackage = server.packages?.find((p: any) => p.registry_type === 'pypi');
+
+        // Determine installation type and command
+        let installation: any = { type: 'manual', instructions: 'Manual installation required' };
+        if (npmPackage) {
+          installation = {
+            type: 'npm',
+            command: `npm install -g ${npmPackage.identifier}`
+          };
+        } else if (pypiPackage) {
+          installation = {
+            type: 'manual',
+            instructions: `pip install ${pypiPackage.identifier}`
+          };
+        } else if (server.remotes && server.remotes.length > 0) {
+          installation = {
+            type: 'remote',
+            instructions: 'Remote server - no installation required'
+          };
+        }
+
+        // Determine categories
+        const categories: string[] = [];
+        if (server.name.includes('gmail') || server.name.includes('postgres')) {
+          categories.push('APIs & Integration');
+        }
+        if (server.name.includes('browser') || server.name.includes('selenium')) {
+          categories.push('Development Tools');
+        }
+        if (server.description?.toLowerCase().includes('ai') || server.description?.toLowerCase().includes('llm')) {
+          categories.push('AI & Language Models');
+        }
+        if (categories.length === 0) {
+          categories.push('Other');
+        }
+
+        categories.forEach(cat => categoriesSet.add(cat));
+
+        const entry: McpServerEntry = {
+          id: server._meta?.['io.modelcontextprotocol.registry/official']?.id || server.name,
+          name: server.name,
+          description: server.description || 'No description available',
+          author: server.repository?.url?.includes('github.com') ?
+            server.repository.url.split('/')[3] : 'MCP Registry',
+          version: server.version || '1.0.0',
+          repository: server.repository?.url,
+          npmPackage: npmPackage?.identifier,
+          category: categories,
+          tags: server.name.split(/[-_.]/).filter((t: string) => t.length > 2),
+          dependencies: [],
+          compatibility: {
+            clients: ['claude-desktop', 'claude-code', 'custom'],
+            platforms: ['darwin', 'linux', 'win32']
+          },
+          stats: {
+            downloads: Math.floor(Math.random() * 10000), // Mock stats for now
+            stars: Math.floor(Math.random() * 1000),
+            lastUpdated: server._meta?.['io.modelcontextprotocol.registry/official']?.updated_at || new Date().toISOString()
+          },
+          installation,
+          config: npmPackage ? {
+            command: npmPackage.identifier.split('/').pop(),
+            args: []
+          } : undefined
+        };
+
+        servers.push(entry);
+      }
+    }
+
+    return {
+      version: '1.0.0',
+      lastUpdated: new Date(),
+      categories: Array.from(categoriesSet),
+      servers
+    };
+  }
+
+  /**
+   * Get mock catalog data for development
+   */
+  private async getMockCatalog(): Promise<McpServerCatalog> {
+    return {
+      version: '1.0.0',
+      lastUpdated: new Date(),
+      categories: [
+        'AI & Language Models',
+        'Development Tools',
+        'Data & Analytics',
+        'Productivity',
+        'File Management',
+        'APIs & Integration'
+      ],
+      servers: [
+        {
+          id: 'mcp-server-filesystem',
+          name: 'Filesystem Server',
+          description: 'Provides secure file system operations with sandboxing',
+          author: 'Anthropic',
+          version: '0.1.0',
+          repository: 'https://github.com/modelcontextprotocol/servers',
+          npmPackage: '@modelcontextprotocol/server-filesystem',
+          category: ['File Management'],
+          tags: ['filesystem', 'files', 'directories'],
+          dependencies: [],
+          compatibility: {
+            clients: ['claude-desktop', 'claude-code', 'custom'],
+            platforms: ['darwin', 'linux', 'win32'],
+            minNodeVersion: '18.0.0'
+          },
+          stats: {
+            downloads: 15234,
+            stars: 456,
+            lastUpdated: '2024-01-15T00:00:00Z'
+          },
+          installation: {
+            type: 'npm',
+            command: 'npm install -g @modelcontextprotocol/server-filesystem'
+          },
+          config: {
+            command: 'mcp-server-filesystem',
+            args: ['--root', '~/Documents']
+          }
+        },
+        {
+          id: 'mcp-server-github',
+          name: 'GitHub Server',
+          description: 'Interact with GitHub repositories, issues, and pull requests',
+          author: 'Anthropic',
+          version: '0.2.0',
+          repository: 'https://github.com/modelcontextprotocol/servers',
+          npmPackage: '@modelcontextprotocol/server-github',
+          category: ['Development Tools', 'APIs & Integration'],
+          tags: ['github', 'git', 'version-control', 'issues', 'prs'],
+          dependencies: [],
+          compatibility: {
+            clients: ['claude-desktop', 'claude-code', 'cursor', 'custom'],
+            platforms: ['darwin', 'linux', 'win32'],
+            minNodeVersion: '18.0.0'
+          },
+          stats: {
+            downloads: 28453,
+            stars: 892,
+            lastUpdated: '2024-01-20T00:00:00Z'
+          },
+          installation: {
+            type: 'npm',
+            command: 'npm install -g @modelcontextprotocol/server-github'
+          },
+          config: {
+            command: 'mcp-server-github',
+            env: {
+              GITHUB_TOKEN: 'your_github_token_here'
+            }
+          }
+        },
+        {
+          id: 'mcp-server-postgres',
+          name: 'PostgreSQL Server',
+          description: 'Connect to PostgreSQL databases for data operations',
+          author: 'Community',
+          version: '0.1.5',
+          repository: 'https://github.com/community/mcp-postgres',
+          npmPackage: 'mcp-server-postgres',
+          category: ['Data & Analytics'],
+          tags: ['database', 'postgresql', 'sql', 'data'],
+          dependencies: ['pg'],
+          compatibility: {
+            clients: ['claude-desktop', 'claude-code', 'custom'],
+            platforms: ['darwin', 'linux', 'win32'],
+            minNodeVersion: '16.0.0'
+          },
+          stats: {
+            downloads: 9876,
+            stars: 234,
+            lastUpdated: '2024-01-10T00:00:00Z'
+          },
+          installation: {
+            type: 'npm',
+            command: 'npm install -g mcp-server-postgres'
+          },
+          config: {
+            command: 'mcp-server-postgres',
+            args: ['--connection-string', 'postgresql://user:pass@localhost/db']
+          }
+        },
+        {
+          id: 'mcp-server-slack',
+          name: 'Slack Integration',
+          description: 'Send messages and interact with Slack workspaces',
+          author: 'Community',
+          version: '0.3.1',
+          repository: 'https://github.com/community/mcp-slack',
+          category: ['Communication', 'APIs & Integration'],
+          tags: ['slack', 'chat', 'messaging', 'notifications'],
+          dependencies: ['@slack/web-api'],
+          compatibility: {
+            clients: ['claude-desktop', 'custom'],
+            platforms: ['darwin', 'linux', 'win32'],
+            minNodeVersion: '18.0.0'
+          },
+          stats: {
+            downloads: 5432,
+            stars: 167,
+            lastUpdated: '2024-01-08T00:00:00Z'
+          },
+          installation: {
+            type: 'npm',
+            command: 'npm install -g mcp-server-slack'
+          },
+          config: {
+            command: 'mcp-server-slack',
+            env: {
+              SLACK_TOKEN: 'xoxb-your-token'
+            }
+          }
+        },
+        {
+          id: 'mcp-server-python',
+          name: 'Python Code Execution',
+          description: 'Execute Python code in a sandboxed environment',
+          author: 'Anthropic',
+          version: '0.1.0',
+          repository: 'https://github.com/modelcontextprotocol/servers',
+          category: ['Development Tools', 'AI & Language Models'],
+          tags: ['python', 'code', 'execution', 'jupyter', 'sandbox'],
+          dependencies: [],
+          compatibility: {
+            clients: ['claude-desktop', 'claude-code', 'custom'],
+            platforms: ['darwin', 'linux'],
+            minNodeVersion: '18.0.0'
+          },
+          stats: {
+            downloads: 34567,
+            stars: 1024,
+            lastUpdated: '2024-01-25T00:00:00Z'
+          },
+          installation: {
+            type: 'manual',
+            instructions: 'Requires Python 3.8+ and pip. Run: pip install mcp-server-python'
+          },
+          config: {
+            command: 'python',
+            args: ['-m', 'mcp_server_python']
+          }
+        }
+      ]
+    };
+  }
+
+  /**
+   * Install an MCP server
+   */
+  async installServer(serverId: string): Promise<void> {
+    const catalog = await this.fetchCatalog();
+    const server = catalog.servers.find(s => s.id === serverId);
+
+    if (!server) {
+      throw new Error(`Server ${serverId} not found in catalog`);
+    }
+
+    // Check if already installed
+    if (this.installedServers.has(serverId)) {
+      throw new Error(`Server ${server.name} is already installed`);
+    }
+
+    // Set installation state
+    this.updateInstallationState(serverId, 'pending');
+
+    try {
+      // Create installation directory
+      const installDir = this.expandPath(this.settings.installLocation);
+      await fs.ensureDir(installDir);
+
+      this.updateInstallationState(serverId, 'downloading');
+
+      switch (server.installation.type) {
+        case 'npm':
+          await this.installViaNum(server, installDir);
+          break;
+        case 'git':
+          await this.installViaGit(server, installDir);
+          break;
+        case 'download':
+          await this.installViaDownload(server, installDir);
+          break;
+        case 'manual':
+          throw new Error(`Manual installation required. ${server.installation.instructions}`);
+        case 'remote':
+          // Remote servers don't need installation - just mark as available
+          console.log('[McpDiscovery] Remote server - no installation needed');
+          break;
+        default:
+          throw new Error(`Unknown installation type: ${server.installation.type}`);
+      }
+
+      // Record installation
+      const installed: InstalledServer = {
+        serverId: server.id,
+        name: server.name,
+        version: server.version,
+        installedAt: new Date(),
+        location: path.join(installDir, server.id),
+        configuredClients: []
+      };
+
+      this.installedServers.set(serverId, installed);
+      await this.saveInstalledServers();
+
+      this.updateInstallationState(serverId, 'completed');
+    } catch (error) {
+      this.updateInstallationState(serverId, 'failed', error instanceof Error ? error.message : String(error));
+      throw error;
+    }
+  }
+
+  /**
+   * Install server via npm
+   */
+  private async installViaNum(server: McpServerEntry, installDir: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const serverDir = path.join(installDir, server.id);
+      fs.ensureDirSync(serverDir);
+
+      // Extract the correct package name from the installation command or npmPackage field
+      let packageToInstall = server.npmPackage;
+      if (!packageToInstall && server.installation.command) {
+        // Parse from command like "npm install -g package-name" or "npx package-name"
+        const parts = server.installation.command.split(' ');
+        packageToInstall = parts[parts.length - 1];
+      }
+
+      if (!packageToInstall) {
+        throw new Error('No package name available for installation');
+      }
+
+      const npmProcess = spawn('npm', ['install', packageToInstall], {
+        cwd: serverDir,
+        shell: true
+      });
+
+      npmProcess.stdout.on('data', (data) => {
+        console.log('[McpDiscovery] npm:', data.toString());
+      });
+
+      npmProcess.stderr.on('data', (data) => {
+        console.error('[McpDiscovery] npm error:', data.toString());
+      });
+
+      npmProcess.on('close', (code) => {
+        if (code === 0) {
+          resolve();
+        } else {
+          reject(new Error(`npm install failed with code ${code}`));
+        }
+      });
+    });
+  }
+
+  /**
+   * Install server via git clone
+   */
+  private async installViaGit(server: McpServerEntry, installDir: string): Promise<void> {
+    // Implementation for git clone installation
+    throw new Error('Git installation not yet implemented');
+  }
+
+  /**
+   * Install server via direct download
+   */
+  private async installViaDownload(server: McpServerEntry, installDir: string): Promise<void> {
+    // Implementation for direct download installation
+    throw new Error('Download installation not yet implemented');
+  }
+
+  /**
+   * Uninstall an MCP server
+   */
+  async uninstallServer(serverId: string): Promise<void> {
+    const installed = this.installedServers.get(serverId);
+    if (!installed) {
+      throw new Error(`Server ${serverId} is not installed`);
+    }
+
+    // Remove from file system
+    await fs.remove(installed.location);
+
+    // Remove from installed list
+    this.installedServers.delete(serverId);
+    await this.saveInstalledServers();
+  }
+
+  /**
+   * Get list of installed servers
+   */
+  getInstalledServers(): InstalledServer[] {
+    return Array.from(this.installedServers.values());
+  }
+
+  /**
+   * Check if a server is installed
+   */
+  isServerInstalled(serverId: string): boolean {
+    return this.installedServers.has(serverId);
+  }
+
+  /**
+   * Get installation state for a server
+   */
+  getInstallationState(serverId: string): InstallationState | undefined {
+    return this.installationStates.get(serverId);
+  }
+
+  /**
+   * Update installation state
+   */
+  private updateInstallationState(serverId: string, status: InstallationState['status'], error?: string): void {
+    const state: InstallationState = {
+      serverId,
+      status,
+      progress: this.calculateProgress(status),
+      error,
+      startedAt: status === 'pending' ? new Date() : this.installationStates.get(serverId)?.startedAt,
+      completedAt: status === 'completed' || status === 'failed' ? new Date() : undefined
+    };
+
+    this.installationStates.set(serverId, state);
+  }
+
+  /**
+   * Calculate progress based on status
+   */
+  private calculateProgress(status: InstallationState['status']): number {
+    switch (status) {
+      case 'idle': return 0;
+      case 'pending': return 10;
+      case 'downloading': return 30;
+      case 'installing': return 60;
+      case 'configuring': return 90;
+      case 'completed': return 100;
+      case 'failed': return 0;
+      default: return 0;
+    }
+  }
+
+  /**
+   * Load installed servers from disk
+   */
+  private async loadInstalledServers(): Promise<void> {
+    try {
+      const dataPath = path.join(app.getPath('userData'), 'mcp-installed-servers.json');
+      if (await fs.pathExists(dataPath)) {
+        const data = await fs.readJson(dataPath);
+        this.installedServers = new Map(data.servers.map((s: InstalledServer) => [s.serverId, s]));
+      }
+    } catch (error) {
+      console.error('[McpDiscovery] Failed to load installed servers:', error);
+    }
+  }
+
+  /**
+   * Save installed servers to disk
+   */
+  private async saveInstalledServers(): Promise<void> {
+    try {
+      const dataPath = path.join(app.getPath('userData'), 'mcp-installed-servers.json');
+      const data = {
+        servers: Array.from(this.installedServers.values()),
+        lastUpdated: new Date()
+      };
+      await fs.writeJson(dataPath, data, { spaces: 2 });
+    } catch (error) {
+      console.error('[McpDiscovery] Failed to save installed servers:', error);
+    }
+  }
+
+  /**
+   * Save catalog cache to disk
+   */
+  private async saveCatalogCache(catalog: McpServerCatalog): Promise<void> {
+    try {
+      const cachePath = path.join(app.getPath('userData'), 'mcp-catalog-cache.json');
+      await fs.writeJson(cachePath, catalog, { spaces: 2 });
+    } catch (error) {
+      console.error('[McpDiscovery] Failed to save catalog cache:', error);
+    }
+  }
+
+  /**
+   * Load catalog cache from disk
+   */
+  private async loadCatalogCache(): Promise<McpServerCatalog | null> {
+    try {
+      const cachePath = path.join(app.getPath('userData'), 'mcp-catalog-cache.json');
+      if (await fs.pathExists(cachePath)) {
+        return await fs.readJson(cachePath);
+      }
+    } catch (error) {
+      console.error('[McpDiscovery] Failed to load catalog cache:', error);
+    }
+    return null;
+  }
+
+  /**
+   * Parse third-party servers from the main README
+   */
+  private parseThirdPartyServersFromReadme(readmeContent: string): any[] {
+    const servers: any[] = [];
+
+    // Find the Third-Party Servers section - note the emoji in the section name
+    // Match everything from "Third-Party Servers" to the end of the file
+    const thirdPartyMatch = readmeContent.match(/##\s+[🤝]*\s*Third-Party Servers[\s\S]*/i);
+    if (!thirdPartyMatch) {
+      console.log('[McpDiscovery] No third-party servers section found in README');
+      return servers;
+    }
+
+    const thirdPartySection = thirdPartyMatch[0];
+    console.log('[McpDiscovery] Found third-party section, length:', thirdPartySection.length);
+
+    // Parse each line that looks like a server entry
+    // Multiple formats to handle:
+    // - [Server Name](url) - Description
+    // - <img ...> **[Server Name](url)** - Description
+    // - **[Server Name](url)** - Description
+    const serverLines = thirdPartySection.match(/^\s*-\s+.*?\[([^\]]+)\]\(([^)]+)\)[^\n]*/gm);
+
+    if (serverLines) {
+      console.log(`[McpDiscovery] Found ${serverLines.length} potential server lines`);
+
+      for (const line of serverLines) {
+        // Extract server name and URL from various formats
+        const linkMatch = line.match(/\*?\*?\[([^\]]+)\]\(([^)]+)\)\*?\*?/);
+        if (linkMatch) {
+          const [, name, url] = linkMatch;
+
+          // Extract description - everything after the link, minus the dash
+          const descMatch = line.match(/\]\([^)]+\)\*?\*?\s*[-–]?\s*(.*)$/);
+          const description = descMatch ? descMatch[1].trim() : '';
+
+          // Skip non-GitHub URLs for now (some might be npm packages)
+          if (!url.includes('github.com') && !url.includes('npmjs.com')) {
+            console.log(`[McpDiscovery] Skipping non-GitHub URL: ${url}`);
+            continue;
+          }
+
+          // Extract repo owner and name from URL
+          const repoMatch = url.match(/github\.com\/([^/]+)\/([^/?#]+)/);
+          if (repoMatch) {
+            const [, owner, repo] = repoMatch;
+            const serverId = `github-3p-${repo.toLowerCase().replace(/[^a-z0-9-]/g, '-')}`;
+
+            // Determine installation type based on common patterns
+            let installationType = 'manual';
+            let installCommand = '';
+            let npmPackage = '';
+
+            // Check if it's an npm package link
+            if (url.includes('npmjs.com/package/')) {
+              const npmMatch = url.match(/npmjs\.com\/package\/(.+)/);
+              if (npmMatch) {
+                npmPackage = npmMatch[1];
+                installationType = 'npm';
+                installCommand = `npm install -g ${npmPackage}`;
+              }
+            } else if (repo.startsWith('mcp-') || repo.includes('-mcp') || name.toLowerCase().includes('mcp')) {
+              // Guess npm package name from repo name
+              npmPackage = repo;
+              installationType = 'npm';
+              installCommand = `npm install -g ${npmPackage}`;
+            }
+
+            servers.push({
+              name: name.trim(),
+              description: description || `${name} MCP server`,
+              version: '1.0.0',
+              status: 'active',
+              repository: {
+                url: url.trim(),
+                source: 'github-third-party'
+              },
+              packages: [{
+                registry_type: installationType === 'npm' ? 'npm' : 'manual',
+                identifier: npmPackage || repo,
+                version: '1.0.0',
+                transport: { type: 'stdio' }
+              }],
+              installation_command: installCommand || `See ${url} for installation instructions`,
+              _meta: {
+                'io.modelcontextprotocol.registry/official': {
+                  id: serverId,
+                  published_at: new Date().toISOString(),
+                  updated_at: new Date().toISOString(),
+                  is_latest: true,
+                  is_official: false,
+                  author: owner
+                }
+              }
+            });
+          }
+        }
+      }
+    } else {
+      console.log('[McpDiscovery] No server lines found in third-party section');
+    }
+
+    console.log(`[McpDiscovery] Parsed ${servers.length} third-party servers from README`);
+    return servers;
+  }
+
+  /**
+   * Expand path with home directory
+   */
+  private expandPath(filePath: string): string {
+    if (filePath.startsWith('~')) {
+      return path.join(app.getPath('home'), filePath.slice(1));
+    }
+    return filePath;
+  }
+}
