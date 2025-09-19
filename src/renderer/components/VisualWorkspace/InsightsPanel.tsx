@@ -136,11 +136,16 @@ export const InsightsPanel: React.FC = () => {
           <div className="bg-base-200 rounded p-2">
             <div className="flex items-center justify-between mb-1">
               <span className="text-xs text-base-content/60">Tokens</span>
-              <span className="text-xs badge badge-primary badge-xs">75%</span>
+              {totalTokens > 1000000 && (
+                <span className="text-xs badge badge-warning badge-xs">High</span>
+              )}
             </div>
             <div className="text-sm font-bold">{totalTokens.toLocaleString()}</div>
             <div className="w-full bg-base-300 rounded-full h-1 mt-1">
-              <div className="bg-primary h-1 rounded-full" style={{ width: '75%' }} />
+              <div
+                className="bg-primary h-1 rounded-full transition-all duration-300"
+                style={{ width: `${Math.min((totalTokens / 1000000) * 100, 100)}%` }}
+              />
             </div>
           </div>
 

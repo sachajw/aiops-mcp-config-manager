@@ -4,15 +4,17 @@ import { useConfigStore } from '@/renderer/store/simplifiedStore';
 import { MCPClient } from '@/shared/types';
 import { AppSettings } from '@/renderer/pages/Settings/SettingsPage';
 import { CardHeader } from './CardHeader';
+import { ClientConfigDialog } from '../ClientConfigDialog';
 
 interface ClientCardProps {
   client: MCPClient;
   serverCount: number;
   isActive: boolean;
   isOver: boolean;
+  onSettingsClick: (clientName: string) => void;
 }
 
-const ClientCard: React.FC<ClientCardProps> = ({ client, serverCount, isActive, isOver }) => {
+const ClientCard: React.FC<ClientCardProps> = ({ client, serverCount, isActive, isOver, onSettingsClick }) => {
   const { selectClient } = useConfigStore() as any;
 
   // Only make it droppable, not draggable
@@ -55,12 +57,12 @@ const ClientCard: React.FC<ClientCardProps> = ({ client, serverCount, isActive, 
         <div className="space-y-1 mb-2">
           <div className="flex items-center justify-between text-xs">
             <span className="text-base-content/60">Servers</span>
-            <span className="font-semibold text-xs">{serverCount}/10</span>
+            <span className="font-semibold text-xs">{serverCount}</span>
           </div>
           <div className="w-full bg-base-300 rounded-full h-1">
             <div
               className="bg-primary h-1 rounded-full transition-all duration-300"
-              style={{ width: `${(serverCount / 10) * 100}%` }}
+              style={{ width: `${Math.min((serverCount / 20) * 100, 100)}%` }}
             />
           </div>
         </div>
@@ -72,21 +74,30 @@ const ClientCard: React.FC<ClientCardProps> = ({ client, serverCount, isActive, 
           </div>
         )}
 
-        {/* Status indicator */}
+        {/* Status indicators */}
         <div className="flex items-center justify-between mt-1">
-          <div className="flex items-center gap-1">
-            <div className={`w-1.5 h-1.5 rounded-full ${(client as any).installed ? 'bg-success animate-pulse' : 'bg-base-content/30'}`} />
-            <span className="text-xs text-base-content/60">
-              {(client as any).installed ? 'Connected' : 'Inactive'}
-            </span>
+          <div className="flex flex-col gap-0.5">
+            <div className="flex items-center gap-1">
+              <div className={`w-1.5 h-1.5 rounded-full ${(client as any).installed ? 'bg-success' : 'bg-base-content/30'}`} />
+              <span className="text-[10px] text-base-content/60">
+                {(client as any).installed ? 'Client installed' : 'Not installed'}
+              </span>
+            </div>
+            {(client as any).installed && serverCount > 0 && (
+              <div className="flex items-center gap-1">
+                <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                <span className="text-[10px] text-base-content/60">
+                  {serverCount} configured
+                </span>
+              </div>
+            )}
           </div>
           {serverCount > 0 && (
             <button
               className="btn btn-ghost btn-xs p-0 h-4 w-4 min-h-0 pointer-events-auto"
               onClick={(e) => {
                 e.stopPropagation();
-                console.log('Settings clicked for:', client.name);
-                // TODO: Open settings for this client
+                onSettingsClick(client.name);
               }}
             >
               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -105,6 +116,9 @@ export const ClientDock: React.FC = () => {
   const { clients, activeClient, servers } = useConfigStore();
   const [showNotInstalled, setShowNotInstalled] = useState(false);
   const [appSettings, setAppSettings] = useState<AppSettings | null>(null);
+  const [clientServerCounts, setClientServerCounts] = useState<Record<string, number>>({});
+  const [configDialogOpen, setConfigDialogOpen] = useState(false);
+  const [selectedClient, setSelectedClient] = useState<string>('');
 
   // Load settings from localStorage
   useEffect(() => {
@@ -118,10 +132,49 @@ export const ClientDock: React.FC = () => {
     }
   }, []);
 
-  // Calculate server count for each client
+  // Load actual server counts for each client
+  useEffect(() => {
+    const loadServerCounts = async () => {
+      const counts: Record<string, number> = {};
+
+      for (const client of clients) {
+        if ((client as any).installed) {
+          try {
+            // Get configuration for this client
+            const config = await (window as any).electronAPI?.readConfig?.(client.name, 'user');
+            if (config?.mcpServers) {
+              counts[client.name] = Object.keys(config.mcpServers).length;
+            } else {
+              counts[client.name] = 0;
+            }
+          } catch (err) {
+            console.warn(`Failed to load server count for ${client.name}:`, err);
+            counts[client.name] = 0;
+          }
+        } else {
+          counts[client.name] = 0;
+        }
+      }
+
+      setClientServerCounts(counts);
+    };
+
+    loadServerCounts();
+
+    // Reload counts when servers change
+    const interval = setInterval(loadServerCounts, 5000);
+    return () => clearInterval(interval);
+  }, [clients, servers]);
+
+  // Get server count for a client
   const getServerCount = (clientName: string) => {
-    // TODO: Get actual count from configuration
-    return Object.keys(servers).length > 0 ? Math.floor(Math.random() * 5) : 0;
+    return clientServerCounts[clientName] || 0;
+  };
+
+  // Handle settings click
+  const handleSettingsClick = (clientName: string) => {
+    setSelectedClient(clientName);
+    setConfigDialogOpen(true);
   };
 
   // Filter clients based on enabled settings
@@ -167,6 +220,7 @@ export const ClientDock: React.FC = () => {
             serverCount={getServerCount(client.name)}
             isActive={activeClient === client.name}
             isOver={false}
+            onSettingsClick={handleSettingsClick}
           />
         ))}
         {installedClients.length === 0 && (
@@ -187,6 +241,7 @@ export const ClientDock: React.FC = () => {
                 serverCount={0}
                 isActive={false}
                 isOver={false}
+                onSettingsClick={handleSettingsClick}
               />
             </div>
           ))}
@@ -205,6 +260,18 @@ export const ClientDock: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Client Configuration Dialog */}
+      {configDialogOpen && (
+        <ClientConfigDialog
+          open={configDialogOpen}
+          clientName={selectedClient}
+          onClose={() => {
+            setConfigDialogOpen(false);
+            setSelectedClient('');
+          }}
+        />
+      )}
     </div>
   );
 };

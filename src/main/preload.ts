@@ -92,7 +92,22 @@ contextBridge.exposeInMainWorld('electronAPI', {
       ipcRenderer.invoke('discovery:updateSettings', settings),
     getSettings: () =>
       ipcRenderer.invoke('discovery:getSettings'),
-  }
+  },
+
+  // Server Catalog methods (for Visual Workspace)
+  getCatalogServers: () => ipcRenderer.invoke('catalog:getServers'),
+  searchCatalogServers: (query: string) => ipcRenderer.invoke('catalog:searchServers', query),
+  getCatalogServersByCategory: (category: string) => ipcRenderer.invoke('catalog:getServersByCategory', category),
+  getPopularServers: (limit?: number) => ipcRenderer.invoke('catalog:getPopularServers', limit),
+
+  // Metrics methods (for Visual Workspace)
+  getServerMetrics: (serverName: string) => ipcRenderer.invoke('metrics:getServer', serverName),
+  getTotalMetrics: (serverNames: string[]) => ipcRenderer.invoke('metrics:getTotal', serverNames),
+
+  // Connection monitoring
+  getConnectionStatus: (serverName: string) => ipcRenderer.invoke('connection:getStatus', serverName),
+  connectToServer: (serverName: string, config: any) => ipcRenderer.invoke('connection:connect', serverName, config),
+  disconnectFromServer: (serverName: string) => ipcRenderer.invoke('connection:disconnect', serverName)
 })
 
 // Type definitions for the exposed API

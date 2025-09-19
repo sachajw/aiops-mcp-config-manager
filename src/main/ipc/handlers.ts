@@ -388,5 +388,40 @@ export function setupIpcHandlers(): void {
     return MCPServerTester.testFilesystemServer();
   });
 
+  // Metrics handlers for Visual Workspace
+  ipcMain.handle('metrics:getServer', async (_, serverName: string) => {
+    const { metricsService } = await import('../services/MetricsService');
+    return metricsService.getServerMetrics(serverName);
+  });
+
+  ipcMain.handle('metrics:getTotal', async (_, serverNames: string[]) => {
+    const { metricsService } = await import('../services/MetricsService');
+    return metricsService.getTotalMetrics(serverNames);
+  });
+
+  // Connection monitoring handlers
+  ipcMain.handle('connection:getStatus', async (_, serverName: string) => {
+    const { connectionMonitor } = await import('../services/ConnectionMonitor');
+    return connectionMonitor.getConnectionStatus(serverName);
+  });
+
+  ipcMain.handle('connection:connect', async (_, serverName: string, config: any) => {
+    const { connectionMonitor } = await import('../services/ConnectionMonitor');
+    await connectionMonitor.startMonitoring(
+      serverName,
+      config.name || serverName,
+      config.command,
+      config.args,
+      config.env
+    );
+    return connectionMonitor.getConnectionStatus(serverName);
+  });
+
+  ipcMain.handle('connection:disconnect', async (_, serverName: string) => {
+    const { connectionMonitor } = await import('../services/ConnectionMonitor');
+    await connectionMonitor.stopMonitoring(serverName);
+    return { success: true };
+  });
+
   console.log('IPC handlers initialized successfully');
 }
