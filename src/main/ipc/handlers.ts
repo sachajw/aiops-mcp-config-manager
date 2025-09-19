@@ -19,16 +19,14 @@ export function setupIpcHandlers(): void {
   });
 
   // Client discovery handlers
-  ipcMain.handle('config:detect', async (): Promise<MCPClient[]> => {
+  ipcMain.handle('config:detect', async () => {
     try {
       console.log('Detecting clients via config:detect...');
-      const result = await ClientDetector.discoverClients();
-
-      if (result.errors && result.errors.length > 0) {
-        console.warn('Client detection had errors:', result.errors);
-      }
-
-      return result.clients;
+      // Import the unified config service to get clients in the correct format
+      const { configService } = await import('../services/UnifiedConfigService');
+      const clients = await configService.detectClients();
+      console.log(`Found ${clients.filter(c => c.installed).length} installed clients out of ${clients.length} total`);
+      return clients;
     } catch (error) {
       console.error('Failed to detect clients:', error);
       throw error;
