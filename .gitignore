@@ -44,3 +44,9 @@ out/
 app/
 packages/
 mcp-marketing-servers/social-media-mcp
+playwright-report/
+test-results/
+test-*.png
+electron-test-*.png
+test-electron-*.png
+screenshot-*.png

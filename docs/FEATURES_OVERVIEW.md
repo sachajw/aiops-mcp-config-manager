@@ -153,6 +153,8 @@ Quick client switching with dropdown menu:
 
 Transform your MCP configuration management with our new visual workspace:
 
+![Visual Workspace Overview](userguide/visual-workspace-full.png)
+
 **Key Features:**
 - **Drag-and-drop server management** - Simply drag servers from the library
 - **Visual connection mapping** - See server-to-client relationships
@@ -160,10 +162,21 @@ Transform your MCP configuration management with our new visual workspace:
 - **Intuitive organization** - Arrange servers visually
 
 ### Components:
-- **Server Library** (Left) - Categorized list of available servers
-- **Interactive Canvas** (Center) - Visual network of your configuration
-- **Client Dock** (Bottom) - Quick switching between AI clients
-- **Insights Panel** (Right) - Real-time metrics and analytics
+
+#### Server Library (Left)
+![Server Library](userguide/visual-workspace-server-library.png)
+Categorized list of available servers with drag-and-drop functionality
+
+#### Interactive Canvas (Center)
+![Canvas View](userguide/visual-workspace-canvas.png)
+Visual network of your configuration with animated connections
+
+#### Client Dock (Bottom)
+![Client Dock](userguide/visual-workspace-client-dock.png)
+Quick switching between AI clients with connection counts
+
+#### Insights Panel (Right)
+Real-time metrics and analytics dashboard
 
 ---
 
@@ -173,13 +186,22 @@ Transform your MCP configuration management with our new visual workspace:
 
 Browse, discover, and install MCP servers from multiple sources:
 
+![Discovery Page](userguide/discovery-page-full.png)
+
 **Discovery Sources:**
 - **MCP Registry** - Official catalog with 100+ verified servers
 - **GitHub Search** - Find community-created servers
 - **NPM Packages** - Published MCP server packages
 
-**Features:**
-- **Smart search and filtering** by category and status
+### Search and Filtering
+![Search and Filter Bar](userguide/discovery-search-filter.png)
+- **Smart search** across names and descriptions
+- **Category filters** for easy browsing
+- **Installation status** tracking
+
+### Server Grid
+![Server Grid View](userguide/discovery-server-grid.png)
+- **Card-based layout** for visual browsing
 - **One-click installation** with automatic configuration
 - **Server details** with documentation and reviews
 - **Update notifications** for installed servers

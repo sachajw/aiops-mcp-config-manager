@@ -1310,6 +1310,28 @@ export const SimplifiedApp: React.FC = () => {
             </div>
             
             <div className="prose prose-sm max-w-none">
+              {/* Beta Version Disclaimer */}
+              <div className="alert alert-warning mb-4">
+                <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <div className="text-sm">
+                  <p className="font-semibold">Beta Version - Testing Required</p>
+                  <p className="mt-1">
+                    This application is in active development. Basic functionality has been confirmed and automatic backups
+                    are created for all configuration changes. However, further testing is still required.
+                    Please <a
+                      href="#"
+                      className="underline font-medium hover:text-blue-300"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        window.electronAPI?.openExternal('https://github.com/itsocialist/mcp-config-manager/issues');
+                      }}
+                    >report any bugs on GitHub</a>.
+                  </p>
+                </div>
+              </div>
+
               <h4 className="text-md font-semibold mt-4 mb-2">Getting Started</h4>
               <p className="text-sm mb-3">
                 MCP Configuration Manager helps you manage Model Context Protocol (MCP) server configurations 

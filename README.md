@@ -17,6 +17,12 @@
 
 ---
 
+> ⚠️ **Beta Version Notice**
+>
+> This application is in active development. Basic functionality has been confirmed and automatic backups are created for all configuration changes. However, further testing is still required. Please [report any bugs or issues](https://github.com/itsocialist/mcp-config-manager/issues) you encounter.
+
+---
+
 ## Why MCP Configuration Manager?
 
 **Before:** Manual JSON editing, syntax errors, scattered configs across multiple AI tools
