@@ -13,8 +13,8 @@ Manage MCP servers across multiple AI applications from one place:
 **Supported Clients:**
 - ✅ Claude Desktop
 - ✅ Claude Code
-- ✅ Kiro
-- ✅ Windsurf
+- ✅ Kiro *(New)*
+- ✅ Windsurf *(New)*
 - ✅ Cursor
 - ✅ VS Code
 - ✅ Codex
@@ -147,30 +147,86 @@ Quick client switching with dropdown menu:
 
 ---
 
+## 🎨 Visual Workspace *(New Feature)*
+
+### Interactive Canvas Interface
+
+Transform your MCP configuration management with our new visual workspace:
+
+**Key Features:**
+- **Drag-and-drop server management** - Simply drag servers from the library
+- **Visual connection mapping** - See server-to-client relationships
+- **Real-time status monitoring** - Animated cables show data flow
+- **Intuitive organization** - Arrange servers visually
+
+### Components:
+- **Server Library** (Left) - Categorized list of available servers
+- **Interactive Canvas** (Center) - Visual network of your configuration
+- **Client Dock** (Bottom) - Quick switching between AI clients
+- **Insights Panel** (Right) - Real-time metrics and analytics
+
+---
+
+## 🔍 Server Discovery *(New Feature)*
+
+### MCP Server Marketplace
+
+Browse, discover, and install MCP servers from multiple sources:
+
+**Discovery Sources:**
+- **MCP Registry** - Official catalog with 100+ verified servers
+- **GitHub Search** - Find community-created servers
+- **NPM Packages** - Published MCP server packages
+
+**Features:**
+- **Smart search and filtering** by category and status
+- **One-click installation** with automatic configuration
+- **Server details** with documentation and reviews
+- **Update notifications** for installed servers
+
+---
+
 ## 🔧 Advanced Features
 
-### Kiro Integration
+### Visual Workspace Integration
 
-Full support for Kiro with all MCP servers:
+Full visual management of MCP servers with React Flow:
+- Node-based interface for intuitive configuration
+- Real-time connection status with animated cables
+- Drag-and-drop server organization
+- Performance metrics visualization
+
+### Discovery & Installation
+
+Marketplace-like experience for finding new servers:
+- Browse 100+ community servers
+- Filter by category (AI, Development, Data, etc.)
+- One-click installation and configuration
+- Automatic dependency management
+
+### Kiro & Windsurf Integration
+
+Full support for newest AI clients:
 
 ![Kiro Interface](userguide/kiro-interface-fullscreen.png)
 
-### Bulk Operations
-- Select multiple servers
-- Bulk enable/disable
-- Export selected configurations
-- Mass delete operations
+### Enhanced Bulk Operations
+- Visual multi-select in workspace
+- Drag multiple servers at once
+- Bulk configuration updates
+- Mass enable/disable with visual feedback
 
-### Configuration Validation
-- Real-time syntax checking
-- Command path validation
-- Environment variable verification
-- Error highlighting
+### Advanced Configuration Validation
+- Visual indicators for configuration issues
+- Real-time path and command validation
+- Environment variable verification with suggestions
+- Connection health monitoring
 
-### Auto-Detection
-- Automatically finds installed AI clients
-- Detects configuration file locations
-- Updates when clients are installed/removed
+### Intelligent Auto-Detection
+- Automatically finds all installed AI clients
+- Discovers MCP servers from npm and GitHub
+- Updates configuration paths dynamically
+- Monitors for new client installations
 
 ---
 
@@ -248,16 +304,29 @@ Optimized for desktop use at 1920x1080:
 
 ---
 
-## 📈 Coming Soon
+## 📈 Recently Added
 
-- Cloud sync for configurations
-- Team collaboration features
-- Server marketplace
-- One-click server installation
-- Configuration templates
-- Server health monitoring
-- Usage analytics
-- Plugin system
+### Version 0.1.4 Features
+- ✅ **Visual Workspace** - Interactive canvas for server management
+- ✅ **Server Discovery** - Marketplace for finding MCP servers
+- ✅ **Kiro & Windsurf Support** - Integration with newest AI clients
+- ✅ **Enhanced Drag-and-Drop** - Visual server configuration
+- ✅ **Real-time Metrics** - Token usage and performance tracking
+- ✅ **Server Library** - Categorized server browser
+- ✅ **Connection Visualization** - Animated connection cables
+- ✅ **One-click Installation** - Simplified server setup
+
+## 🚀 Coming Soon
+
+### Q1 2025 Roadmap
+- **Cloud Sync** - Backup and sync configurations across devices
+- **Team Collaboration** - Share configurations with your team
+- **Advanced Analytics** - Detailed usage statistics and insights
+- **Custom Server Builder** - Create your own MCP servers visually
+- **AI-Powered Suggestions** - Smart server recommendations
+- **Performance Profiling** - Identify and optimize bottlenecks
+- **Enterprise Management** - Organization-wide configuration control
+- **Plugin System** - Extend functionality with custom plugins
 
 ---
 

@@ -31,7 +31,13 @@ interface SettingsPageProps {
 }
 
 export const SettingsPage: React.FC<SettingsPageProps> = ({ onClose, onSave, currentSettings }) => {
-  const [settings, setSettings] = useState<AppSettings>(currentSettings);
+  // Ensure enabledClients is initialized
+  const initialSettings: AppSettings = {
+    ...currentSettings,
+    enabledClients: currentSettings.enabledClients || {}
+  };
+
+  const [settings, setSettings] = useState<AppSettings>(initialSettings);
   const [activeTab, setActiveTab] = useState<'clients' | 'general' | 'advanced'>('clients');
   const [customClientForm, setCustomClientForm] = useState({ name: '', configPath: '' });
 
@@ -44,8 +50,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onClose, onSave, cur
     setSettings(prev => ({
       ...prev,
       enabledClients: {
-        ...prev.enabledClients,
-        [client]: !prev.enabledClients[client]
+        ...(prev.enabledClients || {}),
+        [client]: !(prev.enabledClients?.[client])
       }
     }));
   };
@@ -139,10 +145,10 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onClose, onSave, cur
                       </p>
                     </div>
                     <div className="ml-4">
-                      <input 
+                      <input
                         type="checkbox"
                         className="toggle toggle-primary"
-                        checked={settings.enabledClients[client] !== false}
+                        checked={settings.enabledClients?.[client] !== false}
                         onChange={() => toggleClient(client)}
                       />
                     </div>

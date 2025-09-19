@@ -36,7 +36,13 @@ const ServerCard: React.FC<ServerCardProps> = ({
   const [showDetails, setShowDetails] = useState(false);
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: `server-${id}`,
-    data: server
+    data: {
+      server,
+      name,
+      tools,
+      tokens,
+      icon
+    }
   });
 
   const style = {

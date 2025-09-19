@@ -180,48 +180,55 @@ export const VisualWorkspace: React.FC = () => {
 
     // Handle server drag
     if (active.id.toString().startsWith('server-')) {
-      const serverData = active.data.current as any;
-      const serverName = active.id.toString().replace('server-', '');
+      const dragData = active.data.current as any;
+      const serverName = dragData?.name || active.id.toString().replace('server-', '');
+      const serverData = dragData?.server;
       const serverNodeId = `server-node-${serverName}`;
 
-      if (over) {
-        // Dropped on client
-        if (over.id.toString().startsWith('client-') || over.id.toString().startsWith('client-extra-')) {
-          const targetClientId = over.id.toString();
+      // Check if dropped on a client node
+      const isClientDrop = over && (over.id.toString().startsWith('client-') || over.id.toString().startsWith('client-extra-'));
 
-          // Add server node if it doesn't exist
-          const serverExists = nodes.some(n => n.id === serverNodeId);
-          if (!serverExists) {
-            const newServerNode: Node = {
-              id: serverNodeId,
-              type: 'server',
-              position: { x: 350, y: 200 + nodes.filter(n => n.type === 'server').length * 100 },
+      // If no specific drop target (over is null) or dropped on canvas, add server to canvas
+      // This handles the case where React Flow might not register as a drop target
+      if (!over || over.id === 'react-flow-wrapper' || (!isClientDrop && isDragging)) {
+        console.log('Adding server to canvas', { over: over?.id, serverName });
+
+        // Check if server already exists
+        const serverExists = nodes.some(n => n.id === serverNodeId);
+        if (!serverExists) {
+          const newServerNode: Node = {
+            id: serverNodeId,
+            type: 'server',
+            position: { x: 350, y: 200 + nodes.filter(n => n.type === 'server').length * 100 },
+            data: {
+              label: serverName,
+              server: serverData,
+              icon: dragData?.icon || '📦',
+              tools: dragData?.tools || 10,
+              tokens: dragData?.tokens || 1000
+            },
+          };
+          setNodes((nds) => [...nds, newServerNode]);
+
+          // Automatically create edge to active client if exists
+          const activeClientNode = nodes.find(n => n.id === `client-${activeClient}`);
+          if (activeClientNode) {
+            const newEdge: Edge = {
+              id: `${serverNodeId}-client-${activeClient}`,
+              source: serverNodeId,
+              target: `client-${activeClient}`,
+              type: 'cable',
+              animated: true,
               data: {
-                label: serverName,
-                server: serverData,
-                tools: serverData.tools || 10,
-                tokens: serverData.tokens || 1000
-              },
+                tension: 0.5,
+                sag: 20,
+              }
             };
-            setNodes((nds) => [...nds, newServerNode]);
+            setEdges((eds) => [...eds, newEdge]);
           }
 
-          // Create edge between server and client
-          const newEdge: Edge = {
-            id: `${serverNodeId}-${targetClientId}`,
-            source: serverNodeId,
-            target: targetClientId,
-            type: 'cable',
-            animated: true,
-            data: {
-              tension: 0.5,
-              sag: 20,
-            }
-          };
-          setEdges((eds) => [...eds, newEdge]);
-
           // Save to configuration if auto-save is enabled
-          if (autoSave && activeClient && activeClient !== 'catalog') {
+          if (autoSave && activeClient && activeClient !== 'catalog' && serverData) {
             const serverConfig = {
               ...serverData,
               name: serverName
@@ -229,33 +236,50 @@ export const VisualWorkspace: React.FC = () => {
             addServer(serverName, serverConfig);
           }
         }
-        // Dropped on canvas
-        else if (over.id === 'react-flow-wrapper') {
-          // Check if server already exists
-          const serverExists = nodes.some(n => n.id === serverNodeId);
-          if (!serverExists) {
-            const newServerNode: Node = {
-              id: serverNodeId,
-              type: 'server',
-              position: { x: 350, y: 200 + nodes.filter(n => n.type === 'server').length * 100 },
-              data: {
-                label: serverName,
-                server: serverData,
-                tools: serverData.tools || 10,
-                tokens: serverData.tokens || 1000
-              },
-            };
-            setNodes((nds) => [...nds, newServerNode]);
+      }
+      // Dropped specifically on a client
+      else if (isClientDrop) {
+        const targetClientId = over.id.toString();
 
-            // Save to configuration if auto-save is enabled
-            if (autoSave && activeClient && activeClient !== 'catalog') {
-              const serverConfig = {
-                ...serverData,
-                name: serverName
-              };
-              addServer(serverName, serverConfig);
-            }
+        // Add server node if it doesn't exist
+        const serverExists = nodes.some(n => n.id === serverNodeId);
+        if (!serverExists) {
+          const newServerNode: Node = {
+            id: serverNodeId,
+            type: 'server',
+            position: { x: 350, y: 200 + nodes.filter(n => n.type === 'server').length * 100 },
+            data: {
+              label: serverName,
+              server: serverData,
+              icon: dragData?.icon || '📦',
+              tools: dragData?.tools || 10,
+              tokens: dragData?.tokens || 1000
+            },
+          };
+          setNodes((nds) => [...nds, newServerNode]);
+        }
+
+        // Create edge between server and client
+        const newEdge: Edge = {
+          id: `${serverNodeId}-${targetClientId}`,
+          source: serverNodeId,
+          target: targetClientId,
+          type: 'cable',
+          animated: true,
+          data: {
+            tension: 0.5,
+            sag: 20,
           }
+        };
+        setEdges((eds) => [...eds, newEdge]);
+
+        // Save to configuration if auto-save is enabled
+        if (autoSave && activeClient && activeClient !== 'catalog' && serverData) {
+          const serverConfig = {
+            ...serverData,
+            name: serverName
+          };
+          addServer(serverName, serverConfig);
         }
       }
     }
@@ -319,7 +343,20 @@ export const VisualWorkspace: React.FC = () => {
             </div>
 
             <ReactFlowProvider>
-              <div className="h-full w-full pt-10" id="react-flow-wrapper" ref={setCanvasDropRef}>
+              <div
+                className="h-full w-full pt-10"
+                id="react-flow-wrapper"
+                ref={setCanvasDropRef}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  e.dataTransfer.dropEffect = 'move';
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  // This ensures drops on the canvas are handled
+                  console.log('Native drop on canvas detected');
+                }}
+              >
                 <ReactFlow
                   nodes={nodes}
                   edges={edges}
@@ -331,6 +368,15 @@ export const VisualWorkspace: React.FC = () => {
                   fitView
                   className="bg-base-200"
                   proOptions={{ hideAttribution: true }}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'move';
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    // This ensures drops on React Flow are handled
+                    console.log('Drop on React Flow detected');
+                  }}
                 >
                 <Background color="#4a5568" gap={20} />
                 <Controls

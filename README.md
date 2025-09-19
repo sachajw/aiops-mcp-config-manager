@@ -44,25 +44,41 @@
 
 ## Key Features
 
+### 🎨 Visual Workspace *(New)*
+- **Interactive canvas** for visualizing MCP server connections
+- **Drag-and-drop** servers from library to connect with AI clients
+- **Real-time connection status** with animated cable connections
+- **Visual insights panel** showing server metrics and usage
+
+### 🔍 Server Discovery *(New)*
+- **Browse MCP marketplace** with 100+ community servers
+- **One-click installation** for popular MCP servers
+- **Server details** including documentation and configuration guides
+- **Filter by category** to find servers for your use case
+
 ### Visual Configuration Management
 - **Form-based editing** eliminates JSON syntax errors
 - **Drag-and-drop interface** for server organization
 - **Real-time validation** catches issues before they break your setup
+- **Monaco editor** for advanced JSON editing with syntax highlighting
 
 ### Cross-Client Synchronization
-- **Unified management** for Claude Desktop, VS Code, Cursor, and more
+- **Unified management** for Claude Desktop, VS Code, Cursor, Kiro, Windsurf, and more
 - **Bulk operations** apply changes across multiple clients instantly
 - **Configuration templates** for quick project setup
+- **Auto-detection** of installed AI clients
 
 ### Error Prevention & Recovery
 - **Automatic backups** before any changes
 - **Configuration validation** prevents broken setups
 - **External change detection** monitors files for manual edits
+- **Rollback capability** to restore previous configurations
 
 ### Scope Management
 - **Global configurations** for system-wide MCP servers
 - **Project-specific setups** for team collaboration
 - **User-level customization** for personal preferences
+- **Hierarchical scope resolution** for flexible configuration inheritance
 
 ## Quick Start
 
@@ -133,30 +149,54 @@ See [Installation Guide](docs/INSTALLATION.md) for detailed instructions.
 
 ## Advanced Features
 
-### Server Catalog
-Browse and install MCP servers from a curated catalog:
-- **GitHub MCP Server** - Repository management and automation
-- **Playwright MCP** - Browser automation for testing
-- **Filesystem MCP** - Secure file operations
-- **+ 100+ community servers**
+### 🎯 Visual Workspace Interface
+The new Visual Workspace provides an intuitive canvas for managing MCP configurations:
+- **Interactive node-based interface** using React Flow
+- **Drag servers from library** and drop onto canvas
+- **Visual connections** show server-to-client relationships
+- **Real-time metrics** display token usage and active tools
+- **Client dock** for quick switching between AI clients
+- **Insights panel** with performance analytics
 
-### Bulk Operations
-- **Mass enable/disable** servers across clients
-- **Configuration templates** for instant project setup  
-- **Export/import** configurations for team sharing
+### 🔍 MCP Server Discovery
+Explore and install servers from multiple sources:
+- **MCP Registry** - Official catalog with 100+ verified servers
+- **GitHub search** - Find servers directly from GitHub repositories
+- **NPM packages** - Browse MCP servers published to npm
+- **Categories**: AI Tools, Development, Productivity, Data, and more
+- **One-click configuration** with automatic dependency installation
+- **Server ratings** and community reviews
+
+### Server Management
+Enhanced server configuration capabilities:
+- **Server Library panel** with categorized server list
+- **Quick actions** for enable/disable/configure
+- **Environment variable templates** for common configurations
+- **Command builder** with syntax validation
+- **Bulk operations** across multiple servers and clients
 
 ### Monitoring & Analytics
 - **Real-time server status** monitoring
 - **Performance metrics** for MCP server usage
+- **Token usage tracking** per server and client
 - **Configuration change history** with rollback capability
+- **Connection health monitoring** with automatic reconnection
 
-## Upcoming Features
+## Recently Added (v0.1.4)
 
-- **MCP Server Marketplace** with ratings and reviews
-- **AI-powered configuration suggestions** 
-- **Team collaboration features** with shared configs
-- **Advanced analytics dashboard**
-- **API for CI/CD integration**
+- ✅ **Visual Workspace** - Interactive canvas for server management
+- ✅ **Server Discovery** - Browse and install from 100+ MCP servers
+- ✅ **Kiro & Windsurf Support** - Latest AI client integrations
+- ✅ **Enhanced Drag-and-Drop** - Visual server configuration
+- ✅ **Real-time Metrics** - Performance and usage tracking
+
+## Upcoming Features (Q1 2025)
+
+- **Cloud Sync** - Backup and sync across devices
+- **Team Collaboration** - Share configurations with your team
+- **AI-Powered Suggestions** - Smart server recommendations
+- **Advanced Analytics Dashboard** - Detailed usage insights
+- **API for CI/CD Integration** - Automate configuration deployment
 
 ## Community
 

@@ -8,6 +8,12 @@ import { registerDiscoveryHandlers } from './ipc/discoveryHandlers'
 
 let mainWindow: BrowserWindow | null = null
 
+// Enable remote debugging in dev mode for testing
+if (isDev()) {
+  app.commandLine.appendSwitch('remote-debugging-port', '9222')
+  console.log('[Main] Remote debugging enabled on port 9222')
+}
+
 const createWindow = (): void => {
   console.log('[Main] Creating window...')
   console.log('[Main] __dirname:', __dirname)

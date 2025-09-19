@@ -58,14 +58,14 @@ export const ClientNode: React.FC<NodeProps<ClientNodeData>> = ({ data, selected
           <span className="text-base-content/60">Servers</span>
           <span className="font-semibold">{serverCount}/{maxServers}</span>
         </div>
-        <div className="w-full bg-base-300 rounded-full h-2">
+        <div className="w-full bg-base-300 rounded-full h-2 overflow-hidden">
           <div
             className={`h-2 rounded-full transition-all duration-300 ${
               capacityPercentage >= 80 ? 'bg-warning' :
               capacityPercentage >= 50 ? 'bg-info' :
               'bg-success'
             }`}
-            style={{ width: `${capacityPercentage}%` }}
+            style={{ width: `${Math.min(capacityPercentage, 100)}%` }}
           />
         </div>
       </div>

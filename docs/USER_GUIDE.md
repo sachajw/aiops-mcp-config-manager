@@ -6,6 +6,8 @@
 - [Installation](#installation)
 - [Getting Started](#getting-started)
 - [Main Interface](#main-interface)
+- [Visual Workspace](#visual-workspace)
+- [Server Discovery](#server-discovery)
 - [Managing MCP Servers](#managing-mcp-servers)
 - [Configuration Scopes](#configuration-scopes)
 - [Settings](#settings)
@@ -105,6 +107,199 @@ Choose the configuration scope you want to work with:
 - **User**: Personal configurations in your home directory
 - **Project**: Project-specific configurations (requires a project directory)
 - **System**: System-wide configurations (may require admin privileges)
+
+---
+
+## Visual Workspace
+
+The Visual Workspace provides an intuitive, canvas-based interface for managing MCP server connections. This feature transforms the traditional list-based configuration into an interactive visual experience.
+
+### Accessing Visual Workspace
+
+Click the **Visual Workspace** tab in the main navigation to access the canvas interface.
+
+### Key Components
+
+#### 1. Server Library (Left Panel)
+The Server Library contains all available MCP servers organized by category:
+- **Development**: Code editing, Git, database tools
+- **AI Tools**: LLMs, embeddings, vector databases
+- **Productivity**: Task management, note-taking, automation
+- **Data**: Analytics, processing, visualization
+- **Communication**: Email, messaging, notifications
+- **Utilities**: File management, system tools
+
+**Using the Server Library:**
+- Browse servers by expanding categories
+- Drag servers from the library onto the canvas
+- Search for specific servers using the search bar
+- View server details by hovering over items
+
+#### 2. Interactive Canvas (Center)
+The main canvas area displays your MCP configuration as a visual network:
+- **Server Nodes**: Represent individual MCP servers with icons and labels
+- **Client Node**: Shows the active AI client (Claude, VS Code, etc.)
+- **Connection Cables**: Animated lines showing server-to-client connections
+- **Real-time Status**: Visual indicators for active/inactive connections
+
+**Canvas Controls:**
+- **Zoom**: Use mouse wheel or zoom controls to adjust view
+- **Pan**: Click and drag to navigate the canvas
+- **Select**: Click nodes to view details and configuration
+- **Multi-select**: Hold Shift to select multiple nodes
+
+#### 3. Client Dock (Bottom)
+Quick access bar for switching between AI clients:
+- Shows all detected AI clients with icons
+- Click to switch active client view
+- Highlights the currently selected client
+- Displays connection count for each client
+
+#### 4. Insights Panel (Right)
+Real-time analytics and metrics dashboard:
+- **Token Usage**: Track token consumption per server
+- **Active Tools**: See which MCP tools are currently in use
+- **Performance Metrics**: Monitor response times and throughput
+- **Connection Health**: View connection status and errors
+
+### Working with Visual Workspace
+
+#### Adding Servers via Drag-and-Drop
+1. Open the Server Library panel on the left
+2. Browse or search for the desired server
+3. Drag the server from the library
+4. Drop it onto the canvas
+5. The server will automatically connect to the active client
+
+#### Configuring Servers
+1. Click on a server node to select it
+2. Right-click to open the context menu
+3. Select "Configure" to open the configuration dialog
+4. Update command, arguments, and environment variables
+5. Click "Save" to apply changes
+
+#### Managing Connections
+- **Enable/Disable**: Toggle server connections on/off
+- **Reconnect**: Force reconnection for troubleshooting
+- **Remove**: Delete servers from the configuration
+
+#### Visual Indicators
+- **Green cable**: Active, healthy connection
+- **Yellow cable**: Connection establishing or warning
+- **Red cable**: Connection error or server offline
+- **Pulsing animation**: Data actively flowing
+
+### Best Practices
+
+1. **Organize by Function**: Group related servers together on the canvas
+2. **Use Labels**: Add descriptive labels to servers for clarity
+3. **Monitor Performance**: Keep the Insights Panel open to track usage
+4. **Regular Cleanup**: Remove unused servers to maintain clarity
+5. **Save Layouts**: Export canvas layouts for backup or sharing
+
+---
+
+## Server Discovery
+
+The Server Discovery feature provides a marketplace-like experience for finding and installing MCP servers from various sources.
+
+### Accessing Discovery
+
+Click the **Discovery** tab in the main navigation to browse available MCP servers.
+
+### Discovery Sources
+
+#### 1. MCP Registry (Default)
+- Official catalog of verified MCP servers
+- Community-contributed servers with ratings
+- Regular updates with new servers
+
+#### 2. GitHub Search
+- Search GitHub repositories for MCP servers
+- Filter by stars, forks, and recent updates
+- Direct installation from repository
+
+#### 3. NPM Packages
+- Browse MCP servers published to npm
+- Version management and dependencies
+- Automatic updates available
+
+### Using Discovery
+
+#### Browsing Servers
+
+The Discovery page displays servers in a card grid layout:
+- **Server Card**: Shows name, description, and key information
+- **Category Badge**: Indicates server type (AI, Dev, Data, etc.)
+- **Installation Status**: Shows if server is already installed
+- **Ratings**: Community ratings and review count
+
+#### Filtering and Search
+
+**Search Bar**: Type to search by name, description, or keywords
+
+**Filter Options:**
+- **Category**: Filter by server category
+- **Source**: Choose between Registry, GitHub, or NPM
+- **Installed**: Show only installed or available servers
+- **Sort By**: Relevance, popularity, or recent updates
+
+#### Installing Servers
+
+1. **Browse or Search**: Find the server you want to install
+2. **Click Server Card**: Opens detailed information modal
+3. **Review Details**: Check requirements and configuration options
+4. **Click Install**: Begins the installation process
+5. **Configure**: Set up required environment variables
+6. **Activate**: Enable for your selected AI client
+
+#### Server Details Modal
+
+When you click on a server card, you'll see:
+- **Full Description**: Detailed explanation of server capabilities
+- **Installation Instructions**: Step-by-step setup guide
+- **Configuration Template**: Pre-filled configuration options
+- **Dependencies**: Required software or API keys
+- **Documentation Link**: Access to full documentation
+- **Community Reviews**: User feedback and ratings
+
+### Managing Installed Servers
+
+#### Viewing Installed Servers
+- Toggle the "Installed" filter to see only your servers
+- Green checkmark indicates successful installation
+- Click to view configuration or update
+
+#### Updating Servers
+- Update notifications appear on server cards
+- Click "Update" to install the latest version
+- Review changelog before updating
+
+#### Removing Servers
+1. Open the installed server's details
+2. Click "Uninstall" button
+3. Confirm removal
+4. Server configuration is backed up automatically
+
+### Discovery Settings
+
+Access Discovery settings via the gear icon:
+
+**Catalog Source**:
+- MCP Registry (recommended)
+- GitHub Search
+- NPM Registry
+- Custom URL
+
+**Auto-Update**:
+- Enable automatic server updates
+- Set update check frequency
+- Configure update notifications
+
+**Cache Settings**:
+- Clear discovery cache
+- Set cache duration
+- Offline mode options
 
 ---
 
@@ -473,6 +668,108 @@ MCP server configurations follow this structure:
 2. Namespace your variables: `GITHUB_TOKEN`, `GITHUB_ORG`
 3. Document required vs optional variables
 4. Never hardcode sensitive values
+
+---
+
+## Keyboard Shortcuts
+
+### Global Shortcuts
+
+| Shortcut | Action | Description |
+|----------|--------|-------------|
+| **Cmd/Ctrl + S** | Save Configuration | Save current configuration changes |
+| **Cmd/Ctrl + Shift + S** | Save All | Save all pending changes across clients |
+| **Cmd/Ctrl + R** | Refresh | Reload current configuration |
+| **Cmd/Ctrl + F** | Search | Open search in current context |
+| **Cmd/Ctrl + ,** | Settings | Open settings panel |
+| **Cmd/Ctrl + Q** | Quit | Exit the application |
+
+### Navigation Shortcuts
+
+| Shortcut | Action | Description |
+|----------|--------|-------------|
+| **Cmd/Ctrl + 1** | Configuration Tab | Switch to Configuration view |
+| **Cmd/Ctrl + 2** | Visual Workspace | Switch to Visual Workspace |
+| **Cmd/Ctrl + 3** | Discovery | Switch to Discovery page |
+| **Cmd/Ctrl + 4** | Profiles | Open Profiles manager |
+| **Tab** | Next Field | Navigate to next input field |
+| **Shift + Tab** | Previous Field | Navigate to previous field |
+
+### Visual Workspace Shortcuts
+
+| Shortcut | Action | Description |
+|----------|--------|-------------|
+| **Space** | Pan Mode | Hold to enable canvas panning |
+| **Cmd/Ctrl + Plus** | Zoom In | Increase canvas zoom |
+| **Cmd/Ctrl + Minus** | Zoom Out | Decrease canvas zoom |
+| **Cmd/Ctrl + 0** | Reset Zoom | Reset to default zoom |
+| **Delete** | Delete Node | Remove selected server node |
+| **Cmd/Ctrl + A** | Select All | Select all nodes on canvas |
+| **Escape** | Deselect | Clear current selection |
+
+### Server Management
+
+| Shortcut | Action | Description |
+|----------|--------|-------------|
+| **Cmd/Ctrl + N** | New Server | Open Add Server dialog |
+| **Cmd/Ctrl + D** | Duplicate | Duplicate selected server |
+| **Cmd/Ctrl + E** | Edit Server | Edit selected server |
+| **Cmd/Ctrl + Delete** | Delete Server | Remove selected server |
+| **Space** | Toggle Enable | Enable/disable selected server |
+
+### Discovery Shortcuts
+
+| Shortcut | Action | Description |
+|----------|--------|-------------|
+| **/** | Quick Search | Focus search bar |
+| **Cmd/Ctrl + I** | Install Server | Install selected server |
+| **Cmd/Ctrl + U** | Check Updates | Check for server updates |
+| **F** | Toggle Filter | Show/hide filter panel |
+
+---
+
+## Features Overview
+
+### Core Capabilities
+
+#### Multi-Client Support
+- **Supported Clients**: Claude Desktop, Claude Code, VS Code, Cursor, Kiro, Windsurf, Codex, Gemini Desktop, Gemini CLI
+- **Auto-Detection**: Automatically discovers installed AI clients
+- **Cross-Platform**: Works on macOS, Windows, and Linux
+
+#### Configuration Management
+- **Visual Editing**: Form-based interface prevents JSON syntax errors
+- **Validation**: Real-time validation of configurations
+- **Backup & Restore**: Automatic backups before changes
+- **Import/Export**: Share configurations between systems
+
+#### Advanced Features
+- **Visual Workspace**: Interactive canvas for server management
+- **Server Discovery**: Marketplace for finding and installing servers
+- **Bulk Operations**: Apply changes to multiple servers at once
+- **Profiles**: Save and switch between configuration sets
+- **Monitoring**: Real-time server status and metrics
+
+### Version History
+
+#### Version 0.1.4 (Current)
+- Added Visual Workspace with React Flow canvas
+- Introduced Server Discovery marketplace
+- Added support for Kiro and Windsurf clients
+- Enhanced drag-and-drop functionality
+- Improved performance and stability
+
+#### Version 0.1.3
+- Added profile management
+- Enhanced validation engine
+- Improved error handling
+- Added bulk operations
+
+#### Version 0.1.2
+- Initial public release
+- Core configuration management
+- Multi-client support
+- Basic server management
 
 ---
 
