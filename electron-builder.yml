@@ -1,0 +1,77 @@
+appId: com.mcptools.config-manager
+productName: MCP Configuration Manager
+copyright: Copyright © 2025 MCP Configuration Manager
+
+directories:
+  output: release
+  buildResources: build
+
+files:
+  - dist/**/*
+  - '!dist/**/*.map'
+  - package.json
+
+mac:
+  category: public.app-category.developer-tools
+  icon: assets/icons/icon-512.png
+  hardenedRuntime: true
+  gatekeeperAssess: false
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.plist
+  artifactName: '${productName}-${version}-${arch}.${ext}'
+  target:
+    - target: dmg
+      arch:
+        - arm64
+        - x64
+    - target: zip
+      arch:
+        - arm64
+        - x64
+
+dmg:
+  title: '${productName} ${version}'
+  icon: assets/icons/icon-512.png
+  iconSize: 100
+  contents:
+    - x: 130
+      y: 220
+      type: file
+    - x: 410
+      y: 220
+      type: link
+      path: /Applications
+  window:
+    width: 540
+    height: 380
+  backgroundColor: '#2e3440'
+
+win:
+  target: nsis
+  icon: assets/icons/icon-256.png
+  artifactName: '${productName}-Setup-${version}.${ext}'
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  deleteAppDataOnUninstall: false
+
+linux:
+  target:
+    - AppImage
+    - deb
+  icon: assets/icons/icon-512.png
+  category: Development
+  artifactName: '${productName}-${version}.${ext}'
+
+publish:
+  provider: github
+  owner: itsocialist
+  repo: mcp-config-manager
+  releaseType: release
+
+protocols:
+  name: MCP Configuration Manager Protocol
+  schemes:
+    - mcp-config

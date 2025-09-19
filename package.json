@@ -1,6 +1,6 @@
 {
   "name": "mcp-config-manager",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "The visual command center for AI tool configuration. Stop wrestling with JSON - start managing MCP servers visually across Claude, VS Code, and more.",
   "main": "dist/main/main.js",
   "homepage": "https://github.com/itsocialist/mcp-config-manager",
