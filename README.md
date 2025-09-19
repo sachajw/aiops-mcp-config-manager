@@ -9,7 +9,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Platform](https://img.shields.io/badge/platform-macOS-lightgrey)](https://github.com/itsocialist/mcp-config-manager)
 [![Release](https://img.shields.io/github/v/release/itsocialist/mcp-config-manager)](https://github.com/itsocialist/mcp-config-manager/releases)
-[![Version](https://img.shields.io/badge/version-0.1.5-blue)](https://github.com/itsocialist/mcp-config-manager/releases/tag/v0.1.5)
+[![Version](https://img.shields.io/badge/version-0.1.6-blue)](https://github.com/itsocialist/mcp-config-manager/releases/tag/v0.1.6)
 
 [Download](#installation) • [Quick Start](#quick-start) • [Documentation](#documentation) • [Community](#community)
 
@@ -91,8 +91,8 @@
 ### Installation
 
 **Download for macOS:**
-- [macOS Apple Silicon (M1/M2/M3)](https://github.com/itsocialist/mcp-config-manager/releases/download/v0.1.5/MCP.Configuration.Manager-0.1.5-arm64.dmg)
-- [macOS Intel](https://github.com/itsocialist/mcp-config-manager/releases/download/v0.1.5/MCP.Configuration.Manager-0.1.5.dmg)
+- [macOS Apple Silicon (M1/M2/M3)](https://github.com/itsocialist/mcp-config-manager/releases/download/v0.1.6/MCP.Configuration.Manager-0.1.6-arm64.dmg)
+- [macOS Intel](https://github.com/itsocialist/mcp-config-manager/releases/download/v0.1.6/MCP.Configuration.Manager-0.1.6.dmg)
 - [View all releases](https://github.com/itsocialist/mcp-config-manager/releases)
 
 **Important: First Launch on macOS**  
@@ -156,14 +156,16 @@ See [Installation Guide](docs/INSTALLATION.md) for detailed instructions.
 ## Advanced Features
 
 ### 🎯 Visual Workspace Interface
-The new Visual Workspace provides an intuitive canvas for managing MCP configurations:
+The Visual Workspace provides an intuitive canvas for managing MCP configurations:
 - **Interactive node-based interface** using React Flow
-- **Drag servers from library** and drop onto canvas
+- **Working server library** with 100+ available MCP servers
+- **Drag servers from library** and drop onto canvas for configuration
 - **Visual connections** show server-to-client relationships
-- **Live server metrics** with real MCP protocol integration
-- **Real-time connection status** and health monitoring
-- **Client dock** for quick switching between AI clients
-- **Insights panel** with live performance analytics
+- **Live server metrics** displaying real token usage and tool counts
+- **Real-time connection status** with separate client/server indicators
+- **Client dock** with accurate server counts per client
+- **Performance insights panel** with actual metrics from MCP connections
+- **Configuration path editor** accessible via gear icon on client cards
 
 ### 🔍 MCP Server Discovery
 Explore and install servers from multiple sources:
@@ -184,20 +186,29 @@ Enhanced server configuration capabilities:
 
 ### Monitoring & Analytics
 - **Real-time server status** with native MCP protocol monitoring
-- **Live performance metrics** including response times and tool counts
+- **Live performance metrics** with accurate token counts and response times
 - **Active connection tracking** with health checks and auto-reconnect
 - **Configuration change history** with rollback capability
 - **Server resource monitoring** for tools, prompts, and resources
+- **Client-specific metrics** showing actual configured server counts
 
-## Recently Added (v0.1.5)
+## Recently Added (v0.1.6)
 
+### Critical Bug Fixes
+- ✅ **Fixed Server Library Display** - Catalog servers now load properly
+- ✅ **Real Metrics Display** - Performance insights show actual server data
+- ✅ **Accurate Server Counts** - Client cards display real configuration counts
+- ✅ **Token Display Fixed** - Shows actual numbers instead of percentages
+- ✅ **Client Path Configuration** - New dialog for managing config file locations
+- ✅ **Connection Status Clarity** - Separate indicators for client/server status
+
+### v0.1.5 Features
 - ✅ **Native MCP Protocol** - Real server connections with live communication
 - ✅ **Live Server Metrics** - Actual tool counts, response times, and connection status
 - ✅ **Connection Monitoring** - Real-time health checks and automatic reconnection
 - ✅ **Visual Workspace** - Interactive canvas for server management
 - ✅ **Server Discovery** - Browse and install from 100+ MCP servers
 - ✅ **Kiro & Windsurf Support** - Latest AI client integrations
-- ✅ **Enhanced Drag-and-Drop** - Visual server configuration
 
 ## Upcoming Features (Q1 2025)
 
