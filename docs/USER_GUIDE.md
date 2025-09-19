@@ -69,14 +69,6 @@ The main interface will appear. Select your AI client from the dropdown menu to 
    - Right-click the app and select "Open"
    - Click "Open" in the security dialog
 
-### Windows
-1. Download the latest `.exe` installer
-2. Run the installer and follow the prompts
-3. Launch from the Start Menu or Desktop shortcut
-
-### Linux
-1. Download the appropriate package (`.deb`, `.rpm`, or `.AppImage`)
-2. Install using your package manager or run the AppImage directly
 
 ---
 
@@ -545,13 +537,6 @@ If you see this error message, it means the app couldn't find installed AI clien
 - Claude Code: `~/.claude/claude_code_config.json`
 - Kiro: `~/.kiro/settings/mcp.json`
 
-#### Windows
-- Claude Desktop: `%APPDATA%\Claude\claude_desktop_config.json`
-- VS Code: `%APPDATA%\Code\User\settings.json`
-
-#### Linux
-- Claude Code: `~/.claude/claude_code_config.json`
-- VS Code: `~/.config/Code/User/settings.json`
 
 ---
 
@@ -756,7 +741,7 @@ MCP server configurations follow this structure:
 #### Multi-Client Support
 - **Supported Clients**: Claude Desktop, Claude Code, VS Code, Cursor, Kiro, Windsurf, Codex, Gemini Desktop, Gemini CLI
 - **Auto-Detection**: Automatically discovers installed AI clients
-- **Cross-Platform**: Works on macOS, Windows, and Linux
+- **Platform**: macOS only
 
 #### Configuration Management
 - **Visual Editing**: Form-based interface prevents JSON syntax errors

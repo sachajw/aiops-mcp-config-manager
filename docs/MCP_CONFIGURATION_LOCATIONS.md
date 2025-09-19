@@ -7,11 +7,8 @@ Last Updated: September 10, 2025
 
 ## 1. Claude Desktop
 
-### Configuration Locations
+### Configuration Location
 - **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
-- **Windows**: `%APPDATA%\Roaming\Claude\claude_desktop_config.json`
-  - Typically: `C:\Users\[username]\AppData\Roaming\Claude\claude_desktop_config.json`
-- **Linux**: Not officially supported (Claude Desktop is macOS/Windows only)
 
 ### Configuration Format
 ```json
@@ -103,7 +100,6 @@ Last Updated: September 10, 2025
 
 ### Configuration Location
 - **Primary**: `~/.codex/config.toml`
-- **Windows**: `C:\Users\[username]\.codex\config.toml`
 - **Alternative**: Can specify via `--config` option
 - **Project-specific**: `.agent/mcps.json` (optional, for some implementations)
 
@@ -131,9 +127,7 @@ API_KEY = "value"
 3. **Auto-discovery**: Can discover from other tools (Claude Desktop, etc.)
 
 ### Settings Location
-- **Windows**: `%APPDATA%\Code\User\settings.json`
 - **macOS**: `~/Library/Application Support/Code/User/settings.json`
-- **Linux**: `~/.config/Code/User/settings.json`
 
 ### Configuration Format
 ```json

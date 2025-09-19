@@ -7,7 +7,7 @@
 *The Visual Command Center for AI Tool Configuration*
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey)](https://github.com/itsocialist/mcp-config-manager)
+[![Platform](https://img.shields.io/badge/platform-macOS-lightgrey)](https://github.com/itsocialist/mcp-config-manager)
 [![Release](https://img.shields.io/github/v/release/itsocialist/mcp-config-manager)](https://github.com/itsocialist/mcp-config-manager/releases)
 [![Version](https://img.shields.io/badge/version-0.1.4-blue)](https://github.com/itsocialist/mcp-config-manager/releases/tag/v0.1.4)
 
@@ -90,7 +90,7 @@
 
 ### Installation
 
-**Download for your platform:**
+**Download for macOS:**
 - [macOS Apple Silicon (M1/M2/M3)](https://github.com/itsocialist/mcp-config-manager/releases/download/v0.1.4/MCP.Configuration.Manager-0.1.4-arm64.dmg)
 - [macOS Intel](https://github.com/itsocialist/mcp-config-manager/releases/download/v0.1.4/MCP.Configuration.Manager-0.1.4.dmg)
 - [View all releases](https://github.com/itsocialist/mcp-config-manager/releases)
@@ -136,7 +136,7 @@ See [Installation Guide](docs/INSTALLATION.md) for detailed instructions.
 - **[📖 User Guide](docs/USER_GUIDE.md)** - Complete step-by-step documentation
 - **[🚀 Quick Start Guide](docs/QUICK_START.md)** - Get running in 5 minutes
 - **[✨ Features Overview](docs/FEATURES_OVERVIEW.md)** - Visual tour of all features
-- **[💾 Installation Guide](docs/INSTALLATION.md)** - Platform-specific setup instructions
+- **[💾 Installation Guide](docs/INSTALLATION.md)** - macOS setup instructions
 
 🔗 **Online Documentation:**
 - [GitHub Documentation](https://github.com/itsocialist/mcp-config-manager/tree/main/docs)
@@ -210,7 +210,7 @@ Enhanced server configuration capabilities:
 
 ## Built With
 
-- **Electron** + **React** for cross-platform desktop experience
+- **Electron** + **React** for native desktop experience
 - **TypeScript** for type safety and developer experience  
 - **Tailwind CSS** for modern, responsive UI
 - **Zustand** for state management
