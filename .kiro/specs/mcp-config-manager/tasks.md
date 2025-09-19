@@ -1,5 +1,45 @@
 # Implementation Plan
 
+## ⚠️ CRITICAL: UI Elements Currently Using Mock/Hardcoded Data
+
+The following UI features are currently displaying mock or hardcoded data and need backend implementation:
+
+### Visual Workspace
+- **Token usage** (hardcoded as 2500) - Task 50
+- **Tools count** (hardcoded as 15) - Task 50
+- **Connection status** (always shows as connected) - Task 52
+- **Performance metrics** (not collected) - Task 55
+- **Drag-and-drop** (doesn't modify actual configs) - Task 57
+
+### Server Library
+- **Server list** (partially hardcoded categories) - Task 51
+- **Server availability** (not checked) - Task 51
+- **Drag to add** (doesn't add to real config) - Task 57
+
+### Discovery Page
+- **Install button** (doesn't actually install) - Task 53
+- **Update notifications** (not implemented) - Task 58
+- **Ratings/reviews** (mock data) - Task 58
+- **Installation status** (not tracked) - Task 53
+
+### Insights Panel
+- **All metrics** (completely mock data) - Task 55
+- **Performance graphs** (static placeholders) - Task 55
+- **Connection health** (not monitored) - Task 52
+
+### Server Management
+- **Test Connection** (partial implementation) - Task 56
+- **Enable/Disable toggle** (UI only, no backend) - Task 54
+- **Server status indicators** (not real-time) - Task 52
+
+### Other Features
+- **Backup count** (may not reflect actual backups) - Task 60
+- **Client running status** (not checked) - Task 61
+- **Scope conflict detection** (partial) - Task 62
+- **Bulk operations progress** (UI only) - Task 64
+
+## Implementation Plan
+
 - [x] 1. Set up project structure and development environment
   - Initialize Electron + React + TypeScript project with proper build configuration
   - Configure development tools (ESLint, Prettier, Jest)
@@ -276,6 +316,113 @@
   - Installation failure rollback
   - User-friendly error messages and recovery paths
   - _Requirements: Reliability, error recovery_
+
+## Backend Reality Tasks (CRITICAL - Ensure UI Data is Real)
+
+- [ ] 50. Implement real metrics collection for Visual Workspace
+  - Create metrics service to track actual token usage per server
+  - Implement tool counting from actual MCP server manifests
+  - Add connection status monitoring (real health checks)
+  - Store and aggregate performance data over time
+  - _Requirements: Visual Workspace shows real data, not hardcoded values_
+
+- [ ] 51. Connect Server Library to actual data sources
+  - Populate Server Library from actual discovered MCP servers
+  - Implement real categorization based on server metadata
+  - Add actual server availability checking
+  - Remove hardcoded server lists and categories
+  - _Requirements: Server Library shows real available servers_
+
+- [ ] 52. Implement real connection status monitoring
+  - Create WebSocket or IPC connections to MCP servers
+  - Monitor actual connection health and latency
+  - Implement reconnection logic and error states
+  - Update Visual Workspace cables based on real status
+  - _Requirements: Connection status reflects actual server state_
+
+- [ ] 53. Build actual server installation backend
+  - Implement NPM package installation for MCP servers
+  - Handle GitHub repository cloning and setup
+  - Manage Python/pip installations for Python-based servers
+  - Track installation progress and handle failures
+  - _Requirements: Discovery "Install" button actually installs servers_
+
+- [ ] 54. Implement real server enable/disable functionality
+  - Modify actual configuration files to enable/disable servers
+  - Handle client-specific enable/disable mechanisms
+  - Persist state across application restarts
+  - Update UI to reflect actual enabled state
+  - _Requirements: Toggle switches actually enable/disable servers_
+
+- [ ] 55. Create real performance metrics tracking
+  - Implement actual response time measurement
+  - Track real memory and CPU usage per server
+  - Count actual API calls and tool invocations
+  - Store metrics data for historical analysis
+  - _Requirements: Insights Panel shows real performance data_
+
+- [ ] 56. Build actual server testing functionality
+  - Implement real connection testing with timeouts
+  - Execute actual server commands to verify functionality
+  - Parse and validate server responses
+  - Report detailed error messages from actual failures
+  - _Requirements: "Test Connection" performs real server tests_
+
+- [ ] 57. Implement real drag-and-drop configuration
+  - Actually add servers to configuration when dropped
+  - Update real configuration files on canvas changes
+  - Persist node positions and connections
+  - Handle drag-and-drop validation and conflicts
+  - _Requirements: Visual Workspace drag-and-drop modifies real configs_
+
+- [ ] 58. Connect Discovery to real MCP registries
+  - Implement actual API calls to MCP registry
+  - Parse and cache real server catalog data
+  - Handle pagination and lazy loading of real data
+  - Implement real search against actual server metadata
+  - _Requirements: Discovery shows real servers from actual sources_
+
+- [ ] 59. Implement real configuration validation
+  - Validate actual command paths and executables
+  - Check real environment variable requirements
+  - Verify actual port availability for servers
+  - Test actual file permissions and access rights
+  - _Requirements: Validation reflects actual system state_
+
+- [ ] 60. Build real backup and restore functionality
+  - Create actual backup files with timestamps
+  - Implement real restoration of configuration files
+  - Handle actual file system operations and permissions
+  - Manage real backup retention and cleanup
+  - _Requirements: Backup/restore actually saves and restores configs_
+
+- [ ] 61. Implement real client detection and status
+  - Check actual process lists for running clients
+  - Monitor real client configuration file changes
+  - Detect actual client version numbers
+  - Track real client installation/uninstallation
+  - _Requirements: Client status reflects actual system state_
+
+- [ ] 62. Create real scope resolution system
+  - Implement actual file system hierarchy traversal
+  - Merge real configurations from multiple scopes
+  - Handle actual scope conflicts and precedence
+  - Apply real scope-specific settings to clients
+  - _Requirements: Scope system actually resolves configurations_
+
+- [ ] 63. Build real export/import functionality
+  - Generate actual export packages with all dependencies
+  - Implement real import with validation and conflict resolution
+  - Handle actual file format conversions between clients
+  - Create real shareable configuration bundles
+  - _Requirements: Export/import actually transfers configurations_
+
+- [ ] 64. Implement real bulk operations backend
+  - Execute actual bulk configuration changes
+  - Handle real transaction rollback on failures
+  - Process actual batch server installations
+  - Apply real bulk enable/disable operations
+  - _Requirements: Bulk operations actually modify multiple configs_
 
 ## UI Redesign Tasks (Phase 3 - Lower Priority)
 
