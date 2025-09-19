@@ -2,14 +2,7 @@ import { ipcMain, shell, dialog } from 'electron';
 import { configService } from '../services/UnifiedConfigService';
 
 export function registerSimplifiedHandlers() {
-  ipcMain.handle('config:detect', async () => {
-    try {
-      return await configService.detectClients();
-    } catch (error) {
-      console.error('Error detecting clients:', error);
-      throw error;
-    }
-  });
+  // config:detect is now handled in handlers.ts for consistency
 
   ipcMain.handle('config:read', async (_, clientName: string, scope: string = 'user', projectDirectory?: string) => {
     try {

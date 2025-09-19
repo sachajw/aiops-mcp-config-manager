@@ -19,6 +19,22 @@ export function setupIpcHandlers(): void {
   });
 
   // Client discovery handlers
+  ipcMain.handle('config:detect', async (): Promise<MCPClient[]> => {
+    try {
+      console.log('Detecting clients via config:detect...');
+      const result = await ClientDetector.discoverClients();
+
+      if (result.errors && result.errors.length > 0) {
+        console.warn('Client detection had errors:', result.errors);
+      }
+
+      return result.clients;
+    } catch (error) {
+      console.error('Failed to detect clients:', error);
+      throw error;
+    }
+  });
+
   ipcMain.handle('clients:discover', async (): Promise<MCPClient[]> => {
     try {
       console.log('Discovering clients using real ClientDetector...');
@@ -400,11 +416,6 @@ export function setupIpcHandlers(): void {
   });
 
   // Connection monitoring handlers
-  ipcMain.handle('connection:getStatus', async (_, serverName: string) => {
-    const { connectionMonitor } = await import('../services/ConnectionMonitor');
-    return connectionMonitor.getConnectionStatus(serverName);
-  });
-
   ipcMain.handle('connection:connect', async (_, serverName: string, config: any) => {
     const { connectionMonitor } = await import('../services/ConnectionMonitor');
     await connectionMonitor.startMonitoring(
