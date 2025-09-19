@@ -3,7 +3,7 @@
 ## Critical Bugs (Blocking Core Functionality)
 
 ### BUG-001: Server Library Empty - IPC Handler Mismatch
-- **Status**: Open
+- **Status**: Fixed
 - **Priority**: Critical
 - **Component**: ServerLibrary, IPC
 - **Description**: Server Library shows "No servers found" due to frontend calling `getCatalogServers` but backend provides `catalog:getServers`
@@ -11,7 +11,7 @@
 - **Fix**: Task 110
 
 ### BUG-002: Performance Metrics Not Displaying
-- **Status**: Open
+- **Status**: Fixed
 - **Priority**: Critical
 - **Component**: InsightsPanel, MetricsService
 - **Description**: Despite servers being connected, no metrics show in Performance Insights
@@ -20,7 +20,7 @@
 - **Fix**: Task 111
 
 ### BUG-003: Client Server Counts Using Random Numbers
-- **Status**: Open
+- **Status**: Fixed
 - **Priority**: Critical
 - **Component**: ClientDock
 - **Description**: Server counts shown as random numbers: `Math.floor(Math.random() * 5)`
@@ -30,7 +30,7 @@
 ## Major Bugs (Significant UX Issues)
 
 ### BUG-004: Tokens Displayed as Percentage
-- **Status**: Open
+- **Status**: Fixed
 - **Priority**: Major
 - **Component**: InsightsPanel
 - **File**: `src/renderer/components/VisualWorkspace/InsightsPanel.tsx:139`
@@ -39,7 +39,7 @@
 - **Fix**: Task 112
 
 ### BUG-005: Misleading "Connected" Status
-- **Status**: Open
+- **Status**: Fixed
 - **Priority**: Major
 - **Component**: ClientDock
 - **Description**: Shows client installation status, not MCP server connections
@@ -47,7 +47,7 @@
 - **Fix**: Task 114
 
 ### BUG-006: Non-Functional Gear Icon
-- **Status**: Open
+- **Status**: Fixed
 - **Priority**: Major
 - **Component**: ClientDock
 - **File**: `src/renderer/components/VisualWorkspace/ClientDock.tsx:86-90`
@@ -58,7 +58,7 @@
 ## Minor Bugs (Polish/Clarity)
 
 ### BUG-007: Unclear Server Count Format
-- **Status**: Open
+- **Status**: Fixed
 - **Priority**: Minor
 - **Component**: ClientDock
 - **Description**: "14 servers, 8 active" format is unclear
@@ -66,7 +66,7 @@
 - **Fix**: Task 117
 
 ### BUG-008: Missing Configuration Path UI
-- **Status**: Open
+- **Status**: Fixed
 - **Priority**: Major
 - **Component**: Settings/ClientManagement
 - **Description**: No UI to configure client file paths as requested in backlog

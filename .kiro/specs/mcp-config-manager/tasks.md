@@ -673,14 +673,14 @@ The following UI features are currently displaying mock or hardcoded data and ne
 
 ## Visual Workspace Bug Fixes (Critical)
 
-- [ ] 110. Fix Server Library Display (BUG-001)
+- [x] 110. Fix Server Library Display (BUG-001)
   - Fix IPC handler name mismatch (getCatalogServers → catalog:getServers)
   - Update preload script with proper method mapping
   - Test server catalog loading from backend
   - Verify both discovery and installed servers appear
   - _Priority: Critical - Blocks core functionality_
 
-- [ ] 111. Implement Real Metrics Collection (BUG-002)
+- [x] 111. Implement Real Metrics Collection (BUG-002)
   - Create getTotalMetrics IPC handler in main process
   - Connect MetricsService to aggregate MCPClient metrics
   - Ensure ConnectionMonitor actively monitors configured servers
@@ -688,28 +688,28 @@ The following UI features are currently displaying mock or hardcoded data and ne
   - Test with actual MCP server connections
   - _Priority: Critical - Core feature not working_
 
-- [ ] 112. Fix Token Display Format (BUG-004)
+- [x] 112. Fix Token Display Format (BUG-004)
   - Remove hardcoded "75%" badge from InsightsPanel
   - Display actual token count from metrics
   - Keep percentage only for progress bar visualization
   - Format large numbers with commas
   - _Priority: Major - Misleading information_
 
-- [ ] 113. Fix Client Server Counts (BUG-003)
+- [x] 113. Fix Client Server Counts (BUG-003)
   - Replace Math.floor(Math.random() * 5) with real data
   - Get actual server count from client configuration
   - Show active connections from ConnectionMonitor
   - Update counts when servers are added/removed
   - _Priority: Major - Completely inaccurate data_
 
-- [ ] 114. Clarify Connection Status Indicators (BUG-005)
+- [x] 114. Clarify Connection Status Indicators (BUG-005)
   - Separate "Client Installed" from "Servers Connected"
   - Add two distinct status indicators
   - Show number of active server connections
   - Update status in real-time as connections change
   - _Priority: Major - Confusing UX_
 
-- [ ] 115. Implement Gear Icon Functionality (BUG-006)
+- [x] 115. Implement Gear Icon Functionality (BUG-006)
   - Create client configuration dialog component
   - Display configuration file paths
   - Allow path editing with validation
@@ -717,7 +717,7 @@ The following UI features are currently displaying mock or hardcoded data and ne
   - Connect to UnifiedConfigService for saving
   - _Priority: Major - Missing functionality_
 
-- [ ] 116. Add Configuration Path UI to Settings (BUG-008)
+- [x] 116. Add Configuration Path UI to Settings (BUG-008)
   - Add new section in Client Management tab
   - Display current configuration file paths for each client
   - Implement inline path editor with validation
