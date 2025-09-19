@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  test-env:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    container_name: mcp-config-test
+    environment:
+      - NODE_ENV=test
+      - TEST_MODE=sandbox
+    volumes:
+      # Mount test configurations
+      - ./test-configs:/home/node/configs
+      # Mount test data
+      - ./test-data:/home/node/data
+      # Temporary directory for test outputs
+      - ./test-output:/home/node/output
+    networks:
+      - test-network
+    command: npm test
+
+  # Mock MCP server for testing
+  mock-mcp-server:
+    build:
+      context: .
+      dockerfile: Dockerfile.mock-server
+    container_name: mock-mcp-server
+    ports:
+      - "3030:3030"
+    environment:
+      - PORT=3030
+      - MOCK_MODE=true
+    networks:
+      - test-network
+
+networks:
+  test-network:
+    driver: bridge
+
+volumes:
+  test-data:
+  test-output:

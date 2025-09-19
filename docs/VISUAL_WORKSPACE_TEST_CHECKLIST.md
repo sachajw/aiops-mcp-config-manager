@@ -58,9 +58,10 @@
 - [ ] Connection line should appear between server and client
 
 ### Client to Canvas (Multi-client Setup)
-- [ ] Drag a non-active client from the Client Dock
-- [ ] Drop on canvas
-- [ ] Additional client node should appear for multi-client configuration
+**⚠️ Note: Temporarily disabled - See [Task 102](../BUG_TRACKING.md#issue-3-client-drag-and-drop-removed)**
+- [ ] ~~Drag a non-active client from the Client Dock~~ (Feature removed to fix selection bug)
+- [ ] ~~Drop on canvas~~ (Feature removed to fix selection bug)
+- [ ] ~~Additional client node should appear for multi-client configuration~~ (To be reimplemented)
 
 ## Performance Panel (Bottom)
 - [ ] Performance Insights panel is visible at bottom

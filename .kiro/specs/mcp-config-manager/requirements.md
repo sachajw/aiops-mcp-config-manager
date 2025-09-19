@@ -6,6 +6,41 @@ The MCP Configuration Manager (MCM) is a unified, user-friendly graphical interf
 
 ## Requirements
 
+### Requirement 9: First-Use Onboarding Tour
+
+**User Story:** As a new user of MCP Configuration Manager, I want a guided tour on first launch that shows me the key features and how to get started, so that I can quickly understand how to use the application without reading documentation.
+
+#### Acceptance Criteria
+
+1. WHEN the application launches for the first time THEN the system SHALL display an interactive onboarding tour
+2. WHEN the tour is active THEN the system SHALL highlight UI elements with tooltips explaining their purpose
+3. WHEN the user clicks "Skip Tour" THEN the system SHALL immediately end the tour and remember this preference
+4. WHEN the user completes the tour THEN the system SHALL mark it as completed and not show it on subsequent launches
+5. IF the user wants to replay the tour THEN the system SHALL provide a "Show Tour" option in Settings
+6. WHEN showing tour steps THEN the system SHALL allow navigation with Next/Previous/Skip buttons
+7. IF the user performs the action described in a tour step THEN the system SHALL automatically advance to the next step
+
+#### Tour Content Requirements
+
+1. **Step 1 - Welcome**: Brief introduction to MCP Configuration Manager's purpose
+2. **Step 2 - Client Selection**: Highlight client dropdown and explain auto-detection
+3. **Step 3 - Server List**: Show the server configuration area and explain the table
+4. **Step 4 - Add Server**: Demonstrate how to add a new MCP server
+5. **Step 5 - Visual Workspace**: Introduce the visual workspace tab and drag-and-drop
+6. **Step 6 - Discovery**: Show where to find and install new servers
+7. **Step 7 - Settings**: Point out settings for customization
+8. **Step 8 - Get Started**: Final step with links to documentation and support
+
+#### Technical Requirements
+
+1. Tour state must persist in local storage or application settings
+2. Tour overlay must be accessible (keyboard navigation, screen reader compatible)
+3. Tour must adapt to window resizing and different screen sizes
+4. Tour progress must be saved if user closes app mid-tour
+5. Tour must handle missing UI elements gracefully (if features are disabled)
+
+## Requirements
+
 ### Requirement 1: Configuration Discovery and Display
 
 **User Story:** As a developer using multiple AI assistants, I want the system to automatically detect my installed MCP clients and display their current configurations, so that I can see all my MCP setups in one place without manually locating configuration files.

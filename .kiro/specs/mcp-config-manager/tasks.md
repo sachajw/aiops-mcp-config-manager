@@ -184,7 +184,7 @@ The following UI features are currently displaying mock or hardcoded data and ne
   - Optimize React rendering with memoization
   - _Requirements: Performance and user experience_
 
-- [ ] 25. Create user onboarding and help system
+- [x] 25. Create user onboarding and help system
   - Implement first-run setup wizard
   - Add contextual help and tooltips throughout the UI
   - Create documentation and user guide integration
@@ -192,7 +192,7 @@ The following UI features are currently displaying mock or hardcoded data and ne
 
 ## New Feature Tasks (High Priority - September 2025)
 
-- [ ] 26. Implement landing page with loading state
+- [x] 26. Implement landing page with loading state
   - Create LandingPage component that displays immediately on launch
   - Add loading progress indicators while detecting clients/servers
   - Implement "Get Started" button to enter main interface
@@ -424,6 +424,205 @@ The following UI features are currently displaying mock or hardcoded data and ne
   - Apply real bulk enable/disable operations
   - _Requirements: Bulk operations actually modify multiple configs_
 
+## AI-Powered Code Review Tasks (HIGH PRIORITY - External Audit)
+
+- [ ] 94. Conduct architecture review with ChatGPT
+  - Export project structure and key architectural decisions
+  - Submit to ChatGPT for architectural analysis
+  - Focus on scalability, maintainability, and design patterns
+  - Document recommended architectural improvements
+  - Create action plan for architectural refactoring
+  - _Requirements: External AI review for architecture validation_
+
+- [ ] 95. Perform code quality review with ChatGPT
+  - Submit core components for code review
+  - Focus on React patterns, TypeScript usage, and best practices
+  - Identify code smells and anti-patterns
+  - Get recommendations for performance optimizations
+  - Document refactoring priorities
+  - _Requirements: External AI review for code quality_
+
+- [ ] 96. Execute security audit with ChatGPT
+  - Submit security-critical code for review
+  - Focus on Electron security, IPC safety, file system access
+  - Identify potential vulnerabilities
+  - Get recommendations for security hardening
+  - Create security improvement checklist
+  - _Requirements: External AI security audit_
+
+- [ ] 97. Conduct architecture review with Gemini
+  - Submit same architecture for second opinion
+  - Compare recommendations with ChatGPT review
+  - Focus on different perspectives and approaches
+  - Identify consensus areas and conflicts
+  - Merge best recommendations from both
+  - _Requirements: Second AI opinion on architecture_
+
+- [ ] 98. Perform code quality review with Gemini
+  - Submit same code for alternative review
+  - Focus on different aspects than ChatGPT review
+  - Get fresh perspective on improvements
+  - Compare and contrast recommendations
+  - Create unified improvement plan
+  - _Requirements: Second AI opinion on code quality_
+
+- [ ] 99. Execute security audit with Gemini
+  - Submit security code for additional review
+  - Cross-reference with ChatGPT findings
+  - Identify any missed vulnerabilities
+  - Get alternative security solutions
+  - Create comprehensive security plan
+  - _Requirements: Second AI security audit_
+
+- [ ] 100. Create unified improvement plan from AI reviews
+  - Synthesize all AI recommendations
+  - Prioritize improvements by impact and effort
+  - Create detailed implementation roadmap
+  - Assign tasks to specific components
+  - Set measurable success criteria
+  - _Requirements: Consolidated action plan from all AI reviews_
+
+## Bug Fix Tasks (CRITICAL - User-Reported Issues)
+
+- [ ] 92. Diagnose and fix client drag-and-drop issues
+  - Review Visual Workspace drag-and-drop implementation with user
+  - Debug DndContext and drop zone configuration
+  - Fix server library to canvas drop functionality
+  - Test drag-and-drop across different browsers/environments
+  - Ensure proper state updates when servers are dropped
+  - _Requirements: User-reported bug - drag-and-drop not working properly_
+
+- [ ] 93. Diagnose and fix client selection issues
+  - Review ClientSelector component implementation with user
+  - Debug client switching functionality
+  - Fix state synchronization when changing clients
+  - Ensure server list updates correctly on client change
+  - Test client persistence across app restarts
+  - _Requirements: User-reported bug - client selection not working properly_
+
+## First-Use Onboarding Tour Tasks (High Priority)
+
+- [ ] 75. Design and implement tour framework
+  - Select tour library (Intro.js, Shepherd.js, or custom)
+  - Create tour service for managing tour state
+  - Implement tour overlay and highlighting system
+  - Add keyboard navigation support
+  - _Requirements: Requirement 9 - Interactive onboarding tour framework_
+
+- [ ] 76. Create tour content and steps
+  - Write copy for each tour step (8 steps total)
+  - Design tooltip styling to match app theme
+  - Create smooth transitions between steps
+  - Add progress indicator showing current step
+  - _Requirements: Requirement 9 - Tour content requirements_
+
+- [ ] 77. Implement tour persistence and settings
+  - Store tour completion state in local storage
+  - Add first-launch detection logic
+  - Create "Show Tour" option in Settings
+  - Implement tour reset functionality
+  - _Requirements: Requirement 9 - Tour state persistence_
+
+- [ ] 78. Build tour UI components
+  - Create tour overlay component
+  - Build Next/Previous/Skip button controls
+  - Implement spotlight effect for highlighted elements
+  - Add tooltip positioning logic
+  - _Requirements: Requirement 9 - Tour UI elements_
+
+- [ ] 79. Add smart tour progression
+  - Detect when user completes described action
+  - Auto-advance on action completion
+  - Handle missing UI elements gracefully
+  - Save progress if app closes mid-tour
+  - _Requirements: Requirement 9 - Smart tour behavior_
+
+- [ ] 80. Create tour accessibility features
+  - Add ARIA labels and roles
+  - Implement keyboard navigation (Tab, Enter, Escape)
+  - Ensure screen reader compatibility
+  - Test with accessibility tools
+  - _Requirements: Requirement 9 - Accessibility requirements_
+
+- [ ] 81. Add tour analytics and improvement
+  - Track where users skip the tour
+  - Log which steps users spend most time on
+  - Identify common drop-off points
+  - Create metrics for tour effectiveness
+  - _Requirements: Tour improvement and optimization_
+
+## Promised Features Not Yet Tasked (From Documentation)
+
+- [ ] 82. Develop AI-Powered Suggestions
+  - Integrate AI model for recommendations
+  - Analyze usage patterns for suggestions
+  - Create suggestion UI components
+  - Implement learning from user feedback
+  - _Requirements: README promise - Smart server recommendations_
+
+- [ ] 83. Create Advanced Analytics Dashboard
+  - Build comprehensive metrics visualization
+  - Implement historical data analysis
+  - Add performance trend charts
+  - Create usage reports and exports
+  - _Requirements: README promise - Detailed usage insights_
+
+- [ ] 84. Implement Configuration Templates
+  - Create template library system
+  - Build pre-configured templates for common use cases
+  - Add template import/export functionality
+  - Implement template customization UI
+  - _Requirements: Feature mentioned but not implemented_
+
+- [ ] 85. Add Server Ratings and Reviews
+  - Build rating system backend
+  - Create review submission interface
+  - Implement community moderation
+  - Add rating display in Discovery
+  - _Requirements: Server Marketplace feature completion_
+
+- [ ] 86. Implement Configuration Version Control
+  - Create git-like versioning system
+  - Build diff viewer for changes
+  - Implement rollback functionality
+  - Add commit messages for changes
+  - _Requirements: Configuration history with rollback_
+
+- [ ] 87. Build Auto-Reconnection System
+  - Implement connection health monitoring
+  - Create reconnection logic with exponential backoff
+  - Add connection status notifications
+  - Build connection retry configuration
+  - _Requirements: Connection health monitoring feature_
+
+- [ ] 88. Implement Configuration Merge on Import
+  - Build intelligent merge algorithm
+  - Create conflict detection system
+  - Implement conflict resolution UI
+  - Add preview before merge
+  - _Requirements: Requirement 2.4 from requirements.md_
+
+- [ ] 89. Create Auto-Recovery System
+  - Implement automatic error detection
+  - Build recovery strategies for common issues
+  - Create recovery action queue
+  - Add recovery status reporting
+  - _Requirements: Requirement 7 - Auto-fix capabilities_
+
+- [ ] 90. Build Configuration Repair Tool
+  - Implement JSON repair algorithms
+  - Create schema-based validation and fixing
+  - Add backup before repair
+  - Build repair report generation
+  - _Requirements: Requirement 5.5 - Auto-repair corrupted configs_
+
+- [ ] 91. Optimize External Change Detection
+  - Implement efficient file watching (5-second target)
+  - Add intelligent polling for network drives
+  - Create change batching system
+  - Optimize performance for many files
+  - _Requirements: Requirement 6.1 - 5-second detection target_
+
 ## UI Redesign Tasks (Phase 3 - Lower Priority)
 
 - [ ] 35. Implement responsive layout foundation
@@ -453,4 +652,84 @@ The following UI features are currently displaying mock or hardcoded data and ne
   - Implement ClientConfigWizard for initial client setup
   - Add ImportExportWizard for configuration migration
   - _Requirements: Common operations wizards, guided workflows_
+
+## New Tasks (Added During Development)
+
+- [ ] 101. Implement Multi-Server Configuration Saving
+  - Add visible auto-save toggle for Visual Workspace
+  - Implement manual save functionality for multi-server configs
+  - Show which servers are being added/modified
+  - Add confirmation dialog for bulk changes
+  - Store multi-client configurations properly
+  - _Related to: Visual Workspace drag-and-drop functionality_
+
+- [ ] 102. Reimplement Client Card Drag-and-Drop (Without Breaking Selection)
+  - Make client cards draggable to canvas for multi-client setups
+  - Ensure single-click still selects the client
+  - Use drag activation distance (e.g., 10px) before drag starts
+  - Keep drop functionality to receive servers
+  - Test that both selection and dragging work properly
+  - _Note: Previously removed to fix selection bug - needs proper implementation_
+
+## Visual Workspace Bug Fixes (Critical)
+
+- [ ] 110. Fix Server Library Display (BUG-001)
+  - Fix IPC handler name mismatch (getCatalogServers → catalog:getServers)
+  - Update preload script with proper method mapping
+  - Test server catalog loading from backend
+  - Verify both discovery and installed servers appear
+  - _Priority: Critical - Blocks core functionality_
+
+- [ ] 111. Implement Real Metrics Collection (BUG-002)
+  - Create getTotalMetrics IPC handler in main process
+  - Connect MetricsService to aggregate MCPClient metrics
+  - Ensure ConnectionMonitor actively monitors configured servers
+  - Update InsightsPanel to display real metrics
+  - Test with actual MCP server connections
+  - _Priority: Critical - Core feature not working_
+
+- [ ] 112. Fix Token Display Format (BUG-004)
+  - Remove hardcoded "75%" badge from InsightsPanel
+  - Display actual token count from metrics
+  - Keep percentage only for progress bar visualization
+  - Format large numbers with commas
+  - _Priority: Major - Misleading information_
+
+- [ ] 113. Fix Client Server Counts (BUG-003)
+  - Replace Math.floor(Math.random() * 5) with real data
+  - Get actual server count from client configuration
+  - Show active connections from ConnectionMonitor
+  - Update counts when servers are added/removed
+  - _Priority: Major - Completely inaccurate data_
+
+- [ ] 114. Clarify Connection Status Indicators (BUG-005)
+  - Separate "Client Installed" from "Servers Connected"
+  - Add two distinct status indicators
+  - Show number of active server connections
+  - Update status in real-time as connections change
+  - _Priority: Major - Confusing UX_
+
+- [ ] 115. Implement Gear Icon Functionality (BUG-006)
+  - Create client configuration dialog component
+  - Display configuration file paths
+  - Allow path editing with validation
+  - Add file picker for path selection
+  - Connect to UnifiedConfigService for saving
+  - _Priority: Major - Missing functionality_
+
+- [ ] 116. Add Configuration Path UI to Settings (BUG-008)
+  - Add new section in Client Management tab
+  - Display current configuration file paths for each client
+  - Implement inline path editor with validation
+  - Add "Browse" button for file picker
+  - Save path changes to app settings
+  - Show same UI as gear icon (reuse component)
+  - _Priority: Major - Requested feature missing_
+
+- [ ] 117. Improve Server Count Display Format (BUG-007)
+  - Change from "14 servers, 8 active" to clearer format
+  - Options: "8/14 active" or separate lines
+  - Add tooltips explaining what each number means
+  - Consider using badges for better visibility
+  - _Priority: Minor - Polish improvement_
 

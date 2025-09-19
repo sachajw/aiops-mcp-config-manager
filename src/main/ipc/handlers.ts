@@ -177,6 +177,60 @@ export function setupIpcHandlers(): void {
     }
   });
 
+  // Metrics handlers
+  ipcMain.handle('metrics:getServerMetrics', async (_, serverName: string) => {
+    const { metricsService } = await import('../services/MetricsService');
+    const { connectionMonitor } = await import('../services/ConnectionMonitor');
+
+    // Get connection status if available
+    const connectionStatus = connectionMonitor.getConnectionStatus(serverName);
+    const metrics = metricsService.getServerMetrics(serverName);
+
+    // Merge real connection data with metrics
+    if (connectionStatus) {
+      metrics.isConnected = connectionStatus.status === 'connected';
+      metrics.responseTime = connectionStatus.responseTime;
+    }
+
+    return metrics;
+  });
+
+  ipcMain.handle('metrics:getTotalMetrics', async (_, serverNames: string[]) => {
+    const { metricsService } = await import('../services/MetricsService');
+    const { connectionMonitor } = await import('../services/ConnectionMonitor');
+
+    const totalMetrics = metricsService.getTotalMetrics(serverNames);
+
+    // Override with real connection data
+    totalMetrics.connectedCount = connectionMonitor.getConnectedCount();
+    totalMetrics.avgResponseTime = connectionMonitor.getAverageResponseTime() || totalMetrics.avgResponseTime;
+
+    return totalMetrics;
+  });
+
+  // Connection monitoring handlers
+  ipcMain.handle('connection:startMonitoring', async (_, serverId: string, serverName: string, command: string, args?: string[], env?: Record<string, string>, cwd?: string) => {
+    const { connectionMonitor } = await import('../services/ConnectionMonitor');
+    await connectionMonitor.startMonitoring(serverId, serverName, command, args, env, cwd);
+    return true;
+  });
+
+  ipcMain.handle('connection:stopMonitoring', async (_, serverId: string) => {
+    const { connectionMonitor } = await import('../services/ConnectionMonitor');
+    await connectionMonitor.stopMonitoring(serverId);
+    return true;
+  });
+
+  ipcMain.handle('connection:getStatus', async (_, serverId: string) => {
+    const { connectionMonitor } = await import('../services/ConnectionMonitor');
+    return connectionMonitor.getConnectionStatus(serverId);
+  });
+
+  ipcMain.handle('connection:getAllStatuses', async () => {
+    const { connectionMonitor } = await import('../services/ConnectionMonitor');
+    return connectionMonitor.getAllConnectionStatuses();
+  });
+
   // Backup and recovery handlers (simplified)
   ipcMain.handle('backup:create', async (_, clientId: string, configuration: Configuration) => {
     try {
@@ -295,6 +349,43 @@ export function setupIpcHandlers(): void {
       console.error('Failed to open external URL:', error);
       return false;
     }
+  });
+
+  // Server catalog handlers
+  ipcMain.handle('catalog:getServers', async () => {
+    const { ServerCatalogService } = await import('../services/ServerCatalogService');
+    return ServerCatalogService.getCatalog();
+  });
+
+  ipcMain.handle('catalog:searchServers', async (_, query: string) => {
+    const { ServerCatalogService } = await import('../services/ServerCatalogService');
+    return ServerCatalogService.searchServers(query);
+  });
+
+  ipcMain.handle('catalog:getServersByCategory', async (_, category: string) => {
+    const { ServerCatalogService } = await import('../services/ServerCatalogService');
+    return ServerCatalogService.getServersByCategory(category);
+  });
+
+  ipcMain.handle('catalog:getPopularServers', async (_, limit?: number) => {
+    const { ServerCatalogService } = await import('../services/ServerCatalogService');
+    return ServerCatalogService.getPopularServers(limit);
+  });
+
+  // MCP Server testing handlers
+  ipcMain.handle('mcp:testServer', async (_, serverId: string, serverName: string, command: string, args?: string[]) => {
+    const { MCPServerTester } = await import('../services/MCPServerTester');
+    return MCPServerTester.testServer(serverId, serverName, command, args);
+  });
+
+  ipcMain.handle('mcp:testCommonServers', async () => {
+    const { MCPServerTester } = await import('../services/MCPServerTester');
+    return MCPServerTester.testCommonServers();
+  });
+
+  ipcMain.handle('mcp:testFilesystemServer', async () => {
+    const { MCPServerTester } = await import('../services/MCPServerTester');
+    return MCPServerTester.testFilesystemServer();
   });
 
   console.log('IPC handlers initialized successfully');

@@ -29,9 +29,6 @@ export default defineConfig({
 
   // Shared settings for all projects
   use: {
-    // Base URL for the application
-    baseURL: 'http://localhost:5175',
-
     // Collect trace when retrying the failed test
     trace: 'on-first-retry',
 

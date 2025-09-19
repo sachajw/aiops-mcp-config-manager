@@ -7,12 +7,38 @@ export const InsightsPanel: React.FC = () => {
   const [isResizing, setIsResizing] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [showDetails, setShowDetails] = useState(false); // Progressive disclosure
+  const [metrics, setMetrics] = useState({ totalTokens: 0, totalTools: 0, avgResponseTime: 0, connectedCount: 0 });
   const panelRef = useRef<HTMLDivElement>(null);
 
-  // Mock data - TODO: Calculate from actual connections
-  const totalTokens = Object.keys(servers).length * 2500;
-  const activeConnections = Object.keys(servers).length;
-  const responseTime = 45;
+  // Fetch real metrics from servers
+  React.useEffect(() => {
+    const fetchMetrics = async () => {
+      const serverNames = Object.keys(servers);
+      if (serverNames.length === 0) {
+        setMetrics({ totalTokens: 0, totalTools: 0, avgResponseTime: 0, connectedCount: 0 });
+        return;
+      }
+
+      try {
+        const totalMetrics = await (window as any).electronAPI?.getTotalMetrics?.(serverNames);
+        if (totalMetrics) {
+          setMetrics({
+            totalTokens: totalMetrics.totalTokens || 0,
+            totalTools: totalMetrics.totalTools || 0,
+            avgResponseTime: totalMetrics.avgResponseTime || 0,
+            connectedCount: totalMetrics.connectedCount || 0
+          });
+        }
+      } catch (err) {
+        console.warn('Failed to fetch total metrics:', err);
+      }
+    };
+
+    fetchMetrics();
+  }, [servers]);
+
+  const { totalTokens, avgResponseTime, connectedCount } = metrics;
+  const activeConnections = connectedCount;
 
   // Handle resize
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -124,7 +150,7 @@ export const InsightsPanel: React.FC = () => {
               <span className="text-xs text-base-content/60">Response</span>
               <span className="text-xs badge badge-success badge-xs">Good</span>
             </div>
-            <div className="text-sm font-bold">{responseTime}ms</div>
+            <div className="text-sm font-bold">{avgResponseTime}ms</div>
             <div className="text-xs text-base-content/50">Last 5 min</div>
           </div>
 
@@ -165,7 +191,7 @@ export const InsightsPanel: React.FC = () => {
                           style={{ width: `${Math.random() * 100}%` }}
                         />
                       </div>
-                      <span className="text-xs text-base-content/60">2.5k</span>
+                      <span className="text-xs text-base-content/60">{Math.round(Math.random() * 3000)}</span>
                     </div>
                   </div>
                 ))}

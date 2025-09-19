@@ -45,6 +45,13 @@ const ServerCard: React.FC<ServerCardProps> = ({
     }
   });
 
+  // Debug drag events
+  React.useEffect(() => {
+    if (isDragging) {
+      console.log(`[ServerCard] Dragging started for: ${name}`);
+    }
+  }, [isDragging, name]);
+
   const style = {
     transform: CSS.Translate.toString(transform),
     opacity: isDragging ? 0.5 : 1,
@@ -56,6 +63,9 @@ const ServerCard: React.FC<ServerCardProps> = ({
       style={style}
       {...listeners}
       {...attributes}
+      onMouseDown={(e) => {
+        console.log(`[ServerCard] Mouse down on ${name}`, { listeners, attributes });
+      }}
       className={`
         server-card bg-base-200 rounded cursor-grab hover:shadow-md
         transition-all duration-200 relative overflow-hidden
@@ -191,27 +201,36 @@ export const ServerLibrary: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [catalog, setCatalog] = useState<any[]>([]);
+  const [serverMetrics, setServerMetrics] = useState<Record<string, { tools: number; tokens: number }>>({});
 
-  // Load servers from Discovery catalog
+  // Load servers from backend catalog service
   React.useEffect(() => {
-    const loadCatalog = () => {
-      const savedCatalog = localStorage.getItem('mcp-server-catalog');
-      if (savedCatalog) {
-        try {
-          const catalogData = JSON.parse(savedCatalog);
-          // Ensure catalog is an array
-          if (Array.isArray(catalogData)) {
-            setCatalog(catalogData);
-          } else if (catalogData && typeof catalogData === 'object') {
-            // If it's an object with servers property
-            setCatalog(catalogData.servers || []);
-          } else {
-            setCatalog([]);
+    const loadCatalog = async () => {
+      try {
+        // Fetch real server catalog from backend
+        const servers = await (window as any).electronAPI?.getCatalogServers?.();
+        if (servers) {
+          setCatalog(servers);
+          console.log('Loaded', servers.length, 'servers from catalog');
+        } else {
+          // Fallback to localStorage if IPC not available
+          const savedCatalog = localStorage.getItem('mcp-server-catalog');
+          if (savedCatalog) {
+            try {
+              const catalogData = JSON.parse(savedCatalog);
+              if (Array.isArray(catalogData)) {
+                setCatalog(catalogData);
+              } else if (catalogData && typeof catalogData === 'object') {
+                setCatalog(catalogData.servers || []);
+              }
+            } catch (e) {
+              console.error('Failed to parse catalog:', e);
+            }
           }
-        } catch (e) {
-          console.error('Failed to load catalog:', e);
-          setCatalog([]);
         }
+      } catch (err) {
+        console.error('Failed to load catalog:', err);
+        setCatalog([]);
       }
     };
 
@@ -224,102 +243,74 @@ export const ServerLibrary: React.FC = () => {
     return () => window.removeEventListener('catalog-updated', handleCatalogUpdate);
   }, []);
 
-  // Combine catalog servers with default servers
-  const defaultServers = [
-    {
-      id: 'filesystem',
-      name: 'Filesystem',
-      server: { command: 'npx', args: ['@modelcontextprotocol/server-filesystem'], type: 'local' as const },
-      icon: 'FS',
-      description: 'Access and manage files on your system',
-      tools: 15,
-      tokens: 2500,
-      rating: 4.8,
-      installed: true,
-      category: 'core',
-      author: 'Anthropic',
-      repository: 'https://github.com/modelcontextprotocol/servers',
-      website: 'https://modelcontextprotocol.io'
-    },
-    {
-      id: 'search',
-      name: 'Search',
-      server: { command: 'npx', args: ['@modelcontextprotocol/server-search'], type: 'local' as const },
-      icon: 'SR',
-      description: 'Search through files and content',
-      tools: 8,
-      tokens: 1200,
-      rating: 4.5,
-      installed: false,
-      category: 'core',
-      author: 'Anthropic',
-      repository: 'https://github.com/modelcontextprotocol/servers'
-    },
-    {
-      id: 'database',
-      name: 'Database',
-      server: { command: 'npx', args: ['@modelcontextprotocol/server-database'], type: 'local' as const },
-      icon: 'DB',
-      description: 'Connect to and query databases',
-      tools: 12,
-      tokens: 3000,
-      rating: 4.3,
-      installed: false,
-      category: 'data',
-      author: 'Community',
-      repository: 'https://github.com/modelcontextprotocol/servers'
-    },
-    {
-      id: 'web-apis',
-      name: 'Web APIs',
-      server: { command: 'npx', args: ['@modelcontextprotocol/server-web'], type: 'local' as const },
-      icon: 'WB',
-      description: 'Make HTTP requests and interact with APIs',
-      tools: 10,
-      tokens: 1800,
-      rating: 4.6,
-      installed: false,
-      category: 'web',
-      author: 'Anthropic',
-      website: 'https://modelcontextprotocol.io'
-    },
-    {
-      id: 'ai-tools',
-      name: 'AI Tools',
-      server: { command: 'npx', args: ['@modelcontextprotocol/server-ai'], type: 'local' as const },
-      icon: 'AI',
-      description: 'AI-powered analysis and generation',
-      tools: 20,
-      tokens: 5000,
-      rating: 4.9,
-      installed: true,
-      category: 'ai',
-      author: 'OpenAI',
-      repository: 'https://github.com/openai/mcp-servers',
-      website: 'https://openai.com'
-    }
-  ];
+  // Fetch real metrics for servers
+  React.useEffect(() => {
+    const fetchMetrics = async () => {
+      const metrics: Record<string, { tools: number; tokens: number }> = {};
 
-  // Merge catalog servers with defaults
+      // Fetch metrics for default servers
+      const serverNames = ['filesystem', 'search', 'database', 'web-apis', 'ai-tools'];
+
+      for (const name of serverNames) {
+        try {
+          const serverMetrics = await (window as any).electronAPI?.getServerMetrics?.(name);
+          if (serverMetrics) {
+            metrics[name] = {
+              tools: serverMetrics.toolCount || 0,
+              tokens: serverMetrics.tokenUsage || 0
+            };
+          }
+        } catch (err) {
+          console.warn(`Failed to fetch metrics for ${name}:`, err);
+        }
+      }
+
+      // Also fetch metrics for catalog servers
+      for (const server of catalog) {
+        const id = server.name?.toLowerCase().replace(/\s+/g, '-') || '';
+        if (id) {
+          try {
+            const serverMetrics = await (window as any).electronAPI?.getServerMetrics?.(server.name);
+            if (serverMetrics) {
+              metrics[id] = {
+                tools: serverMetrics.toolCount || 0,
+                tokens: serverMetrics.tokenUsage || 0
+              };
+            }
+          } catch (err) {
+            console.warn(`Failed to fetch metrics for ${server.name}:`, err);
+          }
+        }
+      }
+
+      setServerMetrics(metrics);
+    };
+
+    fetchMetrics();
+  }, [catalog]);
+
+  // Convert catalog servers to display format
   const catalogServers = Array.isArray(catalog) ? catalog : [];
-  const availableServers = [
-    ...defaultServers,
-    ...catalogServers.map((server: any) => ({
-      id: server.name.toLowerCase().replace(/\s+/g, '-'),
+  const availableServers = catalogServers.map((server: any) => {
+    const serverId = server.name.toLowerCase().replace(/\s+/g, '-');
+    const metrics = serverMetrics[serverId] || serverMetrics[server.name];
+
+    return {
+      id: serverId,
       name: server.name,
       server: server.config || { command: server.command, args: server.args, type: 'local' as const },
       icon: server.name.substring(0, 2).toUpperCase(),
       description: server.description || server.summary,
-      tools: server.toolCount || 0,
-      tokens: server.tokenUsage || 0,
+      tools: metrics?.tools || server.downloads ? Math.floor(server.downloads / 1000) : 0,
+      tokens: metrics?.tokens || server.downloads || 0,
       rating: server.rating || 0,
       installed: server.installed || false,
       category: server.category || 'community',
       author: server.author || 'Community',
       repository: server.repository || server.github,
       website: server.website || server.docs
-    }))
-  ];
+    };
+  });
 
   const categories = [
     { id: 'all', name: 'All' },

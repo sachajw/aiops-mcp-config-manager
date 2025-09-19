@@ -1,0 +1,47 @@
+FROM node:18-alpine
+
+# Install necessary dependencies
+RUN apk add --no-cache \
+    python3 \
+    make \
+    g++ \
+    git
+
+# Create test user
+RUN addgroup -g 1001 -S testuser && \
+    adduser -u 1001 -S testuser -G testuser
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm ci --only=production && \
+    npm install --save-dev \
+        jest \
+        @testing-library/react \
+        @testing-library/jest-dom \
+        @types/jest
+
+# Copy application code
+COPY . .
+
+# Create test directories with proper permissions
+RUN mkdir -p \
+    /home/testuser/.config/mcp \
+    /home/testuser/.claude \
+    /home/testuser/.codex \
+    /home/testuser/.gemini \
+    /home/testuser/test-output && \
+    chown -R testuser:testuser /home/testuser
+
+# Switch to test user
+USER testuser
+
+# Set home directory
+ENV HOME=/home/testuser
+
+# Run tests by default
+CMD ["npm", "test"]

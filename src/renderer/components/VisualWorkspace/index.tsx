@@ -1,6 +1,16 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { ReactFlow, Background, Controls, MiniMap, ReactFlowProvider, Node, Edge, Connection, useNodesState, useEdgesState, addEdge } from '@xyflow/react';
-import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, useDroppable, DragOverEvent } from '@dnd-kit/core';
+import {
+  DndContext,
+  DragEndEvent,
+  DragOverlay,
+  DragStartEvent,
+  useDroppable,
+  DragOverEvent,
+  PointerSensor,
+  useSensor,
+  useSensors
+} from '@dnd-kit/core';
 import '@xyflow/react/dist/style.css';
 import './VisualWorkspace.css';
 
@@ -44,9 +54,18 @@ export const VisualWorkspace: React.FC = () => {
     data: { type: 'canvas' }
   });
 
+  // Configure drag sensors with activation constraints
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // Require 8px drag before activation
+      },
+    })
+  );
+
   // React Flow state
-  const [nodes, setNodes, onNodesChange] = useNodesState([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
 
   // Drag state
   const [isDragging, setIsDragging] = useState(false);
@@ -58,50 +77,71 @@ export const VisualWorkspace: React.FC = () => {
 
   // Initialize nodes from current configuration - Client-specific view
   React.useEffect(() => {
-    // Only show servers for the active client
-    const serverNodes: Node[] = Object.entries(servers).map(([name, server], index) => ({
-      id: `server-${name}`,
-      type: 'server',
-      position: { x: 200, y: 100 + index * 100 },
-      data: {
-        label: name,
-        server,
-        icon: '📦',
-        tools: 15, // TODO: Get actual tool count
-        tokens: 2500 // TODO: Calculate actual tokens
-      },
-    }));
+    // Fetch real metrics for servers
+    const fetchMetrics = async () => {
+      const serverNames = Object.keys(servers);
+      const metrics: Record<string, any> = {};
 
-    // Show the active client as the main node
-    const activeClientData = clients.find((c: any) => c.name === activeClient);
-    const clientNodes: Node[] = activeClientData ? [{
-      id: `client-${activeClient}`,
-      type: 'client',
-      position: { x: 600, y: 250 },
-      data: {
-        label: activeClientData.displayName || activeClientData.name,
-        client: activeClientData,
-        icon: '🤖',
-        serverCount: Object.keys(servers).length,
-        isMain: true
-      },
-    }] : [];
-
-    // Create edges between servers and the active client
-    const newEdges: Edge[] = serverNodes.map((serverNode) => ({
-      id: `${serverNode.id}-client-${activeClient}`,
-      source: serverNode.id,
-      target: `client-${activeClient}`,
-      type: 'cable',
-      animated: true,
-      data: {
-        tension: 0.5,
-        sag: 20,
+      // Fetch metrics for each server
+      for (const name of serverNames) {
+        try {
+          const serverMetrics = await (window as any).electronAPI?.getServerMetrics?.(name);
+          metrics[name] = serverMetrics || { toolCount: 10, tokenUsage: 1000 };
+        } catch (err) {
+          console.warn(`Failed to fetch metrics for ${name}:`, err);
+          metrics[name] = { toolCount: 10, tokenUsage: 1000 };
+        }
       }
-    }));
 
-    setNodes([...serverNodes, ...clientNodes]);
-    setEdges(newEdges);
+      return metrics;
+    };
+
+    fetchMetrics().then((metrics) => {
+      // Only show servers for the active client
+      const serverNodes: Node[] = Object.entries(servers).map(([name, server], index) => ({
+        id: `server-${name}`,
+        type: 'server',
+        position: { x: 200, y: 100 + index * 100 },
+        data: {
+          label: name,
+          server,
+          icon: '📦',
+          tools: metrics[name]?.toolCount || 10,
+          tokens: metrics[name]?.tokenUsage || 1000
+        },
+      }));
+
+      // Show the active client as the main node
+      const activeClientData = clients.find((c: any) => c.name === activeClient);
+      const clientNodes: Node[] = activeClientData ? [{
+        id: `client-${activeClient}`,
+        type: 'client',
+        position: { x: 600, y: 250 },
+        data: {
+          label: (activeClientData as any).displayName || activeClientData.name,
+          client: activeClientData,
+          icon: '🤖',
+          serverCount: Object.keys(servers).length,
+          isMain: true
+        },
+      }] : [];
+
+      // Create edges between servers and the active client
+      const newEdges: Edge[] = serverNodes.map((serverNode) => ({
+        id: `${serverNode.id}-client-${activeClient}`,
+        source: serverNode.id,
+        target: `client-${activeClient}`,
+        type: 'cable',
+        animated: true,
+        data: {
+          tension: 0.5,
+          sag: 20,
+        }
+      }));
+
+      setNodes([...serverNodes, ...clientNodes]);
+      setEdges(newEdges);
+    });
   }, [servers, clients, activeClient, setNodes, setEdges]);
 
   // Handle connection creation
@@ -138,41 +178,62 @@ export const VisualWorkspace: React.FC = () => {
   // Handle drag over
   const handleDragOver = (event: DragOverEvent) => {
     // This allows us to track when dragging over the canvas
-    const { over } = event;
+    const { over, active } = event;
     if (over?.id === 'react-flow-wrapper') {
       // Visual feedback when over canvas
-      console.log('Dragging over canvas');
+      console.log('Dragging over canvas', { activeId: active.id, overId: over.id });
+    } else if (over) {
+      console.log('Dragging over element', { activeId: active.id, overId: over.id });
     }
   };
 
   // Handle drag end
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
+    const wasJustDragging = isDragging; // Store the value before resetting
     setIsDragging(false);
 
-    console.log('Drag ended', { activeId: active.id, overId: over?.id });
+    console.log('Drag ended', { activeId: active.id, overId: over?.id, wasJustDragging });
 
     // Handle client drag
     if (active.id.toString().startsWith('client-')) {
       const clientName = active.id.toString().replace('client-', '');
       const clientData = clients.find((c: any) => c.name === clientName);
 
-      // Only add to canvas if it's not the active client and dropped on canvas
-      if (clientData && clientName !== activeClient && over?.id === 'react-flow-wrapper') {
+      console.log('Processing client drop', {
+        clientName,
+        hasClientData: !!clientData,
+        isActiveClient: clientName === activeClient,
+        overId: over?.id,
+        wasJustDragging
+      });
+
+      // Add to canvas if:
+      // 1. We have client data
+      // 2. It's not the currently active client
+      // 3. Either dropped on canvas OR was just dragging (handles React Flow not registering drops)
+      if (clientData && clientName !== activeClient && (!over || over?.id === 'react-flow-wrapper' || wasJustDragging)) {
+        console.log('Adding client to canvas:', clientName);
+
         // Add additional client node for multi-client configuration
         const newClientNode: Node = {
           id: `client-extra-${clientName}`,
           type: 'client',
           position: { x: 800, y: 100 + nodes.filter(n => n.type === 'client').length * 150 },
           data: {
-            label: clientData.displayName || clientData.name,
+            label: (clientData as any).displayName || clientData.name,
             client: clientData,
             icon: '🤖',
             serverCount: 0,
             isMain: false
           },
         };
-        setNodes((nds) => [...nds, newClientNode]);
+        setNodes((nds) => {
+          console.log('Current nodes:', nds.length, 'Adding new client node');
+          return [...nds, newClientNode];
+        });
+      } else {
+        console.log('Client not added to canvas - conditions not met');
       }
       setDraggedItem(null);
       return;
@@ -190,7 +251,7 @@ export const VisualWorkspace: React.FC = () => {
 
       // If no specific drop target (over is null) or dropped on canvas, add server to canvas
       // This handles the case where React Flow might not register as a drop target
-      if (!over || over.id === 'react-flow-wrapper' || (!isClientDrop && isDragging)) {
+      if (!over || over.id === 'react-flow-wrapper' || (!isClientDrop && wasJustDragging)) {
         console.log('Adding server to canvas', { over: over?.id, serverName });
 
         // Check if server already exists
@@ -307,7 +368,12 @@ export const VisualWorkspace: React.FC = () => {
   };
 
   return (
-    <DndContext onDragStart={handleDragStart} onDragOver={handleDragOver} onDragEnd={handleDragEnd}>
+    <DndContext
+      sensors={sensors}
+      onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
+      onDragEnd={handleDragEnd}
+    >
       <div className="visual-workspace flex h-full bg-base-200 relative">
           {/* Left Panel - Server Library */}
           <div className="w-64 bg-base-100 border-r border-base-300 overflow-y-auto flex-shrink-0">
@@ -344,18 +410,11 @@ export const VisualWorkspace: React.FC = () => {
 
             <ReactFlowProvider>
               <div
-                className="h-full w-full pt-10"
+                className={`h-full w-full pt-10 transition-colors duration-200 ${
+                  isOverCanvas ? 'bg-success/10 border-2 border-success border-dashed' : ''
+                }`}
                 id="react-flow-wrapper"
                 ref={setCanvasDropRef}
-                onDragOver={(e) => {
-                  e.preventDefault();
-                  e.dataTransfer.dropEffect = 'move';
-                }}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  // This ensures drops on the canvas are handled
-                  console.log('Native drop on canvas detected');
-                }}
               >
                 <ReactFlow
                   nodes={nodes}
@@ -368,15 +427,6 @@ export const VisualWorkspace: React.FC = () => {
                   fitView
                   className="bg-base-200"
                   proOptions={{ hideAttribution: true }}
-                  onDragOver={(e) => {
-                    e.preventDefault();
-                    e.dataTransfer.dropEffect = 'move';
-                  }}
-                  onDrop={(e) => {
-                    e.preventDefault();
-                    // This ensures drops on React Flow are handled
-                    console.log('Drop on React Flow detected');
-                  }}
                 >
                 <Background color="#4a5568" gap={20} />
                 <Controls

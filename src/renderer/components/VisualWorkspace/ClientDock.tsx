@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useDraggable, useDroppable } from '@dnd-kit/core';
-import { CSS } from '@dnd-kit/utilities';
+import { useDroppable } from '@dnd-kit/core';
 import { useConfigStore } from '@/renderer/store/simplifiedStore';
 import { MCPClient } from '@/shared/types';
 import { AppSettings } from '@/renderer/pages/Settings/SettingsPage';
@@ -14,51 +13,32 @@ interface ClientCardProps {
 }
 
 const ClientCard: React.FC<ClientCardProps> = ({ client, serverCount, isActive, isOver }) => {
-  const { setActiveClient } = useConfigStore() as any;
+  const { selectClient } = useConfigStore() as any;
 
-  // Make client card both draggable and droppable
-  const { attributes, listeners, setNodeRef: setDragRef, transform, isDragging } = useDraggable({
-    id: `client-${client.name}`,
-    data: { type: 'client', client }
-  });
-
+  // Only make it droppable, not draggable
   const { setNodeRef: setDropRef } = useDroppable({
     id: `client-${client.name}`,
   });
 
-  // Combine refs
-  const setNodeRef = (node: HTMLElement | null) => {
-    setDragRef(node);
-    setDropRef(node);
-  };
-
-  const style = {
-    transform: CSS.Translate.toString(transform),
-    opacity: isDragging ? 0.5 : 1,
+  const handleClick = () => {
+    selectClient(client.name);
+    console.log('Client selected:', client.name);
   };
 
   return (
     <div
-      ref={setNodeRef}
-      style={style}
-      {...listeners}
-      {...attributes}
+      ref={setDropRef}
+      onClick={handleClick}
       className={`
-        client-card bg-base-200 rounded cursor-grab hover:shadow-md
+        client-card bg-base-200 rounded cursor-pointer hover:shadow-md
         transition-all duration-200 relative overflow-hidden
-        ${isActive ? 'ring-2 ring-primary shadow-lg' : ''}
+        ${isActive ? 'ring-2 ring-primary shadow-lg bg-primary/10' : 'hover:bg-base-100'}
         ${isOver ? 'bg-success/20 border-success animate-pulse' : ''}
-        ${isDragging ? 'cursor-grabbing shadow-xl scale-105' : ''}
       `}
     >
+
       {/* Dark Header */}
-      <div
-        onDoubleClick={(e) => {
-          e.stopPropagation();
-          setActiveClient(client.name);
-        }}
-        className="cursor-pointer"
-      >
+      <div className="pointer-events-none">
         <CardHeader
           title={(client as any).displayName || client.name}
           badge={
@@ -70,7 +50,7 @@ const ClientCard: React.FC<ClientCardProps> = ({ client, serverCount, isActive, 
       </div>
 
       {/* Card Body */}
-      <div className="p-2">
+      <div className="p-2 pointer-events-none">
         {/* Stats */}
         <div className="space-y-1 mb-2">
           <div className="flex items-center justify-between text-xs">
@@ -101,7 +81,14 @@ const ClientCard: React.FC<ClientCardProps> = ({ client, serverCount, isActive, 
             </span>
           </div>
           {serverCount > 0 && (
-            <button className="btn btn-ghost btn-xs p-0 h-4 w-4 min-h-0">
+            <button
+              className="btn btn-ghost btn-xs p-0 h-4 w-4 min-h-0 pointer-events-auto"
+              onClick={(e) => {
+                e.stopPropagation();
+                console.log('Settings clicked for:', client.name);
+                // TODO: Open settings for this client
+              }}
+            >
               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />

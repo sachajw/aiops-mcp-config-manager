@@ -9,7 +9,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Platform](https://img.shields.io/badge/platform-macOS-lightgrey)](https://github.com/itsocialist/mcp-config-manager)
 [![Release](https://img.shields.io/github/v/release/itsocialist/mcp-config-manager)](https://github.com/itsocialist/mcp-config-manager/releases)
-[![Version](https://img.shields.io/badge/version-0.1.4-blue)](https://github.com/itsocialist/mcp-config-manager/releases/tag/v0.1.4)
+[![Version](https://img.shields.io/badge/version-0.1.5-blue)](https://github.com/itsocialist/mcp-config-manager/releases/tag/v0.1.5)
 
 [Download](#installation) • [Quick Start](#quick-start) • [Documentation](#documentation) • [Community](#community)
 
@@ -91,8 +91,8 @@
 ### Installation
 
 **Download for macOS:**
-- [macOS Apple Silicon (M1/M2/M3)](https://github.com/itsocialist/mcp-config-manager/releases/download/v0.1.4/MCP.Configuration.Manager-0.1.4-arm64.dmg)
-- [macOS Intel](https://github.com/itsocialist/mcp-config-manager/releases/download/v0.1.4/MCP.Configuration.Manager-0.1.4.dmg)
+- [macOS Apple Silicon (M1/M2/M3)](https://github.com/itsocialist/mcp-config-manager/releases/download/v0.1.5/MCP.Configuration.Manager-0.1.5-arm64.dmg)
+- [macOS Intel](https://github.com/itsocialist/mcp-config-manager/releases/download/v0.1.5/MCP.Configuration.Manager-0.1.5.dmg)
 - [View all releases](https://github.com/itsocialist/mcp-config-manager/releases)
 
 **Important: First Launch on macOS**  
@@ -160,9 +160,10 @@ The new Visual Workspace provides an intuitive canvas for managing MCP configura
 - **Interactive node-based interface** using React Flow
 - **Drag servers from library** and drop onto canvas
 - **Visual connections** show server-to-client relationships
-- **Real-time metrics** display token usage and active tools
+- **Live server metrics** with real MCP protocol integration
+- **Real-time connection status** and health monitoring
 - **Client dock** for quick switching between AI clients
-- **Insights panel** with performance analytics
+- **Insights panel** with live performance analytics
 
 ### 🔍 MCP Server Discovery
 Explore and install servers from multiple sources:
@@ -182,19 +183,21 @@ Enhanced server configuration capabilities:
 - **Bulk operations** across multiple servers and clients
 
 ### Monitoring & Analytics
-- **Real-time server status** monitoring
-- **Performance metrics** for MCP server usage
-- **Token usage tracking** per server and client
+- **Real-time server status** with native MCP protocol monitoring
+- **Live performance metrics** including response times and tool counts
+- **Active connection tracking** with health checks and auto-reconnect
 - **Configuration change history** with rollback capability
-- **Connection health monitoring** with automatic reconnection
+- **Server resource monitoring** for tools, prompts, and resources
 
-## Recently Added (v0.1.4)
+## Recently Added (v0.1.5)
 
+- ✅ **Native MCP Protocol** - Real server connections with live communication
+- ✅ **Live Server Metrics** - Actual tool counts, response times, and connection status
+- ✅ **Connection Monitoring** - Real-time health checks and automatic reconnection
 - ✅ **Visual Workspace** - Interactive canvas for server management
 - ✅ **Server Discovery** - Browse and install from 100+ MCP servers
 - ✅ **Kiro & Windsurf Support** - Latest AI client integrations
 - ✅ **Enhanced Drag-and-Drop** - Visual server configuration
-- ✅ **Real-time Metrics** - Performance and usage tracking
 
 ## Upcoming Features (Q1 2025)
 
@@ -211,10 +214,13 @@ Enhanced server configuration capabilities:
 ## Built With
 
 - **Electron** + **React** for native desktop experience
-- **TypeScript** for type safety and developer experience  
+- **TypeScript** for type safety and developer experience
 - **Tailwind CSS** for modern, responsive UI
 - **Zustand** for state management
 - **Monaco Editor** for advanced JSON editing
+- **React Flow** for visual workspace canvas
+- **Native MCP Protocol** for real server communication
+- **JSON-RPC** for protocol messaging
 
 ## License
 
