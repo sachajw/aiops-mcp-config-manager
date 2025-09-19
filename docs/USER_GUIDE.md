@@ -78,7 +78,6 @@ The main interface will appear. Select your AI client from the dropdown menu to 
 
 The main interface consists of several key components:
 
-![Main Interface Full Screen](userguide/main-interface-fullscreen.png)
 
 #### Top Navigation Bar
 
@@ -110,17 +109,15 @@ Choose the configuration scope you want to work with:
 
 The Visual Workspace provides an intuitive, canvas-based interface for managing MCP server connections. This feature transforms the traditional list-based configuration into an interactive visual experience.
 
-![Visual Workspace Full View](userguide/visual-workspace-full.png)
 
 ### Accessing Visual Workspace
 
+Enable the Visual Workspace under Settings> Advanced Settings
 Click the **Visual Workspace** tab in the main navigation to access the canvas interface.
 
 ### Key Components
 
 #### 1. Server Library (Left Panel)
-
-![Server Library Panel](userguide/visual-workspace-server-library.png)
 
 The Server Library contains all available MCP servers organized by category:
 - **Development**: Code editing, Git, database tools
@@ -138,8 +135,6 @@ The Server Library contains all available MCP servers organized by category:
 
 #### 2. Interactive Canvas (Center)
 
-![Visual Workspace Canvas](userguide/visual-workspace-canvas.png)
-
 The main canvas area displays your MCP configuration as a visual network:
 - **Server Nodes**: Represent individual MCP servers with icons and labels
 - **Client Node**: Shows the active AI client (Claude, VS Code, etc.)
@@ -153,8 +148,6 @@ The main canvas area displays your MCP configuration as a visual network:
 - **Multi-select**: Hold Shift to select multiple nodes
 
 #### 3. Client Dock (Bottom)
-
-![Client Dock](userguide/visual-workspace-client-dock.png)
 
 Quick access bar for switching between AI clients:
 - Shows all detected AI clients with icons
@@ -209,9 +202,6 @@ Real-time analytics and metrics dashboard:
 ## Server Discovery
 
 The Server Discovery feature provides a marketplace-like experience for finding and installing MCP servers from various sources.
-
-![Discovery Page Full View](userguide/discovery-page-full.png)
-
 ### Accessing Discovery
 
 Click the **Discovery** tab in the main navigation to browse available MCP servers.
@@ -237,8 +227,6 @@ Click the **Discovery** tab in the main navigation to browse available MCP serve
 
 #### Browsing Servers
 
-![Discovery Server Grid](userguide/discovery-server-grid.png)
-
 The Discovery page displays servers in a card grid layout:
 - **Server Card**: Shows name, description, and key information
 - **Category Badge**: Indicates server type (AI, Dev, Data, etc.)
@@ -246,8 +234,6 @@ The Discovery page displays servers in a card grid layout:
 - **Ratings**: Community ratings and review count
 
 #### Filtering and Search
-
-![Discovery Search and Filter](userguide/discovery-search-filter.png)
 
 **Search Bar**: Type to search by name, description, or keywords
 
