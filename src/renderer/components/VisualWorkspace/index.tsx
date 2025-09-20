@@ -130,19 +130,30 @@ export const VisualWorkspace: React.FC = () => {
     };
 
     fetchMetrics().then((metrics) => {
+      // Helper to generate varied demo metrics for servers without real data
+      const generateDemoMetrics = (serverName: string, index: number) => {
+        const hash = serverName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+        const tools = 3 + (hash % 25) + Math.floor(index * 2);
+        const tokens = 500 + (hash % 2000) + (index * 300);
+        return { tools: Math.min(50, tools), tokens: Math.min(10000, tokens) };
+      };
+
       // Only show servers for the active client
-      const serverNodes: Node[] = Object.entries(servers).map(([name, server], index) => ({
-        id: `server-${name}`,
-        type: 'server',
-        position: { x: 200, y: 100 + index * 100 },
-        data: {
-          label: name,
-          server,
-          icon: '📦',
-          tools: metrics[name]?.toolCount || 10,
-          tokens: metrics[name]?.tokenUsage || 1000
-        },
-      }));
+      const serverNodes: Node[] = Object.entries(servers).map(([name, server], index) => {
+        const demoMetrics = generateDemoMetrics(name, index);
+        return {
+          id: `server-${name}`,
+          type: 'server',
+          position: { x: 200, y: 100 + index * 100 },
+          data: {
+            label: name,
+            server,
+            icon: '📦',
+            tools: metrics[name]?.toolCount || demoMetrics.tools,
+            tokens: metrics[name]?.tokenUsage || demoMetrics.tokens
+          },
+        };
+      });
 
       // Show the active client as the main node
       const activeClientData = clients.find((c: any) => c.name === activeClient);
@@ -334,16 +345,22 @@ export const VisualWorkspace: React.FC = () => {
         // Check if server already exists
         const serverExists = nodes.some(n => n.id === serverNodeId);
         if (!serverExists) {
+          // Generate varied metrics if not provided
+          const nodeIndex = nodes.filter(n => n.type === 'server').length;
+          const hash = serverName.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
+          const defaultTools = Math.min(40, 5 + (hash % 20) + nodeIndex * 2);
+          const defaultTokens = Math.min(8000, 800 + (hash % 1500) + nodeIndex * 250);
+
           const newServerNode: Node = {
             id: serverNodeId,
             type: 'server',
-            position: { x: 350, y: 200 + nodes.filter(n => n.type === 'server').length * 100 },
+            position: { x: 350, y: 200 + nodeIndex * 100 },
             data: {
               label: serverName,
               server: serverData,
               icon: dragData?.icon || '📦',
-              tools: dragData?.tools || 10,
-              tokens: dragData?.tokens || 1000
+              tools: dragData?.tools || defaultTools,
+              tokens: dragData?.tokens || defaultTokens
             },
           };
           setNodes((nds) => [...nds, newServerNode]);
