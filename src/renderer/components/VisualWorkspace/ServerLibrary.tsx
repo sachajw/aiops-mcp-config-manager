@@ -10,13 +10,14 @@ interface ServerCardProps {
   server: MCPServer;
   icon: string;
   description?: string;
-  tools?: number;
-  tokens?: number;
+  tools?: number | string;
+  tokens?: number | string;
   rating?: number;
   installed?: boolean;
   author?: string;
   repository?: string;
   website?: string;
+  loading?: boolean;
 }
 
 const ServerCard: React.FC<ServerCardProps> = ({
@@ -25,13 +26,14 @@ const ServerCard: React.FC<ServerCardProps> = ({
   server,
   icon,
   description,
-  tools = 0,
-  tokens = 0,
+  tools = '—',
+  tokens = '—',
   rating = 0,
   installed = false,
   author,
   repository,
-  website
+  website,
+  loading = false
 }) => {
   const [showDetails, setShowDetails] = useState(false);
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
@@ -96,13 +98,15 @@ const ServerCard: React.FC<ServerCardProps> = ({
             <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
             </svg>
-            <span>{tools}</span>
+            <span className={loading ? 'opacity-50' : ''}>{tools}</span>
           </div>
           <div className="flex items-center gap-0.5">
             <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
             </svg>
-            <span>{tokens > 1000 ? `${(tokens/1000).toFixed(1)}k` : tokens}</span>
+            <span className={loading ? 'opacity-50' : ''}>
+              {typeof tokens === 'number' && tokens > 1000 ? `${(tokens/1000).toFixed(1)}k` : tokens}
+            </span>
           </div>
           {rating > 0 && (
             <div className="flex items-center gap-0.5 ml-auto">
@@ -201,7 +205,7 @@ export const ServerLibrary: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [catalog, setCatalog] = useState<any[]>([]);
-  const [serverMetrics, setServerMetrics] = useState<Record<string, { tools: number; tokens: number }>>({});
+  const [serverMetrics, setServerMetrics] = useState<Record<string, { tools: number | string; tokens: number | string; loading?: boolean }>>({});
 
   // Load servers from backend catalog service
   React.useEffect(() => {
@@ -243,69 +247,89 @@ export const ServerLibrary: React.FC = () => {
     return () => window.removeEventListener('catalog-updated', handleCatalogUpdate);
   }, []);
 
-  // Fetch real metrics for servers
+  // Fetch real metrics for servers asynchronously
   React.useEffect(() => {
-    const fetchMetrics = async () => {
-      const metrics: Record<string, { tools: number; tokens: number }> = {};
+    if (catalog.length === 0) return;
 
-      // Fetch metrics for default servers
-      const serverNames = ['filesystem', 'search', 'database', 'web-apis', 'ai-tools'];
-
-      for (const name of serverNames) {
-        try {
-          const serverMetrics = await (window as any).electronAPI?.getServerMetrics?.(name);
-          if (serverMetrics) {
-            metrics[name] = {
-              tools: serverMetrics.toolCount || 0,
-              tokens: serverMetrics.tokenUsage || 0
-            };
-          }
-        } catch (err) {
-          console.warn(`Failed to fetch metrics for ${name}:`, err);
-        }
+    // Set all servers to loading state with placeholders
+    const initialMetrics: Record<string, { tools: number | string; tokens: number | string; loading?: boolean }> = {};
+    catalog.forEach(server => {
+      const id = server.name?.toLowerCase().replace(/\s+/g, '-') || '';
+      if (id) {
+        initialMetrics[id] = { tools: '—', tokens: '—', loading: true };
       }
+    });
+    setServerMetrics(initialMetrics);
 
-      // Also fetch metrics for catalog servers
-      for (const server of catalog) {
-        const id = server.name?.toLowerCase().replace(/\s+/g, '-') || '';
-        if (id) {
+    // Fetch metrics asynchronously in the background
+    const fetchMetricsAsync = async () => {
+      // Process servers in batches to avoid overwhelming the system
+      const batchSize = 3;
+      const allServers = catalog.map(server => ({
+        id: server.name?.toLowerCase().replace(/\s+/g, '-') || '',
+        name: server.name,
+        config: server.config || { command: server.command, args: server.args }
+      })).filter(s => s.id);
+
+      for (let i = 0; i < allServers.length; i += batchSize) {
+        const batch = allServers.slice(i, i + batchSize);
+
+        // Fetch metrics for batch in parallel
+        const batchPromises = batch.map(async server => {
           try {
-            const serverMetrics = await (window as any).electronAPI?.getServerMetrics?.(server.name);
+            // Try to get real metrics via MCP inspection
+            const serverMetrics = await (window as any).electronAPI?.getServerMetrics?.(
+              server.name,
+              server.config
+            );
+
             if (serverMetrics) {
-              metrics[id] = {
-                tools: serverMetrics.toolCount || 0,
-                tokens: serverMetrics.tokenUsage || 0
-              };
+              setServerMetrics(prev => ({
+                ...prev,
+                [server.id]: {
+                  tools: serverMetrics.toolCount || 0,
+                  tokens: serverMetrics.tokenUsage || 0,
+                  loading: false
+                }
+              }));
+            } else {
+              // Fallback to placeholder if metrics unavailable
+              setServerMetrics(prev => ({
+                ...prev,
+                [server.id]: {
+                  tools: 0,
+                  tokens: 0,
+                  loading: false
+                }
+              }));
             }
           } catch (err) {
             console.warn(`Failed to fetch metrics for ${server.name}:`, err);
+            // On error, keep placeholder but mark as not loading
+            setServerMetrics(prev => ({
+              ...prev,
+              [server.id]: {
+                tools: '—',
+                tokens: '—',
+                loading: false
+              }
+            }));
           }
+        });
+
+        // Wait for batch to complete before starting next batch
+        await Promise.all(batchPromises);
+
+        // Small delay between batches to avoid overwhelming the system
+        if (i + batchSize < allServers.length) {
+          await new Promise(resolve => setTimeout(resolve, 100));
         }
       }
-
-      setServerMetrics(metrics);
     };
 
-    fetchMetrics();
+    fetchMetricsAsync();
   }, [catalog]);
 
-  // Helper to generate varied but realistic metrics
-  const generateServerMetrics = (serverName: string, index: number) => {
-    // Use server name hash for consistent but varied values
-    const hash = serverName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-
-    // Generate realistic tool counts (3-50 range)
-    const baseTools = 3 + (hash % 20);
-    const toolVariation = Math.floor(index / 3);
-    const tools = Math.min(50, baseTools + toolVariation * 2);
-
-    // Generate token usage (100-10000 range)
-    const baseTokens = 100 + (hash % 900);
-    const tokenVariation = index * 150;
-    const tokens = Math.min(10000, baseTokens + tokenVariation);
-
-    return { tools, tokens };
-  };
 
   // Convert catalog servers to display format
   const catalogServers = Array.isArray(catalog) ? catalog : [];
@@ -313,8 +337,9 @@ export const ServerLibrary: React.FC = () => {
     const serverId = server.name.toLowerCase().replace(/\s+/g, '-');
     const metrics = serverMetrics[serverId] || serverMetrics[server.name];
 
-    // Use real metrics if available, otherwise generate varied demo metrics
-    const generatedMetrics = generateServerMetrics(server.name, index);
+    // Use real metrics if available, loading placeholders while fetching
+    const tools = metrics?.tools ?? '—';
+    const tokens = metrics?.tokens ?? '—';
 
     return {
       id: serverId,
@@ -322,14 +347,15 @@ export const ServerLibrary: React.FC = () => {
       server: server.config || { command: server.command, args: server.args, type: 'local' as const },
       icon: server.name.substring(0, 2).toUpperCase(),
       description: server.description || server.summary,
-      tools: metrics?.tools || generatedMetrics.tools,
-      tokens: metrics?.tokens || generatedMetrics.tokens,
+      tools,
+      tokens,
       rating: server.rating || 0,
       installed: server.installed || false,
       category: server.category || 'community',
       author: server.author || 'Community',
       repository: server.repository || server.github,
-      website: server.website || server.docs
+      website: server.website || server.docs,
+      loading: metrics?.loading || false
     };
   });
 

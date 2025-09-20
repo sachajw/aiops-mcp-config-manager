@@ -26,13 +26,13 @@ import { MCPServer } from '@/main/services/UnifiedConfigService';
 
 // Define node types for React Flow
 const nodeTypes = {
-  server: ServerNode,
-  client: ClientNode,
+  server: ServerNode as any,
+  client: ClientNode as any,
 };
 
 // Define edge types for React Flow
 const edgeTypes = {
-  cable: CableEdge,
+  cable: CableEdge as any,
 };
 
 export const VisualWorkspace: React.FC = () => {
@@ -249,6 +249,60 @@ export const VisualWorkspace: React.FC = () => {
     };
   }, [nodes, edges, setNodes, setEdges]);
 
+  // Fetch real metrics for server nodes that are loading
+  React.useEffect(() => {
+    const fetchServerMetrics = async () => {
+      const loadingNodes = nodes.filter(n => n.type === 'server' && n.data.loading);
+
+      for (const node of loadingNodes) {
+        try {
+          const serverMetrics = await (window as any).electronAPI?.getServerMetrics?.(
+            node.data.label,
+            node.data.server
+          );
+
+          if (serverMetrics) {
+            setNodes(nds => nds.map(n => {
+              if (n.id === node.id) {
+                return {
+                  ...n,
+                  data: {
+                    ...n.data,
+                    tools: serverMetrics.toolCount || 0,
+                    tokens: serverMetrics.tokenUsage || 0,
+                    loading: false
+                  }
+                };
+              }
+              return n;
+            }));
+          }
+        } catch (err) {
+          console.warn(`Failed to fetch metrics for ${node.data.label}:`, err);
+          // Keep placeholder on error but mark as not loading
+          setNodes(nds => nds.map(n => {
+            if (n.id === node.id) {
+              return {
+                ...n,
+                data: {
+                  ...n.data,
+                  loading: false
+                }
+              };
+            }
+            return n;
+          }));
+        }
+      }
+    };
+
+    // Only run if there are loading nodes
+    const hasLoadingNodes = nodes.some(n => n.type === 'server' && n.data.loading);
+    if (hasLoadingNodes) {
+      fetchServerMetrics();
+    }
+  }, [nodes, setNodes]);
+
   // Handle drag start
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
@@ -345,11 +399,11 @@ export const VisualWorkspace: React.FC = () => {
         // Check if server already exists
         const serverExists = nodes.some(n => n.id === serverNodeId);
         if (!serverExists) {
-          // Generate varied metrics if not provided
           const nodeIndex = nodes.filter(n => n.type === 'server').length;
-          const hash = serverName.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
-          const defaultTools = Math.min(40, 5 + (hash % 20) + nodeIndex * 2);
-          const defaultTokens = Math.min(8000, 800 + (hash % 1500) + nodeIndex * 250);
+
+          // Use provided metrics or placeholders while loading
+          const initialTools = dragData?.tools !== undefined ? dragData.tools : '—';
+          const initialTokens = dragData?.tokens !== undefined ? dragData.tokens : '—';
 
           const newServerNode: Node = {
             id: serverNodeId,
@@ -359,8 +413,9 @@ export const VisualWorkspace: React.FC = () => {
               label: serverName,
               server: serverData,
               icon: dragData?.icon || '📦',
-              tools: dragData?.tools || defaultTools,
-              tokens: dragData?.tokens || defaultTokens
+              tools: initialTools,
+              tokens: initialTokens,
+              loading: initialTools === '—' || initialTokens === '—'
             },
           };
           setNodes((nds) => [...nds, newServerNode]);
@@ -399,6 +454,10 @@ export const VisualWorkspace: React.FC = () => {
         // Add server node if it doesn't exist
         const serverExists = nodes.some(n => n.id === serverNodeId);
         if (!serverExists) {
+          // Use provided metrics or placeholders while loading
+          const initialTools = dragData?.tools !== undefined ? dragData.tools : '—';
+          const initialTokens = dragData?.tokens !== undefined ? dragData.tokens : '—';
+
           const newServerNode: Node = {
             id: serverNodeId,
             type: 'server',
@@ -407,8 +466,9 @@ export const VisualWorkspace: React.FC = () => {
               label: serverName,
               server: serverData,
               icon: dragData?.icon || '📦',
-              tools: dragData?.tools || 10,
-              tokens: dragData?.tokens || 1000
+              tools: initialTools,
+              tokens: initialTokens,
+              loading: initialTools === '—' || initialTokens === '—'
             },
           };
           setNodes((nds) => [...nds, newServerNode]);

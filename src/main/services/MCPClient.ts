@@ -162,7 +162,7 @@ export class MCPClient extends EventEmitter {
       }
     };
 
-    const response = await this.sendRequest(initMessage);
+    const response = await this.sendRequestInternal(initMessage);
     this.metrics.serverInfo = response.result.serverInfo;
 
     // Send initialized notification
@@ -181,7 +181,7 @@ export class MCPClient extends EventEmitter {
   private async fetchServerCapabilities(): Promise<void> {
     try {
       // Fetch tools
-      const toolsResponse = await this.sendRequest({
+      const toolsResponse = await this.sendRequestInternal({
         jsonrpc: '2.0',
         id: this.nextId++,
         method: 'tools/list'
@@ -193,7 +193,7 @@ export class MCPClient extends EventEmitter {
 
       // Fetch resources
       try {
-        const resourcesResponse = await this.sendRequest({
+        const resourcesResponse = await this.sendRequestInternal({
           jsonrpc: '2.0',
           id: this.nextId++,
           method: 'resources/list'
@@ -216,7 +216,7 @@ export class MCPClient extends EventEmitter {
   /**
    * Send a JSON-RPC request and wait for response
    */
-  private async sendRequest(message: any): Promise<any> {
+  private async sendRequestInternal(message: any): Promise<any> {
     return new Promise((resolve, reject) => {
       const timestamp = Date.now();
       this.pendingRequests.set(message.id, { resolve, reject, timestamp });
@@ -338,7 +338,7 @@ export class MCPClient extends EventEmitter {
 
     try {
       // Send a simple tools/list request as ping
-      await this.sendRequest({
+      await this.sendRequestInternal({
         jsonrpc: '2.0',
         id: this.nextId++,
         method: 'tools/list'
@@ -358,7 +358,7 @@ export class MCPClient extends EventEmitter {
    * Get available tools
    */
   public async getTools(): Promise<MCPTool[]> {
-    const response = await this.sendRequest({
+    const response = await this.sendRequestInternal({
       jsonrpc: '2.0',
       id: this.nextId++,
       method: 'tools/list'
@@ -371,13 +371,23 @@ export class MCPClient extends EventEmitter {
    * Get available resources
    */
   public async getResources(): Promise<MCPResource[]> {
-    const response = await this.sendRequest({
+    const response = await this.sendRequestInternal({
       jsonrpc: '2.0',
       id: this.nextId++,
       method: 'resources/list'
     });
 
     return response.result?.resources || [];
+  }
+
+  /**
+   * Send a public request (for MCPServerInspector)
+   */
+  public async sendRequest(message: any): Promise<any> {
+    if (message.id === undefined) {
+      message.id = this.nextId++;
+    }
+    return this.sendRequestInternal(message);
   }
 }
 

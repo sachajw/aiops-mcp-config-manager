@@ -192,7 +192,20 @@ export function setupIpcHandlers(): void {
   });
 
   // Metrics handlers
-  ipcMain.handle('metrics:getServerMetrics', async (_, serverName: string) => {
+  ipcMain.handle('metrics:getServerMetrics', async (_, serverName: string, serverConfig?: any) => {
+    // If server config provided, use real MCP inspection
+    if (serverConfig && serverConfig.command) {
+      const { MCPServerInspector } = await import('../services/MCPServerInspector');
+      try {
+        const metrics = await MCPServerInspector.getServerMetrics(serverName, serverConfig);
+        console.log(`[IPC] Real metrics for ${serverName}:`, metrics);
+        return metrics;
+      } catch (error) {
+        console.error(`[IPC] Failed to get real metrics for ${serverName}:`, error);
+      }
+    }
+
+    // Fallback to mock metrics service
     const { metricsService } = await import('../services/MetricsService');
     const { connectionMonitor } = await import('../services/ConnectionMonitor');
 
@@ -384,6 +397,23 @@ export function setupIpcHandlers(): void {
   ipcMain.handle('catalog:getPopularServers', async (_, limit?: number) => {
     const { ServerCatalogService } = await import('../services/ServerCatalogService');
     return ServerCatalogService.getPopularServers(limit);
+  });
+
+  // MCP Server inspection handlers
+  ipcMain.handle('mcp:inspectServer', async (_, serverName: string, serverConfig: any) => {
+    const { MCPServerInspector } = await import('../services/MCPServerInspector');
+    try {
+      const result = await MCPServerInspector.inspectServer(serverName, serverConfig);
+      console.log(`[IPC] Inspection result for ${serverName}:`, {
+        tools: result.toolCount,
+        resources: result.resourceCount,
+        prompts: result.promptCount
+      });
+      return result;
+    } catch (error) {
+      console.error(`[IPC] Failed to inspect server ${serverName}:`, error);
+      throw error;
+    }
   });
 
   // MCP Server testing handlers
