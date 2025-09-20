@@ -67,6 +67,9 @@ export const VisualWorkspace: React.FC = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
 
+  // Track client server counts
+  const [clientServerCounts, setClientServerCounts] = React.useState<Record<string, number>>({});
+
   // Drag state
   const [isDragging, setIsDragging] = useState(false);
   const [draggedItem, setDraggedItem] = useState<{ id: string; type: string; data: any } | null>(null);
@@ -74,6 +77,36 @@ export const VisualWorkspace: React.FC = () => {
 
   // Panel visibility
   const [showInsights, setShowInsights] = useState(true);
+
+  // Load actual server counts for each client
+  React.useEffect(() => {
+    const loadClientServerCounts = async () => {
+      const counts: Record<string, number> = {};
+
+      for (const client of clients) {
+        if ((client as any).installed) {
+          try {
+            // Get the actual configuration for this client
+            const config = await (window as any).electronAPI?.readConfig?.(client.name, activeScope);
+            if (config?.data) {
+              counts[client.name] = Object.keys(config.data).length;
+            } else {
+              counts[client.name] = 0;
+            }
+          } catch (err) {
+            console.warn(`Failed to load server count for ${client.name}:`, err);
+            counts[client.name] = 0;
+          }
+        }
+      }
+
+      setClientServerCounts(counts);
+    };
+
+    if (clients.length > 0) {
+      loadClientServerCounts();
+    }
+  }, [clients, activeScope]);
 
   // Initialize nodes from current configuration - Client-specific view
   React.useEffect(() => {
@@ -121,7 +154,8 @@ export const VisualWorkspace: React.FC = () => {
           label: (activeClientData as any).displayName || activeClientData.name,
           client: activeClientData,
           icon: '🤖',
-          serverCount: Object.keys(servers).length,
+          serverCount: clientServerCounts[activeClient as string] || Object.keys(servers).length,
+          maxServers: 20,
           isMain: true
         },
       }] : [];
@@ -142,7 +176,7 @@ export const VisualWorkspace: React.FC = () => {
       setNodes([...serverNodes, ...clientNodes]);
       setEdges(newEdges);
     });
-  }, [servers, clients, activeClient, setNodes, setEdges]);
+  }, [servers, clients, activeClient, setNodes, setEdges, clientServerCounts]);
 
   // Handle connection creation
   const onConnect = useCallback(
@@ -161,6 +195,48 @@ export const VisualWorkspace: React.FC = () => {
     },
     [setEdges]
   );
+
+  // Handle keyboard events for delete
+  React.useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Check if Delete or Backspace key is pressed
+      if (event.key === 'Delete' || event.key === 'Backspace') {
+        // Get selected nodes and edges
+        const selectedNodes = nodes.filter(node => node.selected);
+        const selectedEdges = edges.filter(edge => edge.selected);
+
+        if (selectedNodes.length > 0 || selectedEdges.length > 0) {
+          // Prevent default browser behavior
+          event.preventDefault();
+
+          // Remove selected nodes
+          if (selectedNodes.length > 0) {
+            const nodeIdsToRemove = selectedNodes.map(n => n.id);
+            setNodes(nds => nds.filter(n => !nodeIdsToRemove.includes(n.id)));
+
+            // Also remove edges connected to deleted nodes
+            setEdges(eds => eds.filter(e =>
+              !nodeIdsToRemove.includes(e.source) && !nodeIdsToRemove.includes(e.target)
+            ));
+          }
+
+          // Remove selected edges
+          if (selectedEdges.length > 0) {
+            const edgeIdsToRemove = selectedEdges.map(e => e.id);
+            setEdges(eds => eds.filter(e => !edgeIdsToRemove.includes(e.id)));
+          }
+        }
+      }
+    };
+
+    // Add event listener
+    window.addEventListener('keydown', handleKeyDown);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [nodes, edges, setNodes, setEdges]);
 
   // Handle drag start
   const handleDragStart = (event: DragStartEvent) => {
@@ -224,7 +300,8 @@ export const VisualWorkspace: React.FC = () => {
             label: (clientData as any).displayName || clientData.name,
             client: clientData,
             icon: '🤖',
-            serverCount: 0,
+            serverCount: clientServerCounts[clientName] || 0,
+            maxServers: 20,
             isMain: false
           },
         };
