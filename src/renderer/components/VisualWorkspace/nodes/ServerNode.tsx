@@ -9,6 +9,9 @@ interface ServerNodeData {
   status?: 'active' | 'inactive' | 'error';
   server?: any;
   loading?: boolean;
+  metricsLoaded?: boolean;
+  metricsTimestamp?: number;
+  onRefresh?: () => void;
 }
 
 export const ServerNode: React.FC<NodeProps<ServerNodeData>> = ({ data, selected }) => {
@@ -39,6 +42,23 @@ export const ServerNode: React.FC<NodeProps<ServerNodeData>> = ({ data, selected
         status === 'error' ? 'bg-error' :
         'bg-base-content/30'
       }`} />
+
+      {/* Refresh button - show when metrics are loaded */}
+      {data.metricsLoaded && (
+        <button
+          className="absolute top-1 right-1 p-1 rounded hover:bg-base-300 transition-colors"
+          onClick={(e) => {
+            e.stopPropagation();
+            if (data.onRefresh) data.onRefresh();
+          }}
+          title="Refresh metrics"
+        >
+          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+        </button>
+      )}
 
       {/* Icon and label */}
       <div className="flex items-center gap-2 mb-2">

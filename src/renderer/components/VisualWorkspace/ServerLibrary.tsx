@@ -10,14 +10,10 @@ interface ServerCardProps {
   server: MCPServer;
   icon: string;
   description?: string;
-  tools?: number | string;
-  tokens?: number | string;
-  rating?: number;
   installed?: boolean;
   author?: string;
   repository?: string;
   website?: string;
-  loading?: boolean;
 }
 
 const ServerCard: React.FC<ServerCardProps> = ({
@@ -26,14 +22,10 @@ const ServerCard: React.FC<ServerCardProps> = ({
   server,
   icon,
   description,
-  tools = '—',
-  tokens = '—',
-  rating = 0,
   installed = false,
   author,
   repository,
-  website,
-  loading = false
+  website
 }) => {
   const [showDetails, setShowDetails] = useState(false);
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
@@ -41,8 +33,6 @@ const ServerCard: React.FC<ServerCardProps> = ({
     data: {
       server,
       name,
-      tools,
-      tokens,
       icon
     }
   });
@@ -87,34 +77,10 @@ const ServerCard: React.FC<ServerCardProps> = ({
       {/* Compact Card View */}
       <div className="p-2">
 
-        {/* Description - only if no details shown */}
+        {/* Description - show full description if no details panel */}
         {description && !showDetails && (
-          <p className="text-xs text-base-content/60 line-clamp-1">{description}</p>
+          <p className="text-xs text-base-content/60 line-clamp-2">{description}</p>
         )}
-
-        {/* Quick stats */}
-        <div className="flex items-center gap-2 text-xs mt-1">
-          <div className="flex items-center gap-0.5">
-            <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-            </svg>
-            <span className={loading ? 'opacity-50' : ''}>{tools}</span>
-          </div>
-          <div className="flex items-center gap-0.5">
-            <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-            </svg>
-            <span className={loading ? 'opacity-50' : ''}>
-              {typeof tokens === 'number' && tokens > 1000 ? `${(tokens/1000).toFixed(1)}k` : tokens}
-            </span>
-          </div>
-          {rating > 0 && (
-            <div className="flex items-center gap-0.5 ml-auto">
-              <span className="text-yellow-500">★</span>
-              <span>{rating}</span>
-            </div>
-          )}
-        </div>
       </div>
 
       {/* Expandable Details Section */}
@@ -205,7 +171,6 @@ export const ServerLibrary: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [catalog, setCatalog] = useState<any[]>([]);
-  const [serverMetrics, setServerMetrics] = useState<Record<string, { tools: number | string; tokens: number | string; loading?: boolean }>>({});
 
   // Load servers from backend catalog service
   React.useEffect(() => {
@@ -247,117 +212,28 @@ export const ServerLibrary: React.FC = () => {
     return () => window.removeEventListener('catalog-updated', handleCatalogUpdate);
   }, []);
 
-  // Fetch real metrics for servers asynchronously
-  React.useEffect(() => {
-    if (catalog.length === 0) return;
-
-    // Set all servers to loading state with placeholders
-    const initialMetrics: Record<string, { tools: number | string; tokens: number | string; loading?: boolean }> = {};
-    catalog.forEach(server => {
-      const id = server.name?.toLowerCase().replace(/\s+/g, '-') || '';
-      if (id) {
-        initialMetrics[id] = { tools: '—', tokens: '—', loading: true };
-      }
-    });
-    setServerMetrics(initialMetrics);
-
-    // Fetch metrics asynchronously in the background
-    const fetchMetricsAsync = async () => {
-      // Process servers in batches to avoid overwhelming the system
-      const batchSize = 3;
-      const allServers = catalog.map(server => ({
-        id: server.name?.toLowerCase().replace(/\s+/g, '-') || '',
-        name: server.name,
-        config: server.config || { command: server.command, args: server.args }
-      })).filter(s => s.id);
-
-      for (let i = 0; i < allServers.length; i += batchSize) {
-        const batch = allServers.slice(i, i + batchSize);
-
-        // Fetch metrics for batch in parallel
-        const batchPromises = batch.map(async server => {
-          try {
-            // Try to get real metrics via MCP inspection
-            const serverMetrics = await (window as any).electronAPI?.getServerMetrics?.(
-              server.name,
-              server.config
-            );
-
-            if (serverMetrics) {
-              setServerMetrics(prev => ({
-                ...prev,
-                [server.id]: {
-                  tools: serverMetrics.toolCount || 0,
-                  tokens: serverMetrics.tokenUsage || 0,
-                  loading: false
-                }
-              }));
-            } else {
-              // Fallback to placeholder if metrics unavailable
-              setServerMetrics(prev => ({
-                ...prev,
-                [server.id]: {
-                  tools: 0,
-                  tokens: 0,
-                  loading: false
-                }
-              }));
-            }
-          } catch (err) {
-            console.warn(`Failed to fetch metrics for ${server.name}:`, err);
-            // On error, keep placeholder but mark as not loading
-            setServerMetrics(prev => ({
-              ...prev,
-              [server.id]: {
-                tools: '—',
-                tokens: '—',
-                loading: false
-              }
-            }));
-          }
-        });
-
-        // Wait for batch to complete before starting next batch
-        await Promise.all(batchPromises);
-
-        // Small delay between batches to avoid overwhelming the system
-        if (i + batchSize < allServers.length) {
-          await new Promise(resolve => setTimeout(resolve, 100));
-        }
-      }
-    };
-
-    fetchMetricsAsync();
-  }, [catalog]);
 
 
-  // Convert catalog servers to display format
+  // Convert catalog servers to display format - filter for installed servers only
   const catalogServers = Array.isArray(catalog) ? catalog : [];
-  const availableServers = catalogServers.map((server: any, index: number) => {
-    const serverId = server.name.toLowerCase().replace(/\s+/g, '-');
-    const metrics = serverMetrics[serverId] || serverMetrics[server.name];
+  const availableServers = catalogServers
+    .filter((server: any) => server.installed === true)
+    .map((server: any) => {
+      const serverId = server.name.toLowerCase().replace(/\s+/g, '-');
 
-    // Use real metrics if available, loading placeholders while fetching
-    const tools = metrics?.tools ?? '—';
-    const tokens = metrics?.tokens ?? '—';
-
-    return {
-      id: serverId,
-      name: server.name,
-      server: server.config || { command: server.command, args: server.args, type: 'local' as const },
-      icon: server.name.substring(0, 2).toUpperCase(),
-      description: server.description || server.summary,
-      tools,
-      tokens,
-      rating: server.rating || 0,
-      installed: server.installed || false,
-      category: server.category || 'community',
-      author: server.author || 'Community',
-      repository: server.repository || server.github,
-      website: server.website || server.docs,
-      loading: metrics?.loading || false
-    };
-  });
+      return {
+        id: serverId,
+        name: server.name,
+        server: server.config || { command: server.command, args: server.args, type: 'local' as const },
+        icon: server.name.substring(0, 2).toUpperCase(),
+        description: server.description || server.summary,
+        installed: true,
+        category: server.category || 'community',
+        author: server.author || 'Community',
+        repository: server.repository || server.github,
+        website: server.website || server.docs
+      };
+    });
 
   const categories = [
     { id: 'all', name: 'All' },

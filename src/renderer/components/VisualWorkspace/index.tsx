@@ -252,10 +252,11 @@ export const VisualWorkspace: React.FC = () => {
   // Fetch real metrics for server nodes that are loading
   React.useEffect(() => {
     const fetchServerMetrics = async () => {
-      const loadingNodes = nodes.filter(n => n.type === 'server' && n.data.loading);
+      const loadingNodes = nodes.filter(n => n.type === 'server' && n.data.loading && !n.data.metricsLoaded);
 
       for (const node of loadingNodes) {
         try {
+          console.log(`Fetching metrics for server: ${node.data.label}`);
           const serverMetrics = await (window as any).electronAPI?.getServerMetrics?.(
             node.data.label,
             node.data.server
@@ -270,7 +271,9 @@ export const VisualWorkspace: React.FC = () => {
                     ...n.data,
                     tools: serverMetrics.toolCount || 0,
                     tokens: serverMetrics.tokenUsage || 0,
-                    loading: false
+                    loading: false,
+                    metricsLoaded: true,
+                    metricsTimestamp: Date.now()
                   }
                 };
               }
@@ -286,7 +289,8 @@ export const VisualWorkspace: React.FC = () => {
                 ...n,
                 data: {
                   ...n.data,
-                  loading: false
+                  loading: false,
+                  metricsLoaded: false
                 }
               };
             }
@@ -297,7 +301,7 @@ export const VisualWorkspace: React.FC = () => {
     };
 
     // Only run if there are loading nodes
-    const hasLoadingNodes = nodes.some(n => n.type === 'server' && n.data.loading);
+    const hasLoadingNodes = nodes.some(n => n.type === 'server' && n.data.loading && !n.data.metricsLoaded);
     if (hasLoadingNodes) {
       fetchServerMetrics();
     }
@@ -401,10 +405,7 @@ export const VisualWorkspace: React.FC = () => {
         if (!serverExists) {
           const nodeIndex = nodes.filter(n => n.type === 'server').length;
 
-          // Use provided metrics or placeholders while loading
-          const initialTools = dragData?.tools !== undefined ? dragData.tools : '—';
-          const initialTokens = dragData?.tokens !== undefined ? dragData.tokens : '—';
-
+          // Always start with placeholders and trigger metrics loading
           const newServerNode: Node = {
             id: serverNodeId,
             type: 'server',
@@ -413,9 +414,26 @@ export const VisualWorkspace: React.FC = () => {
               label: serverName,
               server: serverData,
               icon: dragData?.icon || '📦',
-              tools: initialTools,
-              tokens: initialTokens,
-              loading: initialTools === '—' || initialTokens === '—'
+              tools: '—',
+              tokens: '—',
+              loading: true,
+              metricsLoaded: false,
+              onRefresh: () => {
+                // Reset loading state to trigger re-fetch
+                setNodes(nds => nds.map(n => {
+                  if (n.id === serverNodeId) {
+                    return {
+                      ...n,
+                      data: {
+                        ...n.data,
+                        loading: true,
+                        metricsLoaded: false
+                      }
+                    };
+                  }
+                  return n;
+                }));
+              }
             },
           };
           setNodes((nds) => [...nds, newServerNode]);
@@ -454,10 +472,7 @@ export const VisualWorkspace: React.FC = () => {
         // Add server node if it doesn't exist
         const serverExists = nodes.some(n => n.id === serverNodeId);
         if (!serverExists) {
-          // Use provided metrics or placeholders while loading
-          const initialTools = dragData?.tools !== undefined ? dragData.tools : '—';
-          const initialTokens = dragData?.tokens !== undefined ? dragData.tokens : '—';
-
+          // Always start with placeholders and trigger metrics loading
           const newServerNode: Node = {
             id: serverNodeId,
             type: 'server',
@@ -466,9 +481,26 @@ export const VisualWorkspace: React.FC = () => {
               label: serverName,
               server: serverData,
               icon: dragData?.icon || '📦',
-              tools: initialTools,
-              tokens: initialTokens,
-              loading: initialTools === '—' || initialTokens === '—'
+              tools: '—',
+              tokens: '—',
+              loading: true,
+              metricsLoaded: false,
+              onRefresh: () => {
+                // Reset loading state to trigger re-fetch
+                setNodes(nds => nds.map(n => {
+                  if (n.id === serverNodeId) {
+                    return {
+                      ...n,
+                      data: {
+                        ...n.data,
+                        loading: true,
+                        metricsLoaded: false
+                      }
+                    };
+                  }
+                  return n;
+                }));
+              }
             },
           };
           setNodes((nds) => [...nds, newServerNode]);

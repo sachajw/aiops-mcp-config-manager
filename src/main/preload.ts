@@ -101,7 +101,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getPopularServers: (limit?: number) => ipcRenderer.invoke('catalog:getPopularServers', limit),
 
   // Metrics methods (for Visual Workspace)
-  getServerMetrics: (serverName: string) => ipcRenderer.invoke('metrics:getServer', serverName),
+  getServerMetrics: (serverName: string, serverConfig?: any) => ipcRenderer.invoke('metrics:getServerMetrics', serverName, serverConfig),
   getTotalMetrics: (serverNames: string[]) => ipcRenderer.invoke('metrics:getTotal', serverNames),
 
   // Connection monitoring
