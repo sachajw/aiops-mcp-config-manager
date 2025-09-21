@@ -19,10 +19,11 @@ export interface MetricsStore {
 
 export class MetricsService {
   private metrics: MetricsStore = {};
-  private mockMode = true; // Start with mock mode, will implement real collection later
+  // NO MOCK MODE - Only real metrics from actual servers
 
   /**
    * Get metrics for a specific server
+   * Returns real metrics or default zeros if not connected
    */
   public getServerMetrics(serverName: string): ServerMetrics {
     // First try to get real metrics from connection monitor
@@ -42,8 +43,15 @@ export class MetricsService {
       return this.metrics[serverName];
     }
 
-    // Last resort: return realistic mock data based on server type
-    return this.generateMockMetrics(serverName);
+    // NO MOCK DATA - Return zeros for disconnected/unknown servers
+    // The UI should show appropriate loading or disconnected states
+    return {
+      toolCount: 0,
+      tokenUsage: 0,
+      responseTime: 0,
+      lastUpdated: new Date(),
+      isConnected: false
+    };
   }
 
   /**
@@ -76,40 +84,8 @@ export class MetricsService {
     };
   }
 
-  /**
-   * Generate more realistic mock metrics based on server type
-   */
-  private generateMockMetrics(serverName: string): ServerMetrics {
-    const serverTypeMocks: Record<string, Partial<ServerMetrics>> = {
-      filesystem: { toolCount: 8, tokenUsage: 1200, responseTime: 25 },
-      search: { toolCount: 5, tokenUsage: 800, responseTime: 150 },
-      database: { toolCount: 12, tokenUsage: 2000, responseTime: 75 },
-      web: { toolCount: 6, tokenUsage: 1500, responseTime: 350 },
-      ai: { toolCount: 10, tokenUsage: 5000, responseTime: 500 },
-      git: { toolCount: 15, tokenUsage: 1000, responseTime: 45 },
-      docker: { toolCount: 20, tokenUsage: 1800, responseTime: 100 },
-      kubernetes: { toolCount: 25, tokenUsage: 3000, responseTime: 200 },
-    };
-
-    // Try to match server name to type
-    const lowerName = serverName.toLowerCase();
-    let metrics = serverTypeMocks.filesystem; // default
-
-    for (const [type, typeMetrics] of Object.entries(serverTypeMocks)) {
-      if (lowerName.includes(type)) {
-        metrics = typeMetrics;
-        break;
-      }
-    }
-
-    return {
-      toolCount: metrics.toolCount || 10,
-      tokenUsage: metrics.tokenUsage || 1000,
-      responseTime: metrics.responseTime || 50,
-      lastUpdated: new Date(),
-      isConnected: Math.random() > 0.2 // 80% chance of being connected
-    };
-  }
+  // REMOVED: generateMockMetrics method - NO MOCK DATA
+  // All metrics must come from real server connections or return zeros
 
   /**
    * Update metrics for a server (for future real implementation)
@@ -143,6 +119,3 @@ export class MetricsService {
     return this.getServerMetrics(serverName);
   }
 }
-
-// Singleton instance
-export const metricsService = new MetricsService();

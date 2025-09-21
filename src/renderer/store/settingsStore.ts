@@ -207,7 +207,7 @@ export const useSettingsStore = create<SettingsState>()(
             settings: {
               ...state.settings,
               [category]: {
-                ...state.settings[category],
+                ...(state.settings[category] as object || {}),
                 ...updates
               }
             },

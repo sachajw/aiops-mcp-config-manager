@@ -9,7 +9,12 @@ import {
   EditOutlined,
   ToolOutlined
 } from '@ant-design/icons';
-import { ValidationResult, ValidationError } from '../../../shared/types/validation';
+import { ValidationResultType, ValidationErrorSchema } from '../../../shared/types/validation';
+import { z } from 'zod';
+
+// Use the ValidationError type from the schema
+type ValidationError = z.infer<typeof ValidationErrorSchema>;
+type ValidationResult = ValidationResultType;
 
 const { Panel } = Collapse;
 const { Text, Paragraph } = Typography;
@@ -145,7 +150,7 @@ const ValidationErrorDisplay: React.FC<ValidationErrorDisplayProps> = ({
   };
 
   const hasAutoFixableErrors = [...errors, ...warnings].some(
-    issue => issue.suggestion?.autoFixAvailable
+    issue => typeof issue.suggestion === 'object' && issue.suggestion?.autoFixAvailable
   );
 
   if (isValid && errors.length === 0 && warnings.length === 0) {
@@ -263,7 +268,7 @@ const ValidationErrorDisplay: React.FC<ValidationErrorDisplayProps> = ({
             key="suggestions"
           >
             <div style={{ paddingLeft: 24 }}>
-              {suggestions.map((suggestion, index) => (
+              {suggestions.map((suggestion: any, index: number) => (
                 <div key={index} style={{ marginBottom: 12 }}>
                   <Space align="start">
                     <InfoCircleOutlined style={{ color: '#1890ff' }} />

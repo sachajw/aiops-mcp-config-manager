@@ -30,7 +30,7 @@ export const ServerDetailsModal: React.FC<ServerDetailsModalProps> = ({ server, 
     try {
       await installServer(server.id);
     } catch (error) {
-      setInstallError(error.message || 'Installation failed');
+      setInstallError((error as Error).message || 'Installation failed');
     } finally {
       setIsInstalling(false);
     }
@@ -47,7 +47,7 @@ export const ServerDetailsModal: React.FC<ServerDetailsModalProps> = ({ server, 
     try {
       await uninstallServer(server.id);
     } catch (error) {
-      setInstallError(error.message || 'Uninstallation failed');
+      setInstallError((error as Error).message || 'Uninstallation failed');
     } finally {
       setIsInstalling(false);
     }
@@ -203,7 +203,9 @@ export const ServerDetailsModal: React.FC<ServerDetailsModalProps> = ({ server, 
                 className="link link-primary flex items-center gap-1"
                 onClick={(e) => {
                   e.preventDefault();
-                  window.electronAPI?.openExternal(server.repository);
+                  if (server.repository) {
+                    window.electronAPI?.openExternal(server.repository);
+                  }
                 }}
               >
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">

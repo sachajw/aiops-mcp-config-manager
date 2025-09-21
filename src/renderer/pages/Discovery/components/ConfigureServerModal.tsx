@@ -21,7 +21,7 @@ export const ConfigureServerModal: React.FC<ConfigureServerModalProps> = ({ serv
 
   const loadAvailableClients = async () => {
     try {
-      const clients = await window.electronAPI.config.getClients();
+      const clients = await window.electronAPI.discoverClients();
 
       // Get enabled clients from settings (stored in localStorage)
       let enabledClients: Record<string, boolean> | null = null;
@@ -38,13 +38,13 @@ export const ConfigureServerModal: React.FC<ConfigureServerModalProps> = ({ serv
       // Filter to only enabled clients and check which have this server
       const clientsWithStatus = await Promise.all(
         clients
-          .filter(client => {
+          .filter((client: any) => {
             // If no settings or client not in settings, default to enabled
             if (!enabledClients) return true;
             return enabledClients[client.type] !== false;
           })
-          .map(async (client) => {
-            const config = await window.electronAPI.config.readConfig(client.name, 'user');
+          .map(async (client: any) => {
+            const config = await window.electronAPI.loadConfiguration(client.name, 'user');
             const hasServer = config?.mcpServers?.[server.name] !== undefined;
             return {
               name: client.name,
@@ -87,7 +87,7 @@ export const ConfigureServerModal: React.FC<ConfigureServerModalProps> = ({ serv
 
       // Add server to each selected client
       for (const clientName of selectedClients) {
-        const config = await window.electronAPI.config.readConfig(clientName, 'user');
+        const config = await window.electronAPI.loadConfiguration(clientName, 'user') ?? {};
 
         if (!config.mcpServers) {
           config.mcpServers = {};
@@ -97,7 +97,7 @@ export const ConfigureServerModal: React.FC<ConfigureServerModalProps> = ({ serv
         config.mcpServers[server.name] = serverConfig;
 
         // Save the updated configuration
-        await window.electronAPI.config.saveConfig(clientName, 'user', config);
+        await window.electronAPI.saveConfiguration(clientName, config, 'user');
       }
 
       setConfigureSuccess(true);
@@ -110,7 +110,7 @@ export const ConfigureServerModal: React.FC<ConfigureServerModalProps> = ({ serv
         onClose();
       }, 2000);
     } catch (error) {
-      setConfigureError(`Failed to configure: ${error.message}`);
+      setConfigureError(`Failed to configure: ${(error as Error).message}`);
     } finally {
       setIsConfiguring(false);
     }

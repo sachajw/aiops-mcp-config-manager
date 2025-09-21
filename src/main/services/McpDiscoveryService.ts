@@ -307,177 +307,8 @@ export class McpDiscoveryService {
     };
   }
 
-  /**
-   * Get mock catalog data for development
-   */
-  private async getMockCatalog(): Promise<McpServerCatalog> {
-    return {
-      version: '1.0.0',
-      lastUpdated: new Date(),
-      categories: [
-        'AI & Language Models',
-        'Development Tools',
-        'Data & Analytics',
-        'Productivity',
-        'File Management',
-        'APIs & Integration'
-      ],
-      servers: [
-        {
-          id: 'mcp-server-filesystem',
-          name: 'Filesystem Server',
-          description: 'Provides secure file system operations with sandboxing',
-          author: 'Anthropic',
-          version: '0.1.0',
-          repository: 'https://github.com/modelcontextprotocol/servers',
-          npmPackage: '@modelcontextprotocol/server-filesystem',
-          category: ['File Management'],
-          tags: ['filesystem', 'files', 'directories'],
-          dependencies: [],
-          compatibility: {
-            clients: ['claude-desktop', 'claude-code', 'custom'],
-            platforms: ['darwin', 'linux', 'win32'],
-            minNodeVersion: '18.0.0'
-          },
-          stats: {
-            downloads: 15234,
-            stars: 456,
-            lastUpdated: '2024-01-15T00:00:00Z'
-          },
-          installation: {
-            type: 'npm',
-            command: 'npm install -g @modelcontextprotocol/server-filesystem'
-          },
-          config: {
-            command: 'mcp-server-filesystem',
-            args: ['--root', '~/Documents']
-          }
-        },
-        {
-          id: 'mcp-server-github',
-          name: 'GitHub Server',
-          description: 'Interact with GitHub repositories, issues, and pull requests',
-          author: 'Anthropic',
-          version: '0.2.0',
-          repository: 'https://github.com/modelcontextprotocol/servers',
-          npmPackage: '@modelcontextprotocol/server-github',
-          category: ['Development Tools', 'APIs & Integration'],
-          tags: ['github', 'git', 'version-control', 'issues', 'prs'],
-          dependencies: [],
-          compatibility: {
-            clients: ['claude-desktop', 'claude-code', 'cursor', 'custom'],
-            platforms: ['darwin', 'linux', 'win32'],
-            minNodeVersion: '18.0.0'
-          },
-          stats: {
-            downloads: 28453,
-            stars: 892,
-            lastUpdated: '2024-01-20T00:00:00Z'
-          },
-          installation: {
-            type: 'npm',
-            command: 'npm install -g @modelcontextprotocol/server-github'
-          },
-          config: {
-            command: 'mcp-server-github',
-            env: {
-              GITHUB_TOKEN: 'your_github_token_here'
-            }
-          }
-        },
-        {
-          id: 'mcp-server-postgres',
-          name: 'PostgreSQL Server',
-          description: 'Connect to PostgreSQL databases for data operations',
-          author: 'Community',
-          version: '0.1.5',
-          repository: 'https://github.com/community/mcp-postgres',
-          npmPackage: 'mcp-server-postgres',
-          category: ['Data & Analytics'],
-          tags: ['database', 'postgresql', 'sql', 'data'],
-          dependencies: ['pg'],
-          compatibility: {
-            clients: ['claude-desktop', 'claude-code', 'custom'],
-            platforms: ['darwin', 'linux', 'win32'],
-            minNodeVersion: '16.0.0'
-          },
-          stats: {
-            downloads: 9876,
-            stars: 234,
-            lastUpdated: '2024-01-10T00:00:00Z'
-          },
-          installation: {
-            type: 'npm',
-            command: 'npm install -g mcp-server-postgres'
-          },
-          config: {
-            command: 'mcp-server-postgres',
-            args: ['--connection-string', 'postgresql://user:pass@localhost/db']
-          }
-        },
-        {
-          id: 'mcp-server-slack',
-          name: 'Slack Integration',
-          description: 'Send messages and interact with Slack workspaces',
-          author: 'Community',
-          version: '0.3.1',
-          repository: 'https://github.com/community/mcp-slack',
-          category: ['Communication', 'APIs & Integration'],
-          tags: ['slack', 'chat', 'messaging', 'notifications'],
-          dependencies: ['@slack/web-api'],
-          compatibility: {
-            clients: ['claude-desktop', 'custom'],
-            platforms: ['darwin', 'linux', 'win32'],
-            minNodeVersion: '18.0.0'
-          },
-          stats: {
-            downloads: 5432,
-            stars: 167,
-            lastUpdated: '2024-01-08T00:00:00Z'
-          },
-          installation: {
-            type: 'npm',
-            command: 'npm install -g mcp-server-slack'
-          },
-          config: {
-            command: 'mcp-server-slack',
-            env: {
-              SLACK_TOKEN: 'xoxb-your-token'
-            }
-          }
-        },
-        {
-          id: 'mcp-server-python',
-          name: 'Python Code Execution',
-          description: 'Execute Python code in a sandboxed environment',
-          author: 'Anthropic',
-          version: '0.1.0',
-          repository: 'https://github.com/modelcontextprotocol/servers',
-          category: ['Development Tools', 'AI & Language Models'],
-          tags: ['python', 'code', 'execution', 'jupyter', 'sandbox'],
-          dependencies: [],
-          compatibility: {
-            clients: ['claude-desktop', 'claude-code', 'custom'],
-            platforms: ['darwin', 'linux'],
-            minNodeVersion: '18.0.0'
-          },
-          stats: {
-            downloads: 34567,
-            stars: 1024,
-            lastUpdated: '2024-01-25T00:00:00Z'
-          },
-          installation: {
-            type: 'manual',
-            instructions: 'Requires Python 3.8+ and pip. Run: pip install mcp-server-python'
-          },
-          config: {
-            command: 'python',
-            args: ['-m', 'mcp_server_python']
-          }
-        }
-      ]
-    };
-  }
+  // REMOVED: getMockCatalog method - NO MOCK DATA
+  // All catalog data must come from real sources (GitHub or Registry API)
 
   /**
    * Install an MCP server
@@ -939,5 +770,39 @@ export class McpDiscoveryService {
       return path.join(app.getPath('home'), filePath.slice(1));
     }
     return filePath;
+  }
+
+  /**
+   * Get all available categories from the catalog
+   */
+  static async getCategories(): Promise<string[]> {
+    const { ServerCatalogService } = await import('./ServerCatalogService');
+    const servers = await ServerCatalogService.getCatalog();
+    const categoriesSet = new Set<string>();
+
+    servers.forEach((server: any) => {
+      // Handle both category (string) and categories (array) properties
+      if (server.category) {
+        if (Array.isArray(server.category)) {
+          server.category.forEach((cat: string) => categoriesSet.add(cat));
+        } else if (typeof server.category === 'string') {
+          categoriesSet.add(server.category);
+        }
+      }
+      if (server.categories) {
+        if (Array.isArray(server.categories)) {
+          server.categories.forEach((cat: string) => categoriesSet.add(cat));
+        } else if (typeof server.categories === 'string') {
+          categoriesSet.add(server.categories);
+        }
+      }
+    });
+
+    // Add default categories if none found
+    if (categoriesSet.size === 0) {
+      return ['General', 'Development', 'Data', 'Communication', 'Utility'];
+    }
+
+    return Array.from(categoriesSet).sort();
   }
 }

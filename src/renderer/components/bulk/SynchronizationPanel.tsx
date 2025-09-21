@@ -101,7 +101,7 @@ const SynchronizationPanel: React.FC<SynchronizationPanelProps> = ({
       const clientServers = config ? new Set(Object.keys(config.servers)) : new Set();
       
       // Find unique servers (not in primary)
-      const uniqueServers = Array.from(clientServers).filter(server => !primaryServers.has(server));
+      const uniqueServers: string[] = (Array.from(clientServers) as string[]).filter((server) => !primaryServers.has(server));
       
       // Count conflicts (same server name but different configuration)
       let conflicts = 0;
@@ -201,7 +201,7 @@ const SynchronizationPanel: React.FC<SynchronizationPanelProps> = ({
   };
 
   const syncComparisons = generateSyncComparisons();
-  const totalServers = Object.keys(configurations[primaryClientId]?.servers || {}).length;
+  const totalServers = Object.keys(configurations[primaryClientId || '']?.servers || {}).length;
   const outOfSyncClients = syncComparisons.filter(comp => comp.status !== 'synced').length;
   const conflictsCount = syncComparisons.reduce((sum, comp) => sum + comp.conflicts, 0);
 

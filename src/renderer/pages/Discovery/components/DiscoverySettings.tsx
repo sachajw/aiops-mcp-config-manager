@@ -23,7 +23,7 @@ export const DiscoverySettings: React.FC<DiscoverySettingsProps> = ({ onClose })
   const loadSettings = async () => {
     try {
       // Load from backend via IPC
-      const backendSettings = await window.electronAPI.discovery.getSettings();
+      const backendSettings = await window.electronAPI.discovery?.getSettings?.();
       if (backendSettings) {
         setSettings(backendSettings);
       } else {
@@ -50,7 +50,7 @@ export const DiscoverySettings: React.FC<DiscoverySettingsProps> = ({ onClose })
 
       // Try to update backend settings if available
       try {
-        await window.electronAPI.discovery.updateSettings(settings);
+        await window.electronAPI.discovery?.updateSettings?.(settings);
       } catch (err) {
         console.log('Backend settings update not available, using localStorage only');
       }

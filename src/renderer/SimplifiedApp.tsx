@@ -204,7 +204,7 @@ export const SimplifiedApp: React.FC = () => {
     const serverType = server.type || (server.url ? 'remote' : 'local');
     setFormData({
       name,
-      type: serverType,
+      type: serverType as 'local' | 'remote',
       command: server.command || '',
       args: server.args?.join(', ') || '',
       env: server.env ? JSON.stringify(server.env, null, 2) : '',
@@ -356,7 +356,7 @@ export const SimplifiedApp: React.FC = () => {
                         // Filter based on enabled status in settings
                         if (!appSettings.enabledClients) return true; // Show all if no settings
                         // The client.name is the same as the type (e.g., 'claude-desktop', 'claude-code')
-                        return appSettings.enabledClients[client.name] !== false;
+                        return (appSettings.enabledClients as any)[client.name] !== false;
                       })
                       .map(client => (
                         <option key={client.name} value={client.name}>
@@ -910,7 +910,7 @@ export const SimplifiedApp: React.FC = () => {
                         if (serverData) {
                           setFormData({
                             name: serverName,
-                            type: serverData.type || 'local',
+                            type: (serverData.type || 'local') as 'local' | 'remote',
                             command: serverData.command || '',
                             args: serverData.args?.join(', ') || '',
                             env: serverData.env ? JSON.stringify(serverData.env, null, 2) : '',

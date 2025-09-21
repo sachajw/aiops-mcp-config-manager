@@ -359,6 +359,3 @@ export class ServerCatalogService {
     return catalog.slice(0, limit);
   }
 }
-
-// Export singleton instance
-export const serverCatalogService = new ServerCatalogService();

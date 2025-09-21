@@ -10,8 +10,8 @@ interface ClientNodeData {
   client?: any;
 }
 
-export const ClientNode: React.FC<NodeProps<ClientNodeData>> = ({ data, selected }) => {
-  const { label, icon = 'CL', serverCount = 0, maxServers = 10, status = 'active' } = data;
+export const ClientNode: React.FC<NodeProps> = ({ data, selected }) => {
+  const { label, icon = 'CL', serverCount = 0, maxServers = 10, status = 'active' } = data as unknown as ClientNodeData;
 
   const statusColors = {
     active: 'border-success bg-success/10',
@@ -26,7 +26,7 @@ export const ClientNode: React.FC<NodeProps<ClientNodeData>> = ({ data, selected
       className={`
         client-node relative min-w-[200px] rounded-lg border-2 p-3
         transition-all duration-200 backdrop-blur-sm
-        ${statusColors[status]}
+        ${statusColors[status as keyof typeof statusColors]}
         ${selected ? 'shadow-2xl scale-105 ring-2 ring-primary ring-offset-2' : 'shadow-lg hover:shadow-xl'}
       `}
       style={{

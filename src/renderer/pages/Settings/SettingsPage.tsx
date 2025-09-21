@@ -320,6 +320,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onClose, onSave, cur
                     onChange={(e) => setSettings(prev => ({
                       ...prev,
                       experimental: {
+                        enableMcpDiscovery: prev.experimental?.enableMcpDiscovery ?? false,
                         ...prev.experimental,
                         visualWorkspaceEnabled: e.target.checked
                       }
@@ -350,6 +351,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onClose, onSave, cur
                           onChange={(e) => setSettings(prev => ({
                             ...prev,
                             experimental: {
+                              enableMcpDiscovery: prev.experimental?.enableMcpDiscovery ?? false,
                               ...prev.experimental,
                               visualWorkspaceDefault: e.target.checked
                             }
@@ -372,6 +374,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onClose, onSave, cur
                           onChange={(e) => setSettings(prev => ({
                             ...prev,
                             experimental: {
+                              enableMcpDiscovery: prev.experimental?.enableMcpDiscovery ?? false,
                               ...prev.experimental,
                               animationLevel: e.target.value as 'full' | 'reduced' | 'none'
                             }
@@ -398,6 +401,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onClose, onSave, cur
                           onChange={(e) => setSettings(prev => ({
                             ...prev,
                             experimental: {
+                              enableMcpDiscovery: prev.experimental?.enableMcpDiscovery ?? false,
                               ...prev.experimental,
                               canvasRenderer: e.target.value as 'svg' | 'canvas' | 'webgl' | 'auto'
                             }

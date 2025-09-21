@@ -77,7 +77,7 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
         }
       }
 
-      const catalog = await window.electronAPI.discovery.fetchCatalog(forceRefresh, settings);
+      const catalog = await window.electronAPI.discovery?.fetchCatalog?.() ?? Promise.reject(new Error('electronAPI.discovery.fetchCatalog not available'));
       set({
         catalog,
         catalogLoading: false,
@@ -88,7 +88,7 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
       await get().fetchInstalledServers();
     } catch (error) {
       set({
-        catalogError: error.message || 'Failed to fetch catalog',
+        catalogError: (error as Error).message || 'Failed to fetch catalog',
         catalogLoading: false
       });
     }
@@ -99,7 +99,7 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
     set({ installedLoading: true });
 
     try {
-      const installedServers = await window.electronAPI.discovery.getInstalledServers();
+      const installedServers = await window.electronAPI.discovery?.getInstalledServers?.() ?? [];
       set({
         installedServers,
         installedLoading: false
@@ -132,7 +132,7 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
 
     try {
       // Start installation
-      await window.electronAPI.discovery.installServer(serverId);
+      await window.electronAPI.discovery?.installServer?.(serverId) ?? Promise.reject(new Error('electronAPI.discovery.installServer not available'));
 
       // Update installation state
       installState.status = 'completed';
@@ -207,7 +207,7 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
       // Update installation state with error
       installState.status = 'failed';
       installState.progress = 0;
-      installState.error = error.message;
+      installState.error = (error as Error).message;
       installState.completedAt = new Date();
       state.installationStates.set(serverId, installState);
       set({ installationStates: new Map(state.installationStates) });
@@ -222,7 +222,8 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
       const state = get();
       const server = state.catalog?.servers.find(s => s.id === serverId);
 
-      await window.electronAPI.discovery.uninstallServer(serverId);
+      // Method name should be uninstallServer but API might not have it yet
+      await (window.electronAPI.discovery as any)?.uninstallServer?.(serverId) ?? Promise.reject(new Error('electronAPI.discovery.uninstallServer not available'));
 
       // Remove the server from the configuration catalog
       if (server) {
@@ -296,7 +297,7 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
     if (state.filter.categories && state.filter.categories.length > 0) {
       servers = servers.filter(s => {
         // Handle both category (array) and categories (array) properties
-        const serverCategories = s.category || s.categories || [];
+        const serverCategories = s.category || (s as any).categories || [];
         // Check if server has at least one of the selected categories
         return Array.isArray(serverCategories) &&
                serverCategories.some(c => state.filter.categories?.includes(c));

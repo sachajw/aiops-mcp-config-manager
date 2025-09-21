@@ -11,9 +11,15 @@ mcp-config-manager/
 ├── public/                # Static assets
 ├── dist/                  # Build output
 ├── tests/                 # Test files
-├── docs/                  # Documentation
-└── .kiro/                 # Kiro project files
-    ├── specs/             # Feature specifications
+├── docs/                  # User documentation & guides
+└── .kiro/                 # Project planning & specifications
+    ├── specs/             # ALL planning documents
+    │   └── mcp-config-manager/
+    │       ├── README.md  # Documentation index
+    │       ├── project-status-summary.md  # Overall status
+    │       ├── tasks.md   # Master task list
+    │       ├── architecture/  # Technical design
+    │       └── sprints/   # Sprint plans & reports
     └── steering/          # AI assistant guidance
 ```
 
@@ -78,6 +84,36 @@ services/
 - **VS Code**: Workspace/user settings
 - **Gemini Desktop**: `~/Library/Application Support/Gemini/config.json`
 - **Gemini CLI**: `~/.gemini/config.json`
+
+## 📚 Documentation Practices
+
+### Planning Documents Location
+**ALL project planning documents MUST be in `.kiro/specs/mcp-config-manager/`**
+
+- Sprint plans → `.kiro/specs/mcp-config-manager/sprints/`
+- Architecture docs → `.kiro/specs/mcp-config-manager/architecture/`
+- Status reports → `.kiro/specs/mcp-config-manager/project-status-summary.md`
+- Task tracking → `.kiro/specs/mcp-config-manager/tasks.md`
+
+### Documentation Updates
+- Update `project-status-summary.md` weekly
+- Create sprint reports in `sprints/` after each sprint
+- Mark completed tasks with `[x]` in `tasks.md`
+- Update `README.md` index when adding new documents
+
+### User Documentation
+User-facing documentation goes in `/docs`:
+- Installation guides
+- User manuals
+- API documentation
+- Release notes
+
+### Team Communication
+For project planning and team coordination:
+1. Check `.kiro/specs/mcp-config-manager/README.md` for document index
+2. Review `project-status-summary.md` for current status
+3. See `tasks.md` for task assignments and progress
+4. Read sprint reports in `sprints/` for completed work
 
 ## Naming Conventions
 - **Files**: PascalCase for components, camelCase for utilities

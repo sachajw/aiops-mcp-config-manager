@@ -3,9 +3,11 @@
  */
 
 import { connectionMonitor } from './ConnectionMonitor';
-import { metricsService } from './MetricsService';
+import { container } from '../container';
+import { MetricsService } from './MetricsService';
 
 export class MCPServerTester {
+  private static metricsService = container.get<MetricsService>('metricsService');
   /**
    * Test connection to a real MCP server
    */

@@ -1,8 +1,11 @@
 // Main application stores
-export { useApplicationStore } from './applicationStore';
-export { useSettingsStore } from './settingsStore';
-export { useUIStore } from './uiStore';
-export { usePerformanceStore } from './performanceStore';
+import { useApplicationStore } from './applicationStore';
+import { useSettingsStore } from './settingsStore';
+import { useUIStore } from './uiStore';
+import { usePerformanceStore } from './performanceStore';
+
+// Re-export the stores
+export { useApplicationStore, useSettingsStore, useUIStore, usePerformanceStore };
 
 // Export types
 export type { ApplicationState, ServerTestResult } from './applicationStore';

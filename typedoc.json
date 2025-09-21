@@ -1,0 +1,62 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": ["./src"],
+  "entryPointStrategy": "expand",
+  "out": "./docs/api",
+  "name": "MCP Configuration Manager API",
+  "navigationLinks": {
+    "GitHub": "https://github.com/user/mcp-config-manager",
+    "Documentation": "/docs"
+  },
+  "plugin": ["typedoc-plugin-markdown"],
+  "excludePrivate": true,
+  "excludeProtected": false,
+  "excludeInternal": true,
+  "excludeExternals": false,
+  "includeVersion": true,
+  "categorizeByGroup": true,
+  "categoryOrder": [
+    "Core Services",
+    "IPC Handlers",
+    "UI Components",
+    "Stores",
+    "Types",
+    "Utils",
+    "*"
+  ],
+  "theme": "default",
+  "readme": "./README.md",
+  "hideGenerator": true,
+  "searchInComments": true,
+  "blockTags": [
+    "@alpha",
+    "@beta",
+    "@category",
+    "@deprecated",
+    "@example",
+    "@experimental",
+    "@internal",
+    "@override",
+    "@packageDocumentation",
+    "@param",
+    "@privateRemarks",
+    "@public",
+    "@readonly",
+    "@remarks",
+    "@returns",
+    "@sealed",
+    "@service",
+    "@see",
+    "@since",
+    "@throws",
+    "@virtual"
+  ],
+  "exclude": [
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/test/**",
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "**/mock/**"
+  ]
+}

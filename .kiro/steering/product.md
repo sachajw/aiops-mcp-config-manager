@@ -26,3 +26,21 @@ A unified desktop application for managing Model Context Protocol (MCP) server c
 ## Platform Focus
 - **Phase 1**: macOS (primary target)
 - **Phase 2**: Windows and Linux support
+
+## 📚 Project Documentation
+
+All project planning and specifications are maintained in `.kiro/specs/mcp-config-manager/`:
+
+### Key Documents
+- **Project Status**: `.kiro/specs/mcp-config-manager/project-status-summary.md` (65% complete)
+- **Sprint Planning**: `.kiro/specs/mcp-config-manager/sprints/sprint-plan-revised.md`
+- **Task Tracking**: `.kiro/specs/mcp-config-manager/tasks.md`
+- **Architecture**: `.kiro/specs/mcp-config-manager/architecture/`
+- **Requirements**: `.kiro/specs/mcp-config-manager/requirements.md`
+
+### Current Sprint
+**Sprint 2: Type System Migration** (Starting)
+- Previous: Sprint 0 (✅ Mock data elimination) & Sprint 1 (✅ Performance enhancement)
+- Next: Sprint 3 (Testing & Optimization)
+
+See `.kiro/specs/mcp-config-manager/README.md` for complete documentation index.

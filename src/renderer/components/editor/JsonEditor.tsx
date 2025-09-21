@@ -8,6 +8,7 @@ import {
 } from '@ant-design/icons';
 import Editor from '@monaco-editor/react';
 import type { editor } from 'monaco-editor';
+import type * as monaco from 'monaco-editor';
 import { MCPClient } from '../../../shared/types';
 
 const { Text } = Typography;
@@ -32,7 +33,7 @@ const JsonEditor: React.FC<JsonEditorProps> = ({
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
   const [isFormatted, setIsFormatted] = useState(true);
 
-  const handleEditorDidMount = (editor: editor.IStandaloneCodeEditor) => {
+  const handleEditorDidMount = (editor: editor.IStandaloneCodeEditor, monacoInstance: typeof monaco) => {
     editorRef.current = editor;
 
     // Configure editor options
@@ -51,7 +52,7 @@ const JsonEditor: React.FC<JsonEditorProps> = ({
 
     // Add keyboard shortcuts
     editor.addCommand(
-      monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS,
+      monacoInstance.KeyMod.CtrlCmd | monacoInstance.KeyCode.KeyS,
       () => {
         // Handle save - could trigger parent save action
         console.log('Save shortcut triggered');
@@ -59,7 +60,7 @@ const JsonEditor: React.FC<JsonEditorProps> = ({
     );
 
     editor.addCommand(
-      monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyF,
+      monacoInstance.KeyMod.CtrlCmd | monacoInstance.KeyMod.Shift | monacoInstance.KeyCode.KeyF,
       () => {
         handleFormat();
       }

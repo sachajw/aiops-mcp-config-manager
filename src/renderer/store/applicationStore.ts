@@ -129,36 +129,9 @@ export const useApplicationStore = create<ApplicationState>()(
             const clients = await window.electronAPI.discoverClients();
             setClients(clients);
           } else {
-            // Fallback to mock data for development (browser mode)
-            const mockClients: MCPClient[] = [
-              {
-                id: 'claude-desktop',
-                name: 'Claude Desktop',
-                type: 'claude-desktop' as any,
-                configPaths: {
-                  primary: '/Users/user/Library/Application Support/Claude/claude_desktop_config.json',
-                  alternatives: [],
-                  scopePaths: {} as any
-                },
-                status: ClientStatus.ACTIVE,
-                isActive: true,
-                version: '1.0.0'
-              },
-              {
-                id: 'claude-code',
-                name: 'Claude Code',
-                type: 'claude-code' as any,
-                configPaths: {
-                  primary: '/Users/user/.claude/claude_code_config.json',
-                  alternatives: [],
-                  scopePaths: {} as any
-                },
-                status: ClientStatus.INACTIVE,
-                isActive: false,
-                version: '0.9.1'
-              }
-            ];
-            setClients(mockClients);
+            // No mock data - return empty array for browser mode
+            console.warn('Running in browser mode - no client data available');
+            setClients([]);
           }
           
         } catch (error) {
@@ -316,7 +289,7 @@ export const useApplicationStore = create<ApplicationState>()(
           }
           
           // Use Electron API if available, otherwise fall back to mock data
-          if (window.electronAPI) {
+          if (window.electronAPI?.testServer) {
             const result = await window.electronAPI.testServer(server);
             setServerTestResult(serverName, result);
             setTestingServer(serverName, false);

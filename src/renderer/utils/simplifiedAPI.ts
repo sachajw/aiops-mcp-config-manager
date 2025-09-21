@@ -1,12 +1,5 @@
-export interface ElectronAPI {
-  detectClients: () => Promise<any[]>;
-  readConfig: (clientName: string, scope: string) => Promise<any>;
-  writeConfig: (clientName: string, scope: string, servers: any) => Promise<any>;
-  backupConfig: (clientName: string, scope: string) => Promise<any>;
-}
+// Import the unified type
+import '@/shared/types/electron';
 
-declare global {
-  interface Window {
-    electronAPI: ElectronAPI;
-  }
-}
+// Re-export for convenience
+export type { ElectronAPI } from '@/shared/types/electron';

@@ -89,7 +89,15 @@ export const ValidationErrorSchema = z.object({
   field: z.string(),
   message: z.string(),
   severity: z.nativeEnum(ValidationSeverity),
-  code: z.string().optional()
+  code: z.string().optional(),
+  path: z.string().optional(),
+  details: z.string().optional(),
+  relatedIssues: z.array(z.string()).optional(),
+  suggestion: z.object({
+    description: z.string(),
+    fix: z.string().optional(),
+    autoFixAvailable: z.boolean().optional()
+  }).optional()
 });
 
 /**
@@ -98,11 +106,14 @@ export const ValidationErrorSchema = z.object({
 export const ValidationResultSchema = z.object({
   isValid: z.boolean(),
   errors: z.array(ValidationErrorSchema),
-  warnings: z.array(z.object({
+  warnings: z.array(ValidationErrorSchema),
+  suggestions: z.array(z.object({
     field: z.string(),
     message: z.string(),
-    suggestion: z.string().optional()
-  }))
+    description: z.string().optional(),
+    fix: z.string().optional(),
+    autoFixAvailable: z.boolean().optional()
+  })).optional()
 });
 
 /**

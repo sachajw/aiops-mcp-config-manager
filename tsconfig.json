@@ -19,7 +19,11 @@
       "@/*": ["src/*"],
       "@/shared/*": ["src/shared/*"],
       "@/renderer/*": ["src/renderer/*"],
-      "@/main/*": ["src/main/*"]
+      "@/main/*": ["src/main/*"],
+      "@types": ["src/shared/types/index"],
+      "@types/*": ["src/shared/types/*"],
+      "@api": ["src/shared/api/index"],
+      "@schemas": ["src/shared/schemas/index"]
     }
   },
   "include": [

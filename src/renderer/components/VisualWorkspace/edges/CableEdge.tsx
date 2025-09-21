@@ -1,13 +1,17 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { EdgeProps, getSmoothStepPath, BaseEdge } from '@xyflow/react';
+import { EdgeProps, getSmoothStepPath, BaseEdge, Edge } from '@xyflow/react';
 
-interface CableData {
+// CableData is just the additional data, not the full edge type
+type CableData = {
   tension?: number;
   sag?: number;
   animated?: boolean;
   particleCount?: number;
   color?: string;
-}
+};
+
+// The full edge type with CableData
+type CableEdgeType = Edge<CableData>;
 
 // Calculate catenary curve for realistic cable physics
 function calculateCablePath(
@@ -49,7 +53,7 @@ function calculateCablePath(
   }, '');
 }
 
-export const CableEdge: React.FC<EdgeProps<CableData>> = ({
+export const CableEdge: React.FC<EdgeProps> = ({
   id,
   sourceX,
   sourceY,
@@ -62,7 +66,7 @@ export const CableEdge: React.FC<EdgeProps<CableData>> = ({
   ...props
 }) => {
   const [particles, setParticles] = useState<number[]>([]);
-  const { tension = 0.5, sag = 30, animated = true, particleCount = 3, color = '#3B82F6' } = data;
+  const { tension = 0.5, sag = 30, animated = true, particleCount = 3, color = '#3B82F6' } = data as CableData;
 
   // Calculate cable path
   const cablePath = useMemo(

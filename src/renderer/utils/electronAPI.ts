@@ -76,16 +76,5 @@ export const getElectronAPI = () => {
   };
 };
 
-// Type augmentation for window.electronAPI
-declare global {
-  interface Window {
-    electronAPI?: {
-      discoverClients: () => Promise<any[]>;
-      loadConfiguration: (clientId: string, scope?: string) => Promise<any>;
-      resolveConfiguration: (clientId: string) => Promise<any>;
-      saveConfiguration: (clientId: string, config: any, scope?: string) => Promise<boolean>;
-      validateConfiguration: (config: any) => Promise<any>;
-      testServer: (serverConfig: any) => Promise<any>;
-    };
-  }
-}
+// Import the unified type
+import '@/shared/types/electron';

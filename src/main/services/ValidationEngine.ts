@@ -6,6 +6,7 @@ import { Configuration } from '../../shared/types/configuration';
 import { MCPServer } from '../../shared/types/server';
 import { ValidationResult, ValidationError, ValidationWarning } from '../../shared/types/common';
 import { ClientType, ValidationSeverity } from '../../shared/types/enums';
+import { ErrorBoundary, ErrorCategory } from '../../shared/utils/ErrorHandler';
 
 /**
  * Validation context for enhanced error reporting
@@ -34,9 +35,10 @@ export interface CommandValidationResult {
 export class ValidationEngine {
   /**
    * Validate complete configuration with context
+   * Enhanced with error handling
    */
   static async validateConfiguration(
-    config: Configuration, 
+    config: Configuration,
     context: ValidationContext
   ): Promise<ValidationResult> {
     const errors: ValidationError[] = [];

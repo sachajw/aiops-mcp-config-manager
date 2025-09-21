@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { useConfigStore } from '@/renderer/store/simplifiedStore';
-import { MCPClient } from '@/shared/types';
+import { MCPClient, ClientStatus, ClientType } from '@/shared/types';
 import { AppSettings } from '@/renderer/pages/Settings/SettingsPage';
 import { CardHeader } from './CardHeader';
 import { ClientConfigDialog } from '../ClientConfigDialog';
@@ -112,6 +112,22 @@ const ClientCard: React.FC<ClientCardProps> = ({ client, serverCount, isActive, 
   );
 };
 
+// Adapter to convert DetectedClient to MCPClient
+const detectedToMCPClient = (detected: any): MCPClient => {
+  return {
+    id: detected.name,
+    name: detected.name,
+    type: (detected.type || ClientType.CLAUDE_DESKTOP) as ClientType,
+    configPaths: {
+      primary: detected.configPath || '',
+      alternatives: [],
+      scopePaths: {} as any
+    },
+    status: detected.installed ? ClientStatus.ACTIVE : ClientStatus.INACTIVE,
+    isActive: detected.installed || false
+  };
+};
+
 export const ClientDock: React.FC = () => {
   const { clients, activeClient, servers } = useConfigStore();
   const [showNotInstalled, setShowNotInstalled] = useState(false);
@@ -180,7 +196,8 @@ export const ClientDock: React.FC = () => {
   // Filter clients based on enabled settings
   const enabledClients = clients.filter(c => {
     if (!appSettings?.enabledClients) return true;
-    return appSettings.enabledClients[(c as any).type || c.name] !== false;
+    const clientType = (c as any).type || c.name;
+    return appSettings.enabledClients[clientType as keyof typeof appSettings.enabledClients] !== false;
   });
 
   const installedClients = enabledClients.filter(c => (c as any).installed);
@@ -216,7 +233,7 @@ export const ClientDock: React.FC = () => {
         {installedClients.map(client => (
           <ClientCard
             key={client.name}
-            client={client}
+            client={detectedToMCPClient(client)}
             serverCount={getServerCount(client.name)}
             isActive={activeClient === client.name}
             isOver={false}
@@ -237,7 +254,7 @@ export const ClientDock: React.FC = () => {
           {notInstalledClients.map(client => (
             <div key={client.name} className="opacity-50">
               <ClientCard
-                client={client}
+                client={detectedToMCPClient(client)}
                 serverCount={0}
                 isActive={false}
                 isOver={false}

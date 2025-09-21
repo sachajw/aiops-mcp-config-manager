@@ -232,11 +232,11 @@ const ScopeManagementPanel: React.FC<ScopeManagementPanelProps> = ({
             }
             type={hasConflicts ? 'warning' : 'success'}
             showIcon={false}
-            style={{ 
+            style={{
               fontSize: '12px',
-              padding: '8px 12px',
-              '.ant-alert-message': { fontSize: '12px' }
+              padding: '8px 12px'
             }}
+            className="scope-tip-alert"
           />
         </Space>
       </Card>

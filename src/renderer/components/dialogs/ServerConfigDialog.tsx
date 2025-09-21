@@ -28,7 +28,7 @@ import {
   InfoCircleOutlined
 } from '@ant-design/icons';
 import { MCPServer, MCPClient, ServerTestResult } from '../../../shared/types';
-import { ConfigScope } from '../../../shared/types/enums';
+import { ConfigScope, TestStatus } from '../../../shared/types/enums';
 import ScopeTag from '../common/ScopeTag';
 import { ScopeSelector } from '../scope';
 
@@ -163,10 +163,11 @@ const ServerConfigDialog: React.FC<ServerConfigDialogProps> = ({
     } catch (error) {
       console.error('Test failed:', error);
       setTestResult({
+        status: TestStatus.FAILED,
         success: false,
-        error: 'Test configuration failed',
-        details: error instanceof Error ? error.message : String(error),
-        timestamp: new Date()
+        duration: 0,
+        message: 'Test configuration failed',
+        details: error instanceof Error ? error.message : String(error)
       });
     } finally {
       setTesting(false);
@@ -228,7 +229,7 @@ const ServerConfigDialog: React.FC<ServerConfigDialogProps> = ({
         message={testResult.success ? 'Server Test Passed' : 'Server Test Failed'}
         description={
           <div>
-            <p>{testResult.success ? 'The server configuration is valid and can be reached.' : testResult.error}</p>
+            <p>{testResult.success ? 'The server configuration is valid and can be reached.' : testResult.message}</p>
             {testResult.details && (
               <details style={{ marginTop: 8 }}>
                 <summary>Details</summary>
@@ -238,7 +239,7 @@ const ServerConfigDialog: React.FC<ServerConfigDialogProps> = ({
               </details>
             )}
             <Text type="secondary" style={{ fontSize: 12 }}>
-              Tested at: {testResult.timestamp.toLocaleString()}
+              Duration: {testResult.duration}ms
             </Text>
           </div>
         }

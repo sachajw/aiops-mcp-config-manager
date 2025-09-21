@@ -457,4 +457,4 @@ class UnifiedConfigService {
   }
 }
 
-export const configService = new UnifiedConfigService();
+export { UnifiedConfigService };

@@ -14,8 +14,8 @@ interface ServerNodeData {
   onRefresh?: () => void;
 }
 
-export const ServerNode: React.FC<NodeProps<ServerNodeData>> = ({ data, selected }) => {
-  const { label, icon = 'SR', tools = '—', tokens = '—', status = 'inactive', loading = false } = data;
+export const ServerNode: React.FC<NodeProps> = ({ data, selected }) => {
+  const { label, icon = 'SR', tools = '—', tokens = '—', status = 'inactive', loading = false } = data as unknown as ServerNodeData;
 
   const statusColors = {
     active: 'border-success bg-success/10',
@@ -28,7 +28,7 @@ export const ServerNode: React.FC<NodeProps<ServerNodeData>> = ({ data, selected
       className={`
         server-node relative min-w-[180px] rounded-lg border-2 p-3
         transition-all duration-200 backdrop-blur-sm
-        ${statusColors[status]}
+        ${statusColors[status as keyof typeof statusColors]}
         ${selected ? 'shadow-2xl scale-105 ring-2 ring-primary ring-offset-2' : 'shadow-lg hover:shadow-xl'}
       `}
       style={{
@@ -44,12 +44,12 @@ export const ServerNode: React.FC<NodeProps<ServerNodeData>> = ({ data, selected
       }`} />
 
       {/* Refresh button - show when metrics are loaded */}
-      {data.metricsLoaded && (
+      {(data as unknown as ServerNodeData).metricsLoaded && (
         <button
           className="absolute top-1 right-1 p-1 rounded hover:bg-base-300 transition-colors"
           onClick={(e) => {
             e.stopPropagation();
-            if (data.onRefresh) data.onRefresh();
+            if ((data as unknown as ServerNodeData).onRefresh) (data as unknown as ServerNodeData).onRefresh?.();
           }}
           title="Refresh metrics"
         >

@@ -76,10 +76,10 @@ const ScopeConflictDialog: React.FC<ScopeConflictDialogProps> = ({
     return conflicts.map(conflict => ({
       key: conflict.serverName,
       serverName: conflict.serverName,
-      conflicts: conflict.scopes.map(scope => ({
-        scope,
-        server: conflict.servers[scope],
-        priority: scopePriority[scope]
+      conflicts: conflict.scopes.map(scopeEntry => ({
+        scope: scopeEntry.scope,
+        server: scopeEntry.config,
+        priority: scopeEntry.priority
       })).sort((a, b) => a.priority - b.priority)
     }));
   };

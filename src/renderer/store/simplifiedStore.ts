@@ -40,7 +40,7 @@ interface AppState {
   addServer: (name: string, server: MCPServer) => void;
   updateServer: (name: string, server: MCPServer) => void;
   deleteServer: (name: string) => void;
-  saveConfig: () => Promise<any>;
+  saveConfig: () => Promise<{ success: boolean; backupPath?: string } | null>;
   resetState: () => void;
   loadCatalog: () => Promise<void>;
   saveCatalog: () => Promise<void>;
@@ -55,7 +55,10 @@ interface AppState {
   importProfile: (profileData: string) => void;
 }
 
-const electronAPI = (window as any).electronAPI;
+// Import the unified type
+import '@/shared/types/electron';
+
+const electronAPI = window.electronAPI;
 
 // Load catalog from localStorage
 const loadCatalogFromStorage = (): Record<string, MCPServer> => {
@@ -83,7 +86,10 @@ const loadProfilesFromStorage = (): ConfigProfile[] => {
     if (stored) {
       const profiles = JSON.parse(stored);
       // Convert date strings back to Date objects
-      return profiles.map((p: any) => ({ ...p, createdAt: new Date(p.createdAt) }));
+      return profiles.map((p: { name: string; servers: Record<string, MCPServer>; createdAt: string | Date; description?: string }) => ({
+        ...p,
+        createdAt: new Date(p.createdAt)
+      }));
     }
     return [];
   } catch {
@@ -143,25 +149,36 @@ export const useConfigStore = create<AppState>((set, get) => ({
   selectClient: async (clientName: string) => {
     const { activeScope, projectDirectory } = get();
     set({ isLoading: true, error: null, activeClient: clientName });
-    
+
     console.log('[Store] selectClient called:', { clientName, activeScope, projectDirectory });
-    
+
+    // Handle special "catalog" selection
+    if (clientName === 'catalog') {
+      set({
+        servers: {},
+        currentConfigPath: null,
+        isDirty: false,
+        isLoading: false
+      });
+      return;
+    }
+
     try {
       const result = await electronAPI.readConfig(
-        clientName, 
+        clientName,
         activeScope,
-        activeScope === 'project' ? projectDirectory : undefined
+        activeScope === 'project' ? (projectDirectory || undefined) : undefined
       );
-      
+
       if (result.success) {
-        set({ 
+        set({
           servers: result.data || {},
           currentConfigPath: result.configPath || null,
           isDirty: false,
           isLoading: false
         });
       } else {
-        set({ 
+        set({
           servers: {},
           currentConfigPath: null,
           error: result.error || 'Failed to read configuration',
@@ -169,7 +186,7 @@ export const useConfigStore = create<AppState>((set, get) => ({
         });
       }
     } catch (error) {
-      set({ 
+      set({
         servers: {},
         currentConfigPath: null,
         error: `Failed to load configuration: ${(error as Error).message}`,
@@ -280,17 +297,17 @@ export const useConfigStore = create<AppState>((set, get) => ({
     try {
       // Create backup first
       const backupResult = await electronAPI.backupConfig(
-        activeClient, 
+        activeClient,
         activeScope,
-        activeScope === 'project' ? projectDirectory : undefined
+        activeScope === 'project' ? (projectDirectory || undefined) : undefined
       );
       
       // Save configuration
       const result = await electronAPI.writeConfig(
-        activeClient, 
-        activeScope, 
-        servers,
-        activeScope === 'project' ? projectDirectory : undefined
+        activeClient,
+        activeScope,
+        servers as any,
+        activeScope === 'project' ? (projectDirectory || undefined) : undefined
       );
       
       if (result.success) {

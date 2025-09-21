@@ -2,7 +2,8 @@ import { app, BrowserWindow, ipcMain } from 'electron'
 import { join, dirname } from 'path'
 import { format } from 'url'
 import { isDev } from './utils/environment'
-import { setupIpcHandlers } from './ipc/handlers'
+// Use new modular IPC handlers
+import { registerAllHandlers } from './ipc/handlers'
 import { registerSimplifiedHandlers } from './ipc/simplifiedHandlers'
 import { registerDiscoveryHandlers } from './ipc/discoveryHandlers'
 
@@ -124,9 +125,9 @@ const createWindow = (): void => {
 // App event handlers
 app.whenReady().then(() => {
   createWindow()
-  
-  // Setup IPC handlers
-  setupIpcHandlers()
+
+  // Register all modular IPC handlers
+  registerAllHandlers()
 
   // Register simplified handlers
   registerSimplifiedHandlers()
