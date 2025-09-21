@@ -43,10 +43,14 @@ pids/
 out/
 app/
 packages/
-mcp-marketing-servers/social-media-mcp
 playwright-report/
 test-results/
 test-*.png
 electron-test-*.png
+
+# Marketing and GTM (Go-To-Market) - not part of the app
+mcp-marketing-servers/
+Marketing-automation/
+marketing-automation/
 test-electron-*.png
 screenshot-*.png
