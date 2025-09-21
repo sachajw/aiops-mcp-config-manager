@@ -3,6 +3,7 @@ import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import { MCPServer } from '@/main/services/UnifiedConfigService';
 import { CardHeader } from './CardHeader';
+import { useConfigStore } from '@/renderer/store/simplifiedStore';
 
 interface ServerCardProps {
   id: string;
@@ -105,16 +106,16 @@ const ServerCard: React.FC<ServerCardProps> = ({
                 <svg className="w-3 h-3 text-base-content/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
                 </svg>
-                <a
-                  href={repository}
-                  className="text-primary hover:underline truncate"
+                <button
+                  className="text-primary hover:underline truncate text-left"
                   onClick={(e) => {
+                    e.preventDefault();
                     e.stopPropagation();
                     window.electronAPI?.openExternal(repository);
                   }}
                 >
                   Repository
-                </a>
+                </button>
               </div>
             )}
 
@@ -123,16 +124,16 @@ const ServerCard: React.FC<ServerCardProps> = ({
                 <svg className="w-3 h-3 text-base-content/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
                 </svg>
-                <a
-                  href={website}
-                  className="text-primary hover:underline truncate"
+                <button
+                  className="text-primary hover:underline truncate text-left"
                   onClick={(e) => {
+                    e.preventDefault();
                     e.stopPropagation();
                     window.electronAPI?.openExternal(website);
                   }}
                 >
                   Website
-                </a>
+                </button>
               </div>
             )}
           </div>
@@ -167,39 +168,70 @@ const ServerCard: React.FC<ServerCardProps> = ({
   );
 };
 
-export const ServerLibrary: React.FC = () => {
+interface ServerLibraryProps {
+  activeClient?: string;
+  clientServers?: any[];
+}
+
+export const ServerLibrary: React.FC<ServerLibraryProps> = ({ activeClient, clientServers }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+
+  // Get catalog from the store instead of loading separately
+  const storeCatalog = useConfigStore(state => state.catalog);
   const [catalog, setCatalog] = useState<any[]>([]);
 
-  // Load servers from backend catalog service
+  // Convert store catalog (object) to array format and merge with backend catalog
   React.useEffect(() => {
     const loadCatalog = async () => {
       try {
-        // Fetch real server catalog from backend
-        const servers = await (window as any).electronAPI?.getCatalogServers?.();
-        if (servers) {
-          setCatalog(servers);
-          console.log('Loaded', servers.length, 'servers from catalog');
+        // Convert the store catalog (object) to array format
+        const storeServers = Object.entries(storeCatalog || {}).map(([name, server]: [string, any]) => ({
+          name,
+          ...server,
+          description: server.description || server.summary || '',
+          category: server.category || 'community',
+          author: server.author || 'Unknown',
+          installed: server.installed || false
+        }));
+
+        // Try to get additional servers from backend
+        const backendServers = await (window as any).electronAPI?.getCatalogServers?.();
+
+        if (backendServers && backendServers.length > 0) {
+          // Merge both catalogs, avoiding duplicates based on name
+          const serverMap = new Map();
+
+          // Add store servers first
+          storeServers.forEach(server => {
+            serverMap.set(server.name.toLowerCase(), server);
+          });
+
+          // Add backend servers (will override store servers if same name)
+          backendServers.forEach((server: any) => {
+            serverMap.set(server.name.toLowerCase(), server);
+          });
+
+          const mergedCatalog = Array.from(serverMap.values());
+          setCatalog(mergedCatalog);
+          console.log('Loaded', mergedCatalog.length, 'servers from merged catalog');
         } else {
-          // Fallback to localStorage if IPC not available
-          const savedCatalog = localStorage.getItem('mcp-server-catalog');
-          if (savedCatalog) {
-            try {
-              const catalogData = JSON.parse(savedCatalog);
-              if (Array.isArray(catalogData)) {
-                setCatalog(catalogData);
-              } else if (catalogData && typeof catalogData === 'object') {
-                setCatalog(catalogData.servers || []);
-              }
-            } catch (e) {
-              console.error('Failed to parse catalog:', e);
-            }
-          }
+          // Use only store servers if backend unavailable
+          setCatalog(storeServers);
+          console.log('Loaded', storeServers.length, 'servers from store catalog');
         }
       } catch (err) {
         console.error('Failed to load catalog:', err);
-        setCatalog([]);
+        // Fallback to store catalog only
+        const storeServers = Object.entries(storeCatalog || {}).map(([name, server]: [string, any]) => ({
+          name,
+          ...server,
+          description: server.description || server.summary || '',
+          category: server.category || 'community',
+          author: server.author || 'Unknown',
+          installed: server.installed || false
+        }));
+        setCatalog(storeServers);
       }
     };
 
@@ -210,24 +242,50 @@ export const ServerLibrary: React.FC = () => {
     window.addEventListener('catalog-updated', handleCatalogUpdate);
 
     return () => window.removeEventListener('catalog-updated', handleCatalogUpdate);
-  }, []);
+  }, [storeCatalog]);
 
 
 
-  // Convert catalog servers to display format - filter for installed servers only
-  const catalogServers = Array.isArray(catalog) ? catalog : [];
-  const availableServers = catalogServers
-    .filter((server: any) => server.installed === true)
+  // Determine which servers to show based on context
+  let serversToShow: any[] = [];
+
+  if (activeClient && activeClient !== 'catalog' && clientServers) {
+    // Show available servers (catalog servers NOT already configured for this client)
+    const configuredServerNames = new Set(clientServers.map((s: string) =>
+      typeof s === 'string' ? s.toLowerCase() : (s as any).name?.toLowerCase()
+    ));
+
+    // Filter catalog to only show servers that are NOT configured for this client
+    serversToShow = catalog.filter((server: any) => {
+      const serverName = server.name?.toLowerCase() || '';
+      const npmName = server.npm?.toLowerCase() || '';
+
+      // Check if this server is already configured
+      return !configuredServerNames.has(serverName) && !configuredServerNames.has(npmName);
+    });
+  } else {
+    // Show all catalog servers when "Server Catalog" is selected or no client
+    serversToShow = catalog;
+  }
+
+  const availableServers = serversToShow
     .map((server: any) => {
-      const serverId = server.name.toLowerCase().replace(/\s+/g, '-');
+      // If it's already formatted from client servers, return as is
+      if (server.id) return server;
 
+      // Otherwise format catalog server
+      const serverId = server.name.toLowerCase().replace(/\s+/g, '-');
       return {
         id: serverId,
         name: server.name,
-        server: server.config || { command: server.command, args: server.args, type: 'local' as const },
+        server: {
+          command: server.command || 'npx',
+          args: server.args || (server.npm ? ['-y', server.npm] : ['-y', server.name]),
+          type: 'local' as const
+        },
         icon: server.name.substring(0, 2).toUpperCase(),
         description: server.description || server.summary,
-        installed: true,
+        installed: server.installed || false,
         category: server.category || 'community',
         author: server.author || 'Community',
         repository: server.repository || server.github,
@@ -235,14 +293,22 @@ export const ServerLibrary: React.FC = () => {
       };
     });
 
-  const categories = [
-    { id: 'all', name: 'All' },
-    { id: 'core', name: 'Core' },
-    { id: 'data', name: 'Data' },
-    { id: 'web', name: 'Web' },
-    { id: 'ai', name: 'AI' },
-    { id: 'community', name: 'Community' },
-  ];
+  // NO HARDCODED CATEGORIES - Use real categories from props or discovery
+  // Add 'All' as the first option, then use actual categories from data
+  const categories = React.useMemo(() => {
+    const uniqueCategories = new Set<string>();
+    availableServers.forEach(server => {
+      if (server.category) uniqueCategories.add(server.category);
+    });
+
+    return [
+      { id: 'all', name: 'All' },
+      ...Array.from(uniqueCategories).map(cat => ({
+        id: cat.toLowerCase(),
+        name: cat
+      }))
+    ];
+  }, [availableServers]);
 
   const filteredServers = availableServers.filter(server => {
     const matchesSearch = server.name.toLowerCase().includes(searchQuery.toLowerCase()) ||

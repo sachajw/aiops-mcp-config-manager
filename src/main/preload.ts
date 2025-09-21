@@ -1,6 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { MCPClient, Configuration, MCPServer, ServerTestResult } from '../shared/types'
 import { ConfigScope } from '../shared/types/enums'
+import type { ElectronAPI } from '../shared/types/electron'
 
 // Expose protected methods that allow the renderer process to use
 // the ipcRenderer without exposing the entire object
@@ -110,52 +111,3 @@ contextBridge.exposeInMainWorld('electronAPI', {
   disconnectFromServer: (serverName: string) => ipcRenderer.invoke('connection:disconnect', serverName)
 })
 
-// Type definitions for the exposed API
-export interface ElectronAPI {
-  // App methods
-  getVersion: () => Promise<string>
-  
-  // Client discovery methods
-  discoverClients: () => Promise<MCPClient[]>
-  validateClient: (clientId: string) => Promise<boolean>
-  
-  // Configuration methods
-  loadConfiguration: (clientId: string, scope?: ConfigScope) => Promise<Configuration | null>
-  saveConfiguration: (clientId: string, config: Configuration, scope?: ConfigScope) => Promise<void>
-  resolveConfiguration: (clientId: string) => Promise<any>
-  validateConfiguration: (config: Configuration) => Promise<any>
-  getAvailableScopes: (clientId: string) => Promise<ConfigScope[]>
-  
-  // Server testing methods
-  testServer: (serverConfig: MCPServer) => Promise<ServerTestResult>
-  testCommand: (command: string, args?: string[]) => Promise<any>
-  validateEnvironment: (serverConfig: MCPServer) => Promise<any>
-  
-  // Backup and recovery methods
-  createBackup: (clientId: string, config: Configuration) => Promise<string>
-  restoreBackup: (backupId: string) => Promise<Configuration>
-  listBackups: (clientId?: string) => Promise<any[]>
-  deleteBackup: (backupId: string) => Promise<void>
-  
-  // File monitoring methods
-  watchFiles: (paths: string[]) => Promise<void>
-  unwatchFiles: (paths: string[]) => Promise<void>
-  
-  // Bulk operation methods
-  syncConfigurations: (sourceClientId: string, targetClientIds: string[]) => Promise<any[]>
-  enableServers: (clientId: string, serverNames: string[]) => Promise<void>
-  disableServers: (clientId: string, serverNames: string[]) => Promise<void>
-  
-  // Utility methods
-  validateJson: (jsonString: string) => Promise<{ valid: boolean; errors: string[] }>
-  formatJson: (jsonString: string) => Promise<string>
-  
-  // System methods
-  openExternal: (url: string) => Promise<boolean>
-}
-
-declare global {
-  interface Window {
-    electronAPI: ElectronAPI
-  }
-}
