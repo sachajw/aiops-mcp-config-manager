@@ -93,6 +93,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
       ipcRenderer.invoke('discovery:updateSettings', settings),
     getSettings: () =>
       ipcRenderer.invoke('discovery:getSettings'),
+    getInstallationLogs: (serverId: string) =>
+      ipcRenderer.invoke('discovery:getInstallationLogs', serverId),
+    onInstallationOutput: (callback: (event: any, data: any) => void) => {
+      ipcRenderer.on('discovery:installationOutput', callback);
+      return () => ipcRenderer.removeListener('discovery:installationOutput', callback);
+    },
   },
 
   // Server Catalog methods (for Visual Workspace)

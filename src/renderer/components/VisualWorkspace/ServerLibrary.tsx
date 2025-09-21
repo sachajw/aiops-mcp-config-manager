@@ -60,9 +60,9 @@ const ServerCard: React.FC<ServerCardProps> = ({
         console.log(`[ServerCard] Mouse down on ${name}`, { listeners, attributes });
       }}
       className={`
-        server-card bg-base-200 rounded cursor-grab hover:shadow-md
-        transition-all duration-200 relative overflow-hidden
-        ${isDragging ? 'cursor-grabbing shadow-xl scale-105' : ''}
+        server-card bg-base-200 rounded cursor-grab
+        relative overflow-hidden
+        ${isDragging ? 'dragging' : ''}
       `}
     >
       {/* Dark Header */}
@@ -250,22 +250,35 @@ export const ServerLibrary: React.FC<ServerLibraryProps> = ({ activeClient, clie
   let serversToShow: any[] = [];
 
   if (activeClient && activeClient !== 'catalog' && clientServers) {
-    // Show available servers (catalog servers NOT already configured for this client)
-    const configuredServerNames = new Set(clientServers.map((s: string) =>
-      typeof s === 'string' ? s.toLowerCase() : (s as any).name?.toLowerCase()
-    ));
-
-    // Filter catalog to only show servers that are NOT configured for this client
+    // Show available servers using the incremental approach:
+    // Show installed servers that are NOT configured for this client
     serversToShow = catalog.filter((server: any) => {
-      const serverName = server.name?.toLowerCase() || '';
-      const npmName = server.npm?.toLowerCase() || '';
-
-      // Check if this server is already configured
-      return !configuredServerNames.has(serverName) && !configuredServerNames.has(npmName);
+      // Use the new fields if available, fallback to old logic
+      if (server.installationStatus && server.configuredClients) {
+        // New incremental approach: show installed servers not configured for this client
+        return (server.installationStatus === 'installed' || server.installationStatus === 'configured') &&
+               !server.configuredClients.includes(activeClient);
+      } else {
+        // Fallback to old logic for backward compatibility
+        const configuredServerNames = new Set(clientServers.map((s: string) =>
+          typeof s === 'string' ? s.toLowerCase() : (s as any).name?.toLowerCase()
+        ));
+        const serverName = server.name?.toLowerCase() || '';
+        const npmName = server.npm?.toLowerCase() || '';
+        return !configuredServerNames.has(serverName) && !configuredServerNames.has(npmName);
+      }
     });
   } else {
     // Show all catalog servers when "Server Catalog" is selected or no client
-    serversToShow = catalog;
+    // Optionally filter to only show installed servers
+    serversToShow = catalog.filter((server: any) => {
+      // If we have installation status, only show installed/configured servers in catalog view
+      if (server.installationStatus) {
+        return server.installationStatus === 'installed' || server.installationStatus === 'configured';
+      }
+      // Otherwise show all for backward compatibility
+      return true;
+    });
   }
 
   const availableServers = serversToShow
@@ -318,8 +331,8 @@ export const ServerLibrary: React.FC<ServerLibraryProps> = ({ activeClient, clie
   });
 
   return (
-    <div className="p-2 h-full flex flex-col">
-      <h2 className="text-xs font-bold mb-2">Server Library</h2>
+    <div className="p-2 h-full flex flex-col animate-slideInLeft">
+      <h2 className="text-xs font-bold mb-2 animate-fadeIn">Server Library</h2>
 
       {/* Search */}
       <div className="relative mb-2">
@@ -349,7 +362,7 @@ export const ServerLibrary: React.FC<ServerLibraryProps> = ({ activeClient, clie
       </div>
 
       {/* Server list */}
-      <div className="flex-1 overflow-y-auto space-y-1.5">
+      <div className="flex-1 overflow-y-auto space-y-1.5 stagger-children">
         {filteredServers.map(server => (
           <ServerCard key={server.id} {...server} />
         ))}

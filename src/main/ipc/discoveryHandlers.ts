@@ -126,4 +126,16 @@ export function registerDiscoveryHandlers(): void {
       throw error;
     }
   });
+
+  // Get installation logs for a server
+  ipcMain.handle('discovery:getInstallationLogs', async (event, serverId: string): Promise<string[]> => {
+    try {
+      console.log('[IPC] discovery:getInstallationLogs called for:', serverId);
+      const service = getDiscoveryService();
+      return service.getInstallationLogs(serverId);
+    } catch (error) {
+      console.error('[IPC] Failed to get installation logs:', error);
+      throw error;
+    }
+  });
 }

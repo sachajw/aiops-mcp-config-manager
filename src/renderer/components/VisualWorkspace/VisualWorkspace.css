@@ -1,21 +1,61 @@
 /* Visual Workspace Custom Styles */
 
-/* React Flow Controls - Dark Mode */
+/* ===== Smooth Transitions & Animations ===== */
+* {
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* React Flow Controls - Dark Mode with Enhanced Feedback */
 .react-flow__controls {
   background: var(--b3, #1d232a) !important;
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3) !important;
   z-index: 15 !important;
+  transition: all 0.2s ease !important;
+}
+
+.react-flow__controls:hover {
+  box-shadow: 0 8px 12px -2px rgba(0, 0, 0, 0.4) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
 }
 
 .react-flow__controls-button {
   background: var(--b3, #1d232a) !important;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
   color: var(--bc, #a6adba) !important;
+  transition: all 0.2s ease !important;
+  position: relative;
+  overflow: hidden;
 }
 
 .react-flow__controls-button:hover {
   background: var(--b2, #191e24) !important;
+  color: var(--primary, #570df8) !important;
+  transform: scale(1.05);
+}
+
+.react-flow__controls-button:active {
+  transform: scale(0.95);
+  transition: transform 0.1s ease;
+}
+
+/* Ripple effect for control buttons */
+.react-flow__controls-button::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.react-flow__controls-button:active::after {
+  width: 100px;
+  height: 100px;
 }
 
 .react-flow__controls-button svg {
@@ -70,4 +110,401 @@
 /* Ensure performance panel doesn't create extra space */
 .react-flow__container {
   height: 100% !important;
+}
+
+/* ===== Server Card Visual Feedback ===== */
+.server-card {
+  transition: all 0.3s ease;
+  transform-origin: center;
+  will-change: transform, box-shadow;
+}
+
+.server-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px -4px rgba(0, 0, 0, 0.3);
+  border-color: var(--primary, #570df8);
+}
+
+.server-card:active {
+  transform: scale(0.98);
+  transition: transform 0.1s ease;
+}
+
+/* Smooth drag animations */
+.server-card.dragging {
+  cursor: grabbing !important;
+  transform: scale(1.05) rotate(2deg);
+  box-shadow: 0 20px 40px -8px rgba(0, 0, 0, 0.4);
+  opacity: 0.9;
+  z-index: 1000;
+  transition: none;
+}
+
+/* ===== Client Card Enhancements ===== */
+.client-card {
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.client-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  transition: left 0.5s ease;
+}
+
+.client-card:hover::before {
+  left: 100%;
+}
+
+.client-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px -6px rgba(0, 0, 0, 0.3);
+}
+
+.client-card.active {
+  border-color: var(--primary, #570df8);
+  box-shadow: 0 0 0 3px rgba(87, 13, 248, 0.2);
+}
+
+/* ===== Button Enhancements ===== */
+.btn {
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px -2px rgba(0, 0, 0, 0.2);
+}
+
+.btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+}
+
+/* ===== Panel Slide Animations ===== */
+.panel-slide-in {
+  animation: slideIn 0.3s ease-out;
+}
+
+.panel-slide-out {
+  animation: slideOut 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOut {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+}
+
+/* ===== Drop Zone Visual Feedback ===== */
+.drop-zone-active {
+  background-color: rgba(87, 13, 248, 0.1);
+  border: 2px dashed var(--primary, #570df8);
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.drop-zone-hover {
+  background-color: rgba(87, 13, 248, 0.2);
+  border-color: var(--primary, #570df8);
+  border-style: solid;
+  transform: scale(1.02);
+}
+
+/* ===== Loading States ===== */
+.loading-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.loading-skeleton {
+  background: linear-gradient(90deg,
+    var(--b3, #1d232a) 25%,
+    var(--b2, #191e24) 50%,
+    var(--b3, #1d232a) 75%
+  );
+  background-size: 200% 100%;
+  animation: loading 1.5s ease-in-out infinite;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* ===== Focus States ===== */
+button:focus-visible,
+input:focus-visible,
+.focusable:focus-visible {
+  outline: 2px solid var(--primary, #570df8);
+  outline-offset: 2px;
+  transition: outline-offset 0.2s ease;
+}
+
+/* ===== Success/Error Feedback ===== */
+.success-flash {
+  animation: successFlash 0.5s ease-out;
+}
+
+@keyframes successFlash {
+  0% {
+    background-color: rgba(34, 197, 94, 0.3);
+    transform: scale(1);
+  }
+  50% {
+    background-color: rgba(34, 197, 94, 0.5);
+    transform: scale(1.05);
+  }
+  100% {
+    background-color: transparent;
+    transform: scale(1);
+  }
+}
+
+.error-shake {
+  animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+  20%, 40%, 60%, 80% { transform: translateX(4px); }
+}
+
+/* ===== Entrance Animations ===== */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInDown {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    transform: translateX(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes scaleOut {
+  from {
+    transform: scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+}
+
+@keyframes rotateIn {
+  from {
+    transform: rotate(-10deg) scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: rotate(0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes bounceIn {
+  0% {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* ===== Animation Classes ===== */
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.animate-fadeOut {
+  animation: fadeOut 0.3s ease-out;
+}
+
+.animate-slideInUp {
+  animation: slideInUp 0.4s ease-out;
+}
+
+.animate-slideInDown {
+  animation: slideInDown 0.4s ease-out;
+}
+
+.animate-slideInLeft {
+  animation: slideInLeft 0.4s ease-out;
+}
+
+.animate-slideInRight {
+  animation: slideInRight 0.4s ease-out;
+}
+
+.animate-scaleIn {
+  animation: scaleIn 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.animate-scaleOut {
+  animation: scaleOut 0.3s ease-out;
+}
+
+.animate-rotateIn {
+  animation: rotateIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.animate-bounceIn {
+  animation: bounceIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* ===== Stagger Animations for Lists ===== */
+.stagger-children > * {
+  animation: slideInUp 0.4s ease-out both;
+}
+
+.stagger-children > *:nth-child(1) { animation-delay: 0ms; }
+.stagger-children > *:nth-child(2) { animation-delay: 50ms; }
+.stagger-children > *:nth-child(3) { animation-delay: 100ms; }
+.stagger-children > *:nth-child(4) { animation-delay: 150ms; }
+.stagger-children > *:nth-child(5) { animation-delay: 200ms; }
+.stagger-children > *:nth-child(6) { animation-delay: 250ms; }
+.stagger-children > *:nth-child(7) { animation-delay: 300ms; }
+.stagger-children > *:nth-child(8) { animation-delay: 350ms; }
+.stagger-children > *:nth-child(9) { animation-delay: 400ms; }
+.stagger-children > *:nth-child(10) { animation-delay: 450ms; }
+
+/* ===== Floating Animation ===== */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* ===== Spin Animation ===== */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+.animate-spin-slow {
+  animation: spin 3s linear infinite;
 }

@@ -471,9 +471,28 @@ export const VisualWorkspace: React.FC = () => {
       if (!over || over.id === 'react-flow-wrapper' || (!isClientDrop && wasJustDragging)) {
         console.log('Adding server to canvas', { over: over?.id, serverName });
 
-        // Check if server already exists
+        // Check if server already exists on the canvas
         const serverExists = nodes.some(n => n.id === serverNodeId);
-        if (!serverExists) {
+
+        // Check if server is already in the configuration
+        const serverInConfig = Object.keys(servers).some(name =>
+          name.toLowerCase() === serverName.toLowerCase()
+        );
+
+        if (serverExists) {
+          console.log('Server already exists on canvas:', serverName);
+          setDraggedItem(null);
+          return;
+        }
+
+        if (serverInConfig) {
+          console.log('Server already in configuration:', serverName);
+          // Optionally show a notification to the user
+          setDraggedItem(null);
+          return;
+        }
+
+        if (!serverExists && !serverInConfig) {
           const nodeIndex = nodes.filter(n => n.type === 'server').length;
 
           // Generate unique initial metrics based on server name
@@ -545,8 +564,21 @@ export const VisualWorkspace: React.FC = () => {
       else if (isClientDrop) {
         const targetClientId = over.id.toString();
 
-        // Add server node if it doesn't exist
+        // Check if server already exists on the canvas
         const serverExists = nodes.some(n => n.id === serverNodeId);
+
+        // Check if server is already in the configuration
+        const serverInConfig = Object.keys(servers).some(name =>
+          name.toLowerCase() === serverName.toLowerCase()
+        );
+
+        if (serverInConfig) {
+          console.log('Server already in configuration, cannot add duplicate:', serverName);
+          setDraggedItem(null);
+          return;
+        }
+
+        // Add server node if it doesn't exist
         if (!serverExists) {
           // Generate unique initial metrics based on server name
           const hash = serverName.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
@@ -681,8 +713,10 @@ export const VisualWorkspace: React.FC = () => {
 
             <ReactFlowProvider>
               <div
-                className={`h-full w-full pt-10 transition-colors duration-200 ${
-                  isOverCanvas ? 'bg-success/10 border-2 border-success border-dashed' : ''
+                className={`h-full w-full pt-10 transition-all duration-300 ${
+                  isDragging && isOverCanvas ? 'drop-zone-hover' : ''
+                } ${
+                  isDragging && !isOverCanvas ? 'drop-zone-active' : ''
                 }`}
                 id="react-flow-wrapper"
                 ref={setCanvasDropRef}

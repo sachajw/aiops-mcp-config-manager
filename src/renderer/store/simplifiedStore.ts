@@ -40,6 +40,8 @@ interface AppState {
   addServer: (name: string, server: MCPServer) => void;
   updateServer: (name: string, server: MCPServer) => void;
   deleteServer: (name: string) => void;
+  toggleServer: (name: string) => void;
+  enableServer: (name: string, enabled: boolean) => void;
   saveConfig: () => Promise<{ success: boolean; backupPath?: string } | null>;
   resetState: () => void;
   loadCatalog: () => Promise<void>;
@@ -275,12 +277,58 @@ export const useConfigStore = create<AppState>((set, get) => ({
     const { servers } = get();
     const newServers = { ...servers };
     delete newServers[name];
-    
-    set({ 
+
+    set({
       servers: newServers,
       isDirty: true,
       error: null
     });
+  },
+
+  // Toggle server enabled status
+  toggleServer: (name: string) => {
+    const { servers } = get();
+
+    if (!servers[name]) {
+      set({ error: `Server "${name}" not found` });
+      return;
+    }
+
+    const updatedServer = {
+      ...servers[name],
+      enabled: !servers[name].enabled
+    };
+
+    set({
+      servers: { ...servers, [name]: updatedServer },
+      isDirty: true,
+      error: null
+    });
+
+    console.log(`Server ${name} toggled to ${updatedServer.enabled ? 'enabled' : 'disabled'}`);
+  },
+
+  // Enable or disable a server
+  enableServer: (name: string, enabled: boolean) => {
+    const { servers } = get();
+
+    if (!servers[name]) {
+      set({ error: `Server "${name}" not found` });
+      return;
+    }
+
+    const updatedServer = {
+      ...servers[name],
+      enabled
+    };
+
+    set({
+      servers: { ...servers, [name]: updatedServer },
+      isDirty: true,
+      error: null
+    });
+
+    console.log(`Server ${name} ${enabled ? 'enabled' : 'disabled'}`);
   },
 
   // Save configuration back to file

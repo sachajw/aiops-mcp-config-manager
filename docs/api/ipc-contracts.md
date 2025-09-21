@@ -274,6 +274,153 @@ src/main/ipc/handlers/
 
 ---
 
+### DiscoveryHandler (Prefix: `discovery`)
+
+#### `discovery:fetchCatalog`
+**Description:** Fetch MCP server catalog from remote repository
+**Parameters:** `[boolean?, Partial<McpDiscoverySettings>?]`
+- forceRefresh (optional): Force refresh catalog cache
+- settings (optional): Override discovery settings
+**Returns:** `McpServerCatalog`
+**Errors:**
+- `CATALOG_FETCH_ERROR` - When unable to fetch catalog from remote
+
+#### `discovery:getInstalledServers`
+**Description:** Get list of installed MCP servers
+**Parameters:** None
+**Returns:** `InstalledServer[]`
+
+#### `discovery:isServerInstalled`
+**Description:** Check if a specific server is installed
+**Parameters:** `[string]` (serverId)
+**Returns:** `boolean`
+
+#### `discovery:installServer`
+**Description:** Install an MCP server from catalog
+**Parameters:** `[string]` (serverId)
+**Returns:** `void`
+**Errors:**
+- `SERVER_NOT_FOUND` - When serverId doesn't exist in catalog
+- `ALREADY_INSTALLED` - When server is already installed
+- `INSTALLATION_FAILED` - When npm/pip/git installation fails
+
+#### `discovery:uninstallServer`
+**Description:** Uninstall an MCP server
+**Parameters:** `[string]` (serverId)
+**Returns:** `void`
+**Errors:**
+- `NOT_INSTALLED` - When server is not installed
+- `UNINSTALL_FAILED` - When filesystem removal fails
+
+#### `discovery:getInstallationState`
+**Description:** Get current installation state for a server
+**Parameters:** `[string]` (serverId)
+**Returns:** `InstallationState | undefined`
+**Notes:** Returns undefined if no active installation
+
+#### `discovery:updateSettings`
+**Description:** Update discovery service settings
+**Parameters:** `[Partial<McpDiscoverySettings>]`
+**Returns:** `void`
+
+#### `discovery:getSettings`
+**Description:** Get current discovery settings
+**Parameters:** None
+**Returns:** `McpDiscoverySettings`
+
+#### `discovery:getInstallationLogs`
+**Description:** Get installation output logs for a server
+**Parameters:** `[string]` (serverId)
+**Returns:** `string[]`
+**Notes:** Returns last 5 lines of installation output
+
+---
+
+### InstallationHandler (Prefix: `installation`)
+
+#### `installation:install`
+**Description:** Install an MCP server from npm, pip, cargo, or git
+**Parameters:** `[string, string]`
+- serverId: Unique identifier for the server
+- source: Installation source (e.g., "npm:@mcp/server", "pip:mcp-server", "git:https://...")
+**Returns:** `InstallResult`
+```typescript
+{
+  success: boolean;
+  version?: string;
+  path?: string;
+  error?: string;
+}
+```
+**Errors:**
+- `UNKNOWN_SOURCE` - When source type is not recognized
+- `INSTALL_FAILED` - When installation process fails
+- `ALREADY_INSTALLED` - When server is already installed
+
+#### `installation:uninstall`
+**Description:** Uninstall an MCP server
+**Parameters:** `[string]` (serverId)
+**Returns:** `InstallResult`
+**Errors:**
+- `SERVER_NOT_FOUND` - When server is not installed
+- `UNINSTALL_FAILED` - When uninstallation process fails
+
+#### `installation:check`
+**Description:** Check if a package is installed
+**Parameters:** `[string]` (packageSource)
+**Returns:** `{ installed: boolean; version?: string; }`
+**Notes:** Checks system for npm, pip, cargo, or git installations
+
+#### `installation:getInstalled`
+**Description:** Get list of all installed servers
+**Parameters:** None
+**Returns:** `InstalledServerInfo[]`
+```typescript
+{
+  serverId: string;
+  packageName: string;
+  version: string;
+  installDate: Date;
+  installPath: string;
+  type: 'npm' | 'pip' | 'cargo' | 'git' | 'manual';
+}
+```
+
+#### `installation:getInfo`
+**Description:** Get detailed information about an installed server
+**Parameters:** `[string]` (serverId)
+**Returns:** `InstalledServerInfo | null`
+
+#### `installation:getVersion`
+**Description:** Get version of an installed package
+**Parameters:** `[string]` (packageName)
+**Returns:** `string | null`
+
+---
+
+### ServerHandler Extensions
+
+#### `servers:install`
+**Description:** Install a server from the catalog (delegates to InstallationService)
+**Parameters:** `[string, McpServerEntry]`
+- serverId: Server identifier
+- serverEntry: Full server metadata from catalog
+**Returns:** `InstallResult`
+**Notes:** Uses InstallationService internally for actual installation
+
+#### `servers:uninstall`
+**Description:** Uninstall a server (delegates to InstallationService)
+**Parameters:** `[string]` (serverId)
+**Returns:** `InstallResult`
+
+#### `servers:checkInstalled`
+**Description:** Check installation status of a server
+**Parameters:** `[string]` (serverId)
+**Returns:** `{ installed: boolean; version?: string; configuredClients?: string[] }`
+**Notes:** Returns installation status and which clients use this server
+
+---
+
 ## TypeScript Contract Definition
 
 ```typescript
@@ -361,6 +508,44 @@ export interface IPCContracts {
     params: [string, string, string, string[]?];
     returns: TestResult;
   };
+
+  // Discovery handlers
+  'discovery:fetchCatalog': {
+    params: [boolean?, Partial<McpDiscoverySettings>?];
+    returns: McpServerCatalog;
+  };
+  'discovery:getInstalledServers': {
+    params: void;
+    returns: InstalledServer[];
+  };
+  'discovery:isServerInstalled': {
+    params: [string];
+    returns: boolean;
+  };
+  'discovery:installServer': {
+    params: [string];
+    returns: void;
+  };
+  'discovery:uninstallServer': {
+    params: [string];
+    returns: void;
+  };
+  'discovery:getInstallationState': {
+    params: [string];
+    returns: InstallationState | undefined;
+  };
+  'discovery:updateSettings': {
+    params: [Partial<McpDiscoverySettings>];
+    returns: void;
+  };
+  'discovery:getSettings': {
+    params: void;
+    returns: McpDiscoverySettings;
+  };
+  'discovery:getInstallationLogs': {
+    params: [string];
+    returns: string[];
+  };
 }
 
 // Type-safe IPC invoke helper
@@ -414,6 +599,71 @@ console.log(`Test ${result.success ? 'passed' : 'failed'}`);
 // Get metrics for a specific server
 const metrics = await invokeIPC('metrics:getServerMetrics', 'filesystem');
 console.log(`Tools: ${metrics.toolCount}, Tokens: ${metrics.tokenUsage}`);
+```
+
+### Discovery - Install Server with Output Streaming
+```typescript
+// Set up listener for installation output
+const unsubscribe = window.electronAPI.discovery.onInstallationOutput((event, data) => {
+  if (data.serverId === 'my-server') {
+    console.log('Installation output:', data.output);
+    console.log('Stream:', data.stream); // 'stdout' or 'stderr'
+    console.log('Last 5 lines:', data.lastFiveLines);
+  }
+});
+
+// Install the server
+try {
+  await invokeIPC('discovery:installServer', 'my-server');
+  console.log('Installation complete');
+} catch (error) {
+  console.error('Installation failed:', error);
+} finally {
+  // Clean up listener
+  unsubscribe();
+}
+```
+
+## Event Listeners
+
+### Discovery Installation Output Event
+**Event:** `discovery:installationOutput`
+**Description:** Real-time streaming of server installation output from discovery service
+**Payload:**
+```typescript
+{
+  serverId: string;        // ID of the server being installed
+  output: string;          // Raw output from the installation process
+  stream: 'stdout' | 'stderr';  // Output stream type
+  lastFiveLines: string[]; // Circular buffer of last 5 output lines
+}
+```
+
+### Installation Service Output Event
+**Event:** `installation:output`
+**Description:** Real-time streaming of installation output from InstallationService
+**Payload:**
+```typescript
+{
+  serverId: string;        // ID of the server being installed
+  type: 'npm' | 'pip' | 'cargo' | 'git';  // Installation type
+  message: string;         // Installation message
+  progress?: number;       // Installation progress (0-100)
+  stream: 'stdout' | 'stderr';  // Output stream type
+}
+```
+
+### Installation State Change Event
+**Event:** `installation:stateChange`
+**Description:** Installation state updates
+**Payload:**
+```typescript
+{
+  serverId: string;
+  state: 'pending' | 'downloading' | 'installing' | 'configuring' | 'completed' | 'failed';
+  progress: number;        // 0-100
+  error?: string;         // Error message if failed
+}
 ```
 
 ## Migration from Old Handlers

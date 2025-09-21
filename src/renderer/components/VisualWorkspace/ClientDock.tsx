@@ -32,10 +32,10 @@ const ClientCard: React.FC<ClientCardProps> = ({ client, serverCount, isActive, 
       ref={setDropRef}
       onClick={handleClick}
       className={`
-        client-card bg-base-200 rounded cursor-pointer hover:shadow-md
-        transition-all duration-200 relative overflow-hidden
-        ${isActive ? 'ring-2 ring-primary shadow-lg bg-primary/10' : 'hover:bg-base-100'}
-        ${isOver ? 'bg-success/20 border-success animate-pulse' : ''}
+        client-card bg-base-200 rounded cursor-pointer
+        relative overflow-hidden
+        ${isActive ? 'active' : ''}
+        ${isOver ? 'drop-zone-hover' : ''}
       `}
     >
 
@@ -204,9 +204,9 @@ export const ClientDock: React.FC = () => {
   const notInstalledClients = enabledClients.filter(c => !(c as any).installed);
 
   return (
-    <div className="p-2">
+    <div className="p-2 animate-slideInRight">
       <div className="flex justify-between items-center mb-2">
-        <h2 className="text-xs font-bold">Client Selector</h2>
+        <h2 className="text-xs font-bold animate-fadeIn">Client Selector</h2>
         <button
           className="btn btn-ghost btn-xs"
           onClick={() => setShowNotInstalled(!showNotInstalled)}
@@ -228,7 +228,7 @@ export const ClientDock: React.FC = () => {
       </div>
 
       {/* Installed clients */}
-      <div className="space-y-2 mb-4">
+      <div className="space-y-2 mb-4 stagger-children">
         <h3 className="text-xs font-semibold text-base-content/60 uppercase tracking-wide">Installed</h3>
         {installedClients.map(client => (
           <ClientCard

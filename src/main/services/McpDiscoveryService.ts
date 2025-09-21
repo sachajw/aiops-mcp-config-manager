@@ -1,4 +1,4 @@
-import { app } from 'electron';
+import { app, BrowserWindow } from 'electron';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { spawn } from 'child_process';
@@ -11,6 +11,7 @@ import {
   McpDiscoverySettings,
   DEFAULT_MCP_DISCOVERY_SETTINGS
 } from '../../shared/types/mcp-discovery';
+import { InstallationService } from './InstallationService';
 
 export class McpDiscoveryService {
   private settings: McpDiscoverySettings;
@@ -18,9 +19,12 @@ export class McpDiscoveryService {
   private cacheTimestamp: Date | null = null;
   private installedServers: Map<string, InstalledServer> = new Map();
   private installationStates: Map<string, InstallationState> = new Map();
+  private installationLogs: Map<string, string[]> = new Map();
+  private installationService: InstallationService;
 
   constructor(settings?: Partial<McpDiscoverySettings>) {
     this.settings = { ...DEFAULT_MCP_DISCOVERY_SETTINGS, ...settings };
+    this.installationService = new InstallationService();
     this.loadInstalledServers();
   }
 
@@ -429,11 +433,13 @@ export class McpDiscoveryService {
       npmProcess.stdout.on('data', (data) => {
         output += data.toString();
         console.log('[McpDiscovery] npm:', data.toString());
+        this.emitInstallationOutput(server.id, data.toString(), 'stdout');
       });
 
       npmProcess.stderr.on('data', (data) => {
         errorOutput += data.toString();
         console.error('[McpDiscovery] npm error:', data.toString());
+        this.emitInstallationOutput(server.id, data.toString(), 'stderr');
       });
 
       npmProcess.on('close', (code) => {
@@ -463,6 +469,44 @@ export class McpDiscoveryService {
   private async installViaDownload(server: McpServerEntry, installDir: string): Promise<void> {
     // Implementation for direct download installation
     throw new Error('Download installation not yet implemented');
+  }
+
+  /**
+   * Emit installation output to renderer
+   */
+  private emitInstallationOutput(serverId: string, data: string, stream: 'stdout' | 'stderr'): void {
+    // Store in circular buffer (last 5 lines)
+    if (!this.installationLogs.has(serverId)) {
+      this.installationLogs.set(serverId, []);
+    }
+
+    const logs = this.installationLogs.get(serverId)!;
+    const lines = data.split('\n').filter(line => line.trim());
+
+    for (const line of lines) {
+      logs.push(line);
+      if (logs.length > 5) {
+        logs.shift(); // Keep only last 5 lines
+      }
+    }
+
+    // Send to all renderer windows
+    const windows = BrowserWindow.getAllWindows();
+    for (const window of windows) {
+      window.webContents.send('discovery:installationOutput', {
+        serverId,
+        output: data,
+        stream,
+        lastFiveLines: [...logs]
+      });
+    }
+  }
+
+  /**
+   * Get installation logs for a server
+   */
+  getInstallationLogs(serverId: string): string[] {
+    return this.installationLogs.get(serverId) || [];
   }
 
   /**

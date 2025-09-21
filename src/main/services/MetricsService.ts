@@ -19,39 +19,74 @@ export interface MetricsStore {
 
 export class MetricsService {
   private metrics: MetricsStore = {};
+  private metricsCache: Map<string, { metrics: ServerMetrics; timestamp: number }> = new Map();
+  private readonly CACHE_DURATION = 30000; // 30 seconds cache to reduce server load
   // NO MOCK MODE - Only real metrics from actual servers
 
   /**
-   * Get metrics for a specific server
+   * Get metrics for a specific server with caching
    * Returns real metrics or default zeros if not connected
+   *
+   * TOKEN USAGE ESTIMATION FORMULA:
+   * - tokenUsage = resourceCount * 100
+   * - This is an ESTIMATION since MCP protocol doesn't provide actual token metrics
+   * - Each resource is estimated to consume approximately 100 tokens
+   * - If resourceCount = 0, then tokenUsage = 0
+   * - This estimation helps provide a relative measure of server activity
+   *
+   * @param serverName - Name of the server to get metrics for
+   * @returns ServerMetrics with estimated token usage
    */
   public getServerMetrics(serverName: string): ServerMetrics {
+    // Check cache first
+    const cached = this.metricsCache.get(serverName);
+    if (cached && Date.now() - cached.timestamp < this.CACHE_DURATION) {
+      console.log(`[MetricsService] Using cached metrics for ${serverName}`);
+      return cached.metrics;
+    }
+
     // First try to get real metrics from connection monitor
     const realMetrics = connectionMonitor.getRealMetrics(serverName);
     if (realMetrics) {
-      return {
+      const metrics: ServerMetrics = {
         toolCount: realMetrics.toolCount,
-        tokenUsage: realMetrics.resourceCount * 100, // Estimate based on resources
+        tokenUsage: realMetrics.resourceCount * 100, // ESTIMATED: resourceCount * 100 tokens per resource
         responseTime: realMetrics.responseTime,
         lastUpdated: realMetrics.lastActivity,
         isConnected: realMetrics.isConnected
       };
+
+      // Cache the metrics
+      this.metricsCache.set(serverName, {
+        metrics,
+        timestamp: Date.now()
+      });
+
+      return metrics;
     }
 
     // Fall back to stored metrics
     if (this.metrics[serverName]) {
+      // Cache even stored metrics
+      this.metricsCache.set(serverName, {
+        metrics: this.metrics[serverName],
+        timestamp: Date.now()
+      });
       return this.metrics[serverName];
     }
 
     // NO MOCK DATA - Return zeros for disconnected/unknown servers
     // The UI should show appropriate loading or disconnected states
-    return {
+    const defaultMetrics: ServerMetrics = {
       toolCount: 0,
       tokenUsage: 0,
       responseTime: 0,
       lastUpdated: new Date(),
       isConnected: false
     };
+
+    // Don't cache default metrics to allow retry
+    return defaultMetrics;
   }
 
   /**
@@ -103,6 +138,22 @@ export class MetricsService {
    */
   public clearMetrics(): void {
     this.metrics = {};
+    this.metricsCache.clear();
+  }
+
+  /**
+   * Clear cache for a specific server
+   */
+  public clearCacheForServer(serverName: string): void {
+    this.metricsCache.delete(serverName);
+  }
+
+  /**
+   * Force refresh metrics for a server (bypasses cache)
+   */
+  public forceRefreshMetrics(serverName: string): ServerMetrics {
+    this.clearCacheForServer(serverName);
+    return this.getServerMetrics(serverName);
   }
 
   /**

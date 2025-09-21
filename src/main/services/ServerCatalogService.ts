@@ -5,6 +5,8 @@
 import { promises as fs } from 'fs';
 import { homedir } from 'os';
 import * as path from 'path';
+import { InstallationService } from './InstallationService';
+import { UnifiedConfigService } from './UnifiedConfigService';
 
 export interface CatalogServer {
   name: string;
@@ -17,7 +19,9 @@ export interface CatalogServer {
   command: string;
   args?: string[];
   category: 'core' | 'data' | 'web' | 'ai' | 'community' | 'tools';
-  installed?: boolean;
+  installed?: boolean; // Deprecated - use installationStatus instead
+  installationStatus?: 'discovered' | 'installed' | 'configured';
+  configuredClients?: string[]; // Track which clients are using this server
   rating?: number;
   downloads?: number;
   version?: string;
@@ -45,12 +49,53 @@ export class ServerCatalogService {
       // In future, fetch from official MCP registry API
       const catalog = await this.getOfficialServers();
 
-      // Check installed status for each server
+      // Initialize services
+      const installationService = new InstallationService();
+      const configService = UnifiedConfigService.getInstance();
+
+      // Get all configured clients
+      const detectedClients = await configService.detectClients();
+
+      // Check installation status and configured clients for each server
       const catalogWithStatus = await Promise.all(
-        catalog.map(async (server) => ({
-          ...server,
-          installed: await this.isServerInstalled(server)
-        }))
+        catalog.map(async (server) => {
+          // Check if installed
+          const isInstalled = await this.isServerInstalled(server);
+
+          // Check which clients are using this server
+          const configuredClients: string[] = [];
+          for (const client of detectedClients) {
+            try {
+              const config = await configService.readConfig(client.name, 'user');
+              if (config.data) {
+                // Check if this server is in the client's configuration
+                const hasServer = Object.keys(config.data).some(
+                  serverName => serverName.toLowerCase() === server.name.toLowerCase()
+                );
+                if (hasServer) {
+                  configuredClients.push(client.name);
+                }
+              }
+            } catch (err) {
+              // Client config not readable, skip
+            }
+          }
+
+          // Determine installation status
+          let installationStatus: 'discovered' | 'installed' | 'configured' = 'discovered';
+          if (configuredClients.length > 0) {
+            installationStatus = 'configured';
+          } else if (isInstalled) {
+            installationStatus = 'installed';
+          }
+
+          return {
+            ...server,
+            installed: isInstalled, // Keep for backward compatibility
+            installationStatus,
+            configuredClients
+          };
+        })
       );
 
       this.catalogCache = catalogWithStatus;

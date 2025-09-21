@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { McpServerEntry } from '@/shared/types/mcp-discovery';
 import { useDiscoveryStore } from '../../../stores/discoveryStore';
 import { ConfigureServerModal } from './ConfigureServerModal';
+import { InstallationConsole } from './InstallationConsole';
 
 interface ServerDetailsModalProps {
   server: McpServerEntry;
@@ -19,13 +20,38 @@ export const ServerDetailsModal: React.FC<ServerDetailsModalProps> = ({ server, 
   const [isInstalling, setIsInstalling] = useState(false);
   const [installError, setInstallError] = useState<string | null>(null);
   const [showConfigureModal, setShowConfigureModal] = useState(false);
+  const [installationLogs, setInstallationLogs] = useState<string[]>([]);
 
   const isInstalled = isServerInstalled(server.id);
   const installState = getInstallationState(server.id);
 
+  // Listen for installation output
+  useEffect(() => {
+    if (!window.electronAPI?.discovery?.onInstallationOutput) return;
+
+    const unsubscribe = window.electronAPI.discovery.onInstallationOutput((event, data) => {
+      if (data.serverId === server.id) {
+        // Use the last 5 lines from the server
+        setInstallationLogs(data.lastFiveLines || []);
+      }
+    });
+
+    // Load any existing logs when component mounts
+    if (window.electronAPI?.discovery?.getInstallationLogs) {
+      window.electronAPI.discovery.getInstallationLogs(server.id).then(logs => {
+        setInstallationLogs(logs);
+      }).catch(console.error);
+    }
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
+  }, [server.id]);
+
   const handleInstall = async () => {
     setIsInstalling(true);
     setInstallError(null);
+    setInstallationLogs([]); // Clear previous logs
 
     try {
       await installServer(server.id);
@@ -214,6 +240,14 @@ export const ServerDetailsModal: React.FC<ServerDetailsModalProps> = ({ server, 
                 View on GitHub
               </a>
             </div>
+          )}
+
+          {/* Installation Console */}
+          {(isInstalling || installationLogs.length > 0) && (
+            <InstallationConsole
+              logs={installationLogs}
+              isInstalling={isInstalling}
+            />
           )}
 
           {/* Error Message */}

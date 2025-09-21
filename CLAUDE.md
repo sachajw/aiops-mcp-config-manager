@@ -55,9 +55,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - [x] Task 119: Fix Client Library Panel ✅ COMPLETE
 - [x] Task 125: Convert static services to instance-based ✅ COMPLETE
 - [x] Task 126: Document service contracts ✅ COMPLETE
-- [ ] Task 127: Add installation console output (from ISSUE-001) - NOT STARTED
-- [ ] Task 51: Fix ServerLibrary filtering logic (available vs configured)
-- [ ] Task 57b: Implement three-tier server architecture
+- [x] Task 127: Installation console output ✅ COMPLETE
+- [x] Task 146-148: Bug investigations ✅ COMPLETE
+- [ ] Task 57b: Incremental server state architecture (Phase 1)
+- [ ] Task 120: Prevent duplicate servers in client config
+- [ ] Task 121-122: Smart server stats loading
 
 **⏸️ Deferred (for later sprints):**
 - Task 132: Remove remaining any types from components
@@ -65,13 +67,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Task 134: Remove old type definitions
 
 ### Active Bugs (Remove when fixed):
-- Client Library shows only Claude Code servers (Task 119)
+- ✅ Task 146: Server metrics validated as real (BUG-011) - RESOLVED
+- ✅ Task 147: Descriptions have fallbacks (BUG-012) - RESOLVED
+- ✅ Task 148: Token aggregation root cause found (BUG-013) - IDENTIFIED
 
 ### Context Files by Work Type:
 - **Visual Workspace**: Load `.kiro/CONTEXT-VISUAL-WORKSPACE.md`
 - **Backend Services**: Load `.kiro/CONTEXT-BACKEND-SERVICES.md`
 - **IPC Work**: Load `.kiro/CONTEXT-IPC.md`
 - **Store Work**: Load `src/renderer/store/simplifiedStore.ts`
+- **QA Instance**: Load `CLAUDE-QA.md` (for QA/documentation specialist role)
 
 ### Always Include (Core References):
 
@@ -246,6 +251,55 @@ Following Kiro steering guidelines:
 - do notcrete or use mock data or hardcoded data to eb displayed in the frontend
 - use a TDD approach
 - Do not value complexity. value simplicity.
+
+## Documentation & Testing Strategy
+
+### Development Workflow Requirements
+
+#### For Every Code Change:
+1. **IPC Endpoints**: Update `/docs/api/ipc-contracts.md` IMMEDIATELY when adding/modifying handlers
+2. **Service Contracts**: Update `/docs/api/service-contracts.md` when changing service interfaces
+3. **Tests**: Write/update tests in the SAME commit as code changes
+4. **Validation**: Run `npm run type-check && npm test` before marking any task complete
+
+#### Documentation Commands:
+```bash
+npm run docs:generate  # Generate TypeDoc documentation
+npm run docs:validate  # Check documentation coverage
+npm run docs:ipc      # Generate IPC contracts from code
+```
+
+#### Task Completion Checklist:
+- [ ] Code implementation complete
+- [ ] Tests written and passing
+- [ ] Documentation updated (if API changed)
+- [ ] Type checking passes (0 errors)
+- [ ] tasks.md updated with completion status
+
+### Testing Requirements by Change Type
+
+| Change Type | Testing Required | Documentation Required |
+|------------|------------------|----------------------|
+| New IPC endpoint | Unit test + integration test | Update ipc-contracts.md |
+| Service method | Unit test with mocks | Update service-contracts.md |
+| UI component | Component test + snapshot | JSDoc comments |
+| Bug fix | Regression test | Changelog entry |
+| Refactoring | Existing tests must pass | Update if API changed |
+
+### Parallel QA Instance (For Major Features)
+
+When working on features > 2 hours, consider running a parallel QA instance:
+```
+Developer Instance: Focus on implementation
+QA Instance: Write tests, update docs, validate coverage
+```
+
+### Documentation Priority Levels
+
+- **P0 (Immediate)**: API changes that break other code
+- **P1 (Same PR)**: New features users interact with
+- **P2 (Within Sprint)**: Bug fixes and improvements
+- **P3 (Eventually)**: Internal refactoring notes
 
 ## Task Management Workflow (CRITICAL)
 

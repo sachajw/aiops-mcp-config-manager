@@ -55,6 +55,23 @@ export interface ElectronAPI {
     getInstalledServers?: () => Promise<any>;
     getSettings?: () => Promise<any>;
     updateSettings?: (settings: any) => Promise<any>;
+    getInstallationLogs?: (serverId: string) => Promise<string[]>;
+    onInstallationOutput?: (callback: (event: any, data: {
+      serverId: string;
+      output: string;
+      stream: 'stdout' | 'stderr';
+      lastFiveLines: string[];
+    }) => void) => () => void;
+  };
+
+  // Installation operations
+  installation?: {
+    install: (serverId: string, source: string) => Promise<any>;
+    uninstall: (serverId: string) => Promise<any>;
+    check: (packageName: string) => Promise<any>;
+    getInstalled: () => Promise<any>;
+    getInfo: (serverId: string) => Promise<any>;
+    getVersion: (packageName: string) => Promise<any>;
   };
 
   // Additional IPC operations

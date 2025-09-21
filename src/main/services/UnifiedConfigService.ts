@@ -9,14 +9,15 @@ export interface MCPServer {
   command?: string;
   args?: string[];
   env?: Record<string, string>;
-  
+
   // Remote server config
   url?: string;
   headers?: Record<string, string>;
-  
+
   // Common fields
   type?: 'local' | 'remote' | 'stdio' | 'http' | 'sse';
   description?: string;
+  enabled?: boolean;
 }
 
 export interface MCPConfig {

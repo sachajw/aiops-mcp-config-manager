@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { promises as fs } from 'fs';
 import { existsSync } from 'fs';
 import { resolve, isAbsolute } from 'path';
+import * as net from 'net';
 import { Configuration } from '../../shared/types/configuration';
 import { MCPServer } from '../../shared/types/server';
 import { ValidationResult, ValidationError, ValidationWarning } from '../../shared/types/common';
@@ -17,6 +18,7 @@ export interface ValidationContext {
   scope?: string;
   checkFileSystem?: boolean;
   checkCommands?: boolean;
+  checkPorts?: boolean;
 }
 
 /**
@@ -62,6 +64,13 @@ export class ValidationEngine {
     const crossValidation = this.validateCrossServerRules(config);
     errors.push(...crossValidation.errors);
     warnings.push(...crossValidation.warnings);
+
+    // Port availability validation
+    if (context.checkPorts && config.mcpServers) {
+      const portValidation = await this.validatePortAvailability(config.mcpServers);
+      errors.push(...portValidation.errors);
+      warnings.push(...portValidation.warnings);
+    }
 
     // Client-specific validation
     const clientValidation = this.validateClientSpecificRules(config, context.clientType);
@@ -587,6 +596,67 @@ export class ValidationEngine {
     return Array.from(portMap.entries())
       .filter(([_, serverList]) => serverList.length > 1)
       .map(([port, serverList]) => ({ port, servers: serverList }));
+  }
+
+  /**
+   * Validate port availability on the system
+   */
+  private static async validatePortAvailability(servers: Record<string, MCPServer>): Promise<ValidationResult> {
+    const errors: ValidationError[] = [];
+    const warnings: ValidationWarning[] = [];
+
+    for (const [serverName, server] of Object.entries(servers)) {
+      const ports = this.extractPorts(server);
+
+      for (const port of ports) {
+        try {
+          const isAvailable = await this.isPortAvailable(port);
+          if (!isAvailable) {
+            warnings.push({
+              field: `mcpServers.${serverName}`,
+              message: `Port ${port} is already in use`,
+              severity: ValidationSeverity.WARNING,
+              code: 'PORT_IN_USE',
+              suggestion: `Use a different port or stop the service using port ${port}`
+            });
+          }
+        } catch (error) {
+          warnings.push({
+            field: `mcpServers.${serverName}`,
+            message: `Could not check availability of port ${port}`,
+            severity: ValidationSeverity.WARNING,
+            code: 'PORT_CHECK_FAILED',
+            suggestion: 'Manually verify port availability before starting the server'
+          });
+        }
+      }
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors,
+      warnings
+    };
+  }
+
+  /**
+   * Check if a port is available (not in use)
+   */
+  private static async isPortAvailable(port: number): Promise<boolean> {
+    return new Promise((resolve) => {
+      const server = net.createServer();
+
+      server.listen(port, () => {
+        server.once('close', () => {
+          resolve(true);
+        });
+        server.close();
+      });
+
+      server.on('error', () => {
+        resolve(false);
+      });
+    });
   }
 
   /**

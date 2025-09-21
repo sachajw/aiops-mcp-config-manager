@@ -16,7 +16,7 @@ describe('Core Data Models and Types', () => {
     it('should have correct ClientType values', () => {
       expect(ClientType.CLAUDE_DESKTOP).toBe('claude-desktop');
       expect(ClientType.CLAUDE_CODE).toBe('claude-code');
-      expect(ClientType.CODEX).toBe('codex');
+      expect(ClientType.CODEX).toBe('codex-cli');
       expect(ClientType.VS_CODE).toBe('vscode');
       expect(ClientType.GEMINI_DESKTOP).toBe('gemini-desktop');
       expect(ClientType.GEMINI_CLI).toBe('gemini-cli');
