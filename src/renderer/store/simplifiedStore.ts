@@ -36,6 +36,8 @@ interface AppState {
   // Actions
   detectClients: () => Promise<void>;
   selectClient: (clientName: string) => Promise<void>;
+  setActiveClient: (clientName: string | null) => void;
+  setServers: (servers: Record<string, MCPServer>) => void;
   setScope: (scope: ConfigScope) => void;
   addServer: (name: string, server: MCPServer) => void;
   updateServer: (name: string, server: MCPServer) => void;
@@ -197,13 +199,37 @@ export const useConfigStore = create<AppState>((set, get) => ({
     }
   },
 
+  // Set active client without loading configuration
+  setActiveClient: (clientName: string | null) => {
+    set({ activeClient: clientName });
+  },
+
+  // Set servers directly (for JSON editor updates)
+  setServers: (servers: Record<string, MCPServer>) => {
+    set({ servers, isDirty: true });
+  },
+
   // Change configuration scope
   setScope: (scope: ConfigScope) => {
-    const { activeClient } = get();
+    const { activeClient, projectDirectory } = get();
     set({ activeScope: scope });
-    
+
+    // Handle project scope special case
+    if (scope === 'project' && !projectDirectory) {
+      // If switching to project scope but no directory selected, show empty state
+      // User will need to select a project directory first
+      set({
+        servers: {},
+        currentConfigPath: null,
+        error: null, // Clear any previous errors
+        isLoading: false
+      });
+      console.log('[Store] Project scope selected but no directory set - showing empty state');
+      return;
+    }
+
     // Reload config for new scope
-    if (activeClient) {
+    if (activeClient && activeClient !== 'catalog') {
       get().selectClient(activeClient);
     }
   },

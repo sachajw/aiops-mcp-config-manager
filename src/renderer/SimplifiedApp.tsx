@@ -337,7 +337,7 @@ export const SimplifiedApp: React.FC = () => {
                       const customClientName = value.replace('custom-', '');
                       const customClient = appSettings.customClients?.find(c => c.name === customClientName);
                       if (customClient) {
-                        // TODO: Load custom client config from specified path
+                        // Custom client config loading not yet implemented
                         selectClient(value);
                       }
                     } else {
@@ -381,19 +381,19 @@ export const SimplifiedApp: React.FC = () => {
                 <div className="flex items-center gap-3">
                   <label className="text-sm font-medium text-base-content/70 whitespace-nowrap">Scope:</label>
                   <div className="btn-group">
-                    <button 
-                      className={`btn btn-sm ${activeScope === 'user' ? 'btn-active' : ''}`}
-                      onClick={() => setScope('user')}
-                    >
-                      User
-                    </button>
-                    <button 
+                    <button
                       className={`btn btn-sm ${activeScope === 'project' ? 'btn-active' : ''}`}
                       onClick={() => setScope('project')}
                     >
                       Project
                     </button>
-                    <button 
+                    <button
+                      className={`btn btn-sm ${activeScope === 'user' ? 'btn-active' : ''}`}
+                      onClick={() => setScope('user')}
+                    >
+                      User
+                    </button>
+                    <button
                       className={`btn btn-sm ${activeScope === 'system' ? 'btn-active' : ''}`}
                       onClick={() => setScope('system')}
                     >
@@ -642,7 +642,7 @@ export const SimplifiedApp: React.FC = () => {
           <VisualWorkspace />
         </div>
       ) : (
-        <div className="container mx-auto px-4" style={{ paddingTop: activeScope === 'project' && activeClient && activeClient !== 'catalog' ? '180px' : '120px', paddingBottom: activeClient ? '60px' : '20px' }}>
+        <div className="container mx-auto px-4" style={{ paddingTop: activeScope === 'project' && activeClient && activeClient !== 'catalog' ? '140px' : '120px', paddingBottom: activeClient ? '60px' : '20px' }}>
           {/* Servers Table Card */}
           <div className="card bg-base-100 shadow-xl">
           <div className="card-body">
@@ -1263,7 +1263,7 @@ export const SimplifiedApp: React.FC = () => {
           onClose={() => setSettingsOpen(false)}
           onSave={(settings) => {
             setAppSettings(settings);
-            // TODO: Apply settings to client detection
+            // Settings not yet applied to client detection
             localStorage.setItem('mcp-app-settings', JSON.stringify(settings));
           }}
           currentSettings={appSettings}

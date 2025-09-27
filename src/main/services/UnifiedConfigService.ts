@@ -47,13 +47,11 @@ class UnifiedConfigService {
     'claude-code': {
       displayName: 'Claude Code',
       user: [
-        path.join(os.homedir(), '.claude.json'), // Primary recommended location
-        path.join(os.homedir(), '.claude_code_config.json'), // Alternative location
-        path.join(os.homedir(), '.claude', 'settings.local.json') // User-specific local
+        path.join(os.homedir(), '.claude_code_config.json'), // Primary location for MCP configs
+        path.join(os.homedir(), '.claude.json') // Fallback if it's actually JSON (not HTML)
       ],
       project: (projectDir?: string) => [
-        path.join(projectDir || process.cwd(), '.mcp.json'), // Project root MCP config
-        path.join(projectDir || process.cwd(), '.claude', 'settings.local.json') // Project-specific
+        path.join(projectDir || process.cwd(), '.mcp.json') // Project root MCP config
       ],
       format: 'json' as const
     },
@@ -174,9 +172,20 @@ class UnifiedConfigService {
         paths = claudeCodeClient.user;
       }
       
-      // Check each path and return first existing one
+      // Check each path and return first existing valid JSON file
       for (const p of paths) {
         if (await fs.pathExists(p)) {
+          // Special check for .claude.json to ensure it's valid JSON
+          if (p.endsWith('.claude.json')) {
+            try {
+              const content = await fs.readFile(p, 'utf-8');
+              JSON.parse(content); // Will throw if not valid JSON
+              return p;
+            } catch {
+              // Not valid JSON, skip this file
+              continue;
+            }
+          }
           return p;
         }
       }

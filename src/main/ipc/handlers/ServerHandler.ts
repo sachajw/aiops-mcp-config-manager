@@ -20,6 +20,64 @@ export class ServerHandler extends BaseHandler {
   register(): void {
     const validationEngine = container.getValidationEngine();
 
+    // List servers for a client
+    this.handle<[{ clientId?: string }], { success: boolean; servers?: MCPServer[]; error?: string }>(
+      'list',
+      async (_, { clientId }) => {
+        try {
+          const configService = container.get('configurationService') as any;
+
+          if (clientId) {
+            // Get servers for specific client
+            const config = await configService.loadConfiguration(clientId);
+
+            if (!config || !config.servers) {
+              return { success: true, servers: [] };
+            }
+
+            // Convert servers object to array
+            const servers = Object.entries(config.servers).map(([name, server]: [string, any]) => ({
+              ...server,
+              name
+            }));
+
+            console.log(`[ServerHandler] Listed ${servers.length} servers for client ${clientId}`);
+            return { success: true, servers };
+          } else {
+            // Get all servers from all clients
+            const allServers: MCPServer[] = [];
+            const clients = ['claude-desktop', 'claude-code', 'codex', 'vscode', 'gemini-desktop', 'gemini-cli'];
+
+            for (const client of clients) {
+              try {
+                const config = await configService.loadConfiguration(client);
+                if (config && config.servers) {
+                  const servers = Object.entries(config.servers).map(([name, server]: [string, any]) => ({
+                    ...server,
+                    name,
+                    client
+                  }));
+                  allServers.push(...servers);
+                }
+              } catch (error) {
+                // Ignore errors for individual clients
+                console.warn(`[ServerHandler] Could not load config for ${client}:`, error);
+              }
+            }
+
+            console.log(`[ServerHandler] Listed ${allServers.length} total servers across all clients`);
+            return { success: true, servers: allServers };
+          }
+        } catch (error) {
+          console.error('[ServerHandler] Failed to list servers:', error);
+          return {
+            success: false,
+            error: error instanceof Error ? error.message : 'Failed to list servers'
+          };
+        }
+      }
+    );
+
     // Test server connection
     this.handle<[MCPServer], ServerTestResult>(
       'test',
@@ -70,7 +128,7 @@ export class ServerHandler extends BaseHandler {
       'enable',
       async (_, clientName: string, serverName: string, enabled: boolean = true) => {
         try {
-          const configService = container.get('configurationService');
+          const configService = container.get('configurationService') as any;
           const config = await configService.loadConfiguration(clientName);
 
           if (!config || !config.servers || !config.servers[serverName]) {
@@ -100,8 +158,29 @@ export class ServerHandler extends BaseHandler {
       'disable',
       async (_, clientName: string, serverName: string) => {
         // Delegate to enable with false flag
-        return this.handlers.get('server:enable')?.(_, clientName, serverName, false) ||
-               { success: false, error: 'Handler not found' };
+        try {
+          const configService = container.get('configurationService') as any;
+          const config = await configService.loadConfiguration(clientName);
+
+          if (!config || !config.servers || !config.servers[serverName]) {
+            return { success: false, error: 'Server not found in configuration' };
+          }
+
+          // Update the enabled status to false
+          config.servers[serverName].enabled = false;
+
+          // Save the configuration
+          await configService.saveConfiguration(clientName, config);
+
+          console.log(`[ServerHandler] Server ${serverName} disabled for client ${clientName}`);
+          return { success: true };
+        } catch (error) {
+          console.error('[ServerHandler] Failed to disable server:', error);
+          return {
+            success: false,
+            error: error instanceof Error ? error.message : 'Failed to disable server'
+          };
+        }
       }
     );
 
@@ -110,7 +189,7 @@ export class ServerHandler extends BaseHandler {
       'toggle',
       async (_, clientName: string, serverName: string) => {
         try {
-          const configService = container.get('configurationService');
+          const configService = container.get('configurationService') as any;
           const config = await configService.loadConfiguration(clientName);
 
           if (!config || !config.servers || !config.servers[serverName]) {

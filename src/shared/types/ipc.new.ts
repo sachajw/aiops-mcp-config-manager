@@ -36,7 +36,7 @@ export const IPC_CHANNELS = {
     UPDATE: 'server:update',
     REMOVE: 'server:remove',
     GET_STATUS: 'server:getStatus',
-    GET_METRICS: 'server:getMetrics',
+    GET_METRICS: 'metrics:getServerMetrics',
     GET_LOGS: 'server:getLogs',
     BULK_CONNECT: 'server:bulkConnect',
     BULK_DISCONNECT: 'server:bulkDisconnect',

@@ -418,9 +418,57 @@ export class ConfigurationParser {
   /**
    * Format configuration for client-specific output
    */
-  static formatForClient(config: Configuration, clientType: ClientType): string {
+  static formatForClient(config: Configuration, clientType: ClientType, filePath?: string): string {
     const formatted = this.convertToClientFormat(config, clientType);
-    return JSON.stringify(formatted, null, 2);
+
+    // Determine format from file extension if provided
+    const format = this.getFormatFromPath(filePath);
+
+    return this.serializeContent(formatted, format);
+  }
+
+  /**
+   * Determine format from file path
+   */
+  private static getFormatFromPath(filePath?: string): 'json' | 'json5' | 'toml' {
+    if (!filePath) return 'json';
+
+    const ext = filePath.toLowerCase().split('.').pop();
+    switch (ext) {
+      case 'toml':
+        return 'toml';
+      case 'json5':
+        return 'json5';
+      case 'jsonc':
+      case 'json':
+      default:
+        return 'json';
+    }
+  }
+
+  /**
+   * Serialize content in the specified format
+   */
+  private static serializeContent(content: any, format: 'json' | 'json5' | 'toml'): string {
+    switch (format) {
+      case 'json':
+        return JSON.stringify(content, null, 2);
+      case 'json5':
+        const JSON5 = require('json5');
+        return JSON5.stringify(content, null, 2);
+      case 'toml':
+        const toml = require('@iarna/toml');
+        try {
+          // Clean content for TOML compatibility
+          const cleanContent = JSON.parse(JSON.stringify(content));
+          return toml.stringify(cleanContent);
+        } catch (error) {
+          console.error('TOML serialization failed, falling back to JSON:', error);
+          return JSON.stringify(content, null, 2);
+        }
+      default:
+        return JSON.stringify(content, null, 2);
+    }
   }
 
   /**

@@ -24,7 +24,7 @@ export const SearchAndFilter: React.FC = () => {
   };
 
   const handleCategoryToggle = (category: string) => {
-    const currentCategories = filter.categories || [];
+    const currentCategories = filter.categories ?? [];
     const newCategories = currentCategories.includes(category)
       ? currentCategories.filter(c => c !== category)
       : [...currentCategories, category];
@@ -52,8 +52,8 @@ export const SearchAndFilter: React.FC = () => {
   };
 
   const activeFilterCount =
-    (filter.categories?.length || 0) +
-    (filter.tags?.length || 0) +
+    (filter.categories?.length ?? 0) +
+    (filter.tags?.length ?? 0) +
     (filter.showInstalled ? 1 : 0);
 
   return (
@@ -65,7 +65,7 @@ export const SearchAndFilter: React.FC = () => {
             type="text"
             className="input input-bordered w-full pl-10"
             placeholder="Search servers by name, description, or tags..."
-            value={filter.searchText || ''}
+            value={filter.searchText ?? ''}
             onChange={handleSearchChange}
           />
           <svg className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-base-content/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -116,7 +116,7 @@ export const SearchAndFilter: React.FC = () => {
               </label>
               <select
                 className="select select-sm select-bordered"
-                value={filter.sortBy || 'downloads'}
+                value={filter.sortBy ?? 'downloads'}
                 onChange={(e) => handleSortChange(e.target.value)}
               >
                 <option value="downloads">Downloads</option>
@@ -132,7 +132,7 @@ export const SearchAndFilter: React.FC = () => {
               </label>
               <select
                 className="select select-sm select-bordered"
-                value={filter.sortOrder || 'desc'}
+                value={filter.sortOrder ?? 'desc'}
                 onChange={(e) => setFilter({ sortOrder: e.target.value as 'asc' | 'desc' })}
               >
                 <option value="desc">Descending</option>
@@ -149,7 +149,7 @@ export const SearchAndFilter: React.FC = () => {
                 <input
                   type="checkbox"
                   className="toggle toggle-primary toggle-sm"
-                  checked={filter.showInstalled || false}
+                  checked={filter.showInstalled ?? false}
                   onChange={handleToggleInstalled}
                 />
               </label>

@@ -43,33 +43,27 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
    - Size of loaded context files
    - Relevance of current context to active work
 
-### Current Sprint Tasks (Auto-update from tasks.md):
-**Sprint 2: Type System Migration ✅ 100% COMPLETE! (0 TypeScript errors!)**
+### Current Sprint Tasks (Auto-update 2025-01-23):
+**Current Focus: Post Bug-006 Fix - Moving to UI Integration**
 
-**✅ Story 1.1.3 Completed (Tasks 128-145):**
-- All TypeScript errors eliminated (188 → 0)
-- Full type safety achieved across the codebase
-- Tasks 140-145: Fixed apiService, store types, Promise returns, and all remaining issues
+**✅ Recently Completed:**
+- [x] Bug-006: Fallback antipatterns FIXED (80/81 violations resolved)
+- [x] Task 150, 159-163: File monitoring & IDE config paths
 
-**🔄 Next Priority Tasks (Post-Sprint 2):**
-- [x] Task 119: Fix Client Library Panel ✅ COMPLETE
-- [x] Task 125: Convert static services to instance-based ✅ COMPLETE
-- [x] Task 126: Document service contracts ✅ COMPLETE
-- [x] Task 127: Installation console output ✅ COMPLETE
-- [x] Task 146-148: Bug investigations ✅ COMPLETE
-- [ ] Task 57b: Incremental server state architecture (Phase 1)
-- [ ] Task 120: Prevent duplicate servers in client config
-- [ ] Task 121-122: Smart server stats loading
+**🔄 Active Priority Tasks:**
+- [ ] Task 166: Integrate Monaco JSON Editor (exists but not wired to UI!)
+- [ ] Bug-001: Performance Insights (test with Bug-006 fix)
+- [ ] Bug-002-005, 007-013: Various UI/UX issues
 
-**⏸️ Deferred (for later sprints):**
-- Task 132: Remove remaining any types from components
-- Task 133: Further apiService.ts improvements
-- Task 134: Remove old type definitions
+**📋 Remaining Work:**
+- 12 active bugs (was 13, Bug-006 fixed)
+- 1 `|| false` violation remains (ServerLibrary.tsx:301)
+- Monaco Editor integration critical
 
-### Active Bugs (Remove when fixed):
-- ✅ Task 146: Server metrics validated as real (BUG-011) - RESOLVED
-- ✅ Task 147: Descriptions have fallbacks (BUG-012) - RESOLVED
-- ✅ Task 148: Token aggregation root cause found (BUG-013) - IDENTIFIED
+### Active Bugs (Updated 2025-01-23):
+- **Bug-001**: Performance Insights - Ready for retest with Bug-006 fix
+- **Bug-002-005, 007-013**: Various UI issues documented in ACTIVE_BUGS_AUDIT.md
+- **Note**: Bug-006 FIXED (99% - 1 violation remains)
 
 ### Context Files by Work Type:
 - **Visual Workspace**: Load `.kiro/CONTEXT-VISUAL-WORKSPACE.md`
@@ -248,9 +242,30 @@ Following Kiro steering guidelines:
 - **Commit Frequently**: Regular commits with meaningful messages
 - **Project Context**: Use specs, requirements, and designs to guide development
 - **Task Tracking**: Update `.kiro/specs/mcp-config-manager/tasks.md` as tasks complete
-- do notcrete or use mock data or hardcoded data to eb displayed in the frontend
+- do not create or use mock data or hardcoded data to be displayed in the frontend
 - use a TDD approach
 - Do not value complexity. value simplicity.
+
+### ⚠️ CRITICAL: No Fallback Anti-Pattern
+
+**BANNED PATTERNS** (These mask failures and create false success):
+```javascript
+// ❌ NEVER USE:
+value || 0           // Shows 0 when undefined (false success)
+value || false       // Shows false when undefined (misleading)
+value || ""          // Shows empty string when undefined (hides errors)
+value || []          // Shows empty array when undefined (fake data)
+```
+
+**REQUIRED PATTERNS**:
+```javascript
+// ✅ ALWAYS USE:
+value ?? '—'                                    // Nullish coalescing for display
+typeof value === 'number' ? value : '—'        // Explicit type checking
+value === true / value === false               // Explicit boolean checking
+```
+
+**WHY**: The `||` operator treats 0, false, and "" as falsy, causing real values to be replaced with fallbacks. This makes debugging impossible and creates false impressions of success. If the backend returns 0, we want to show 0. If it returns undefined/null (failure), we want to show "—" to indicate no data.
 
 ## Documentation & Testing Strategy
 
@@ -416,3 +431,4 @@ const config = await window.electron.invoke('config:load', 'claude-desktop', 'us
 - Backend developers: Never rename endpoints without updating all references
 - Use TypeScript strict mode to catch type mismatches
 - Test IPC calls with actual data, not assumptions
+- you are QA. You shoudl to fix the code, I did not ask you to fix the code. when you do you conflict iwht the deeloepr and make things harder

@@ -15,6 +15,7 @@ interface ServerCardProps {
   author?: string;
   repository?: string;
   website?: string;
+  source?: 'official' | 'user';
 }
 
 const ServerCard: React.FC<ServerCardProps> = ({
@@ -26,7 +27,8 @@ const ServerCard: React.FC<ServerCardProps> = ({
   installed = false,
   author,
   repository,
-  website
+  website,
+  source
 }) => {
   const [showDetails, setShowDetails] = useState(false);
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
@@ -68,7 +70,15 @@ const ServerCard: React.FC<ServerCardProps> = ({
       {/* Dark Header */}
       <CardHeader
         title={name}
-        badge={installed ? { text: 'Active', variant: 'success' } : undefined}
+        badge={
+          installed
+            ? { text: 'Active', variant: 'success' }
+            : source === 'official'
+            ? { text: 'Official', variant: 'info' }
+            : source === 'user'
+            ? { text: 'Custom', variant: 'secondary' }
+            : undefined
+        }
         onActionClick={(e) => {
           e.stopPropagation();
           setShowDetails(!showDetails);
@@ -143,7 +153,7 @@ const ServerCard: React.FC<ServerCardProps> = ({
               className="btn btn-xs btn-ghost flex-1"
               onClick={(e) => {
                 e.stopPropagation();
-                // TODO: Implement settings
+                // Settings button not yet implemented
               }}
             >
               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -156,7 +166,7 @@ const ServerCard: React.FC<ServerCardProps> = ({
               className="btn btn-xs btn-primary flex-1"
               onClick={(e) => {
                 e.stopPropagation();
-                // TODO: Add to canvas
+                // Add to canvas not yet implemented
               }}
             >
               Add
@@ -185,43 +195,62 @@ export const ServerLibrary: React.FC<ServerLibraryProps> = ({ activeClient, clie
   React.useEffect(() => {
     const loadCatalog = async () => {
       try {
-        // Convert the store catalog (object) to array format
+        // Get official catalog from backend first
+        const backendServers = await (window as any).electronAPI?.getCatalogServers?.();
+
+        // Convert the store catalog (user's custom servers) to array format
         const storeServers = Object.entries(storeCatalog || {}).map(([name, server]: [string, any]) => ({
           name,
           ...server,
           description: server.description || server.summary || '',
           category: server.category || 'community',
           author: server.author || 'Unknown',
-          installed: server.installed || false
+          installed: server.installed === true,
+          source: 'user' // Mark as user-added
         }));
 
-        // Try to get additional servers from backend
-        const backendServers = await (window as any).electronAPI?.getCatalogServers?.();
-
         if (backendServers && backendServers.length > 0) {
-          // Merge both catalogs, avoiding duplicates based on name
+          // Create a map to properly merge catalogs
           const serverMap = new Map();
 
-          // Add store servers first
-          storeServers.forEach(server => {
-            serverMap.set(server.name.toLowerCase(), server);
+          // Add backend servers first (official catalog)
+          backendServers.forEach((server: any) => {
+            serverMap.set(server.name.toLowerCase(), {
+              ...server,
+              source: 'official' // Mark as official
+            });
           });
 
-          // Add backend servers (will override store servers if same name)
-          backendServers.forEach((server: any) => {
-            serverMap.set(server.name.toLowerCase(), server);
+          // Add user's custom servers (from store) without overriding official ones
+          storeServers.forEach(server => {
+            const key = server.name.toLowerCase();
+            if (!serverMap.has(key)) {
+              // Only add if not in official catalog
+              serverMap.set(key, server);
+            } else {
+              // Merge user customizations with official data
+              const official = serverMap.get(key);
+              serverMap.set(key, {
+                ...official,
+                installed: server.installed || official.installed,
+                enabled: server.enabled !== undefined ? server.enabled : official.enabled,
+                // Keep official metadata but allow user overrides for installation status
+                installationStatus: server.installationStatus || official.installationStatus,
+                configuredClients: server.configuredClients || official.configuredClients
+              });
+            }
           });
 
           const mergedCatalog = Array.from(serverMap.values());
           setCatalog(mergedCatalog);
-          console.log('Loaded', mergedCatalog.length, 'servers from merged catalog');
+          console.log('[ServerLibrary] Loaded', mergedCatalog.length, 'servers (official + user)');
         } else {
           // Use only store servers if backend unavailable
           setCatalog(storeServers);
-          console.log('Loaded', storeServers.length, 'servers from store catalog');
+          console.log('[ServerLibrary] Using', storeServers.length, 'user servers (backend unavailable)');
         }
       } catch (err) {
-        console.error('Failed to load catalog:', err);
+        console.error('[ServerLibrary] Failed to load catalog:', err);
         // Fallback to store catalog only
         const storeServers = Object.entries(storeCatalog || {}).map(([name, server]: [string, any]) => ({
           name,
@@ -229,7 +258,8 @@ export const ServerLibrary: React.FC<ServerLibraryProps> = ({ activeClient, clie
           description: server.description || server.summary || '',
           category: server.category || 'community',
           author: server.author || 'Unknown',
-          installed: server.installed || false
+          installed: server.installed === true,
+          source: 'user'
         }));
         setCatalog(storeServers);
       }
@@ -282,27 +312,31 @@ export const ServerLibrary: React.FC<ServerLibraryProps> = ({ activeClient, clie
   }
 
   const availableServers = serversToShow
-    .map((server: any) => {
+    .map((server: any, index: number) => {
       // If it's already formatted from client servers, return as is
       if (server.id) return server;
 
-      // Otherwise format catalog server
-      const serverId = server.name.toLowerCase().replace(/\s+/g, '-');
+      // Create stable ID based on server properties, not array index
+      const baseId = server.name.toLowerCase().replace(/\s+/g, '-');
+      const uniqueId = server.npm || server.repository || server.github || baseId;
+      const serverId = `${baseId}-${uniqueId.replace(/[^a-z0-9-]/gi, '').substring(0, 8)}`;
       return {
         id: serverId,
         name: server.name,
         server: {
           command: server.command || 'npx',
           args: server.args || (server.npm ? ['-y', server.npm] : ['-y', server.name]),
-          type: 'local' as const
+          type: 'local' as const,
+          source: server.source // Pass through the source field
         },
         icon: server.name.substring(0, 2).toUpperCase(),
         description: server.description || server.summary,
-        installed: server.installed || false,
+        installed: server.installed === true,
         category: server.category || 'community',
         author: server.author || 'Community',
         repository: server.repository || server.github,
-        website: server.website || server.docs
+        website: server.website || server.docs,
+        source: server.source // Also at top level for badge display
       };
     });
 

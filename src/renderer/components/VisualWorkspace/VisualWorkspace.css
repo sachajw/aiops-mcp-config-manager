@@ -12,6 +12,8 @@
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3) !important;
   z-index: 15 !important;
   transition: all 0.2s ease !important;
+  bottom: 20px !important; /* Ensure controls are not cut off */
+  left: 20px !important;
 }
 
 .react-flow__controls:hover {
@@ -67,6 +69,8 @@
   background: var(--b3, #1d232a) !important;
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
   z-index: 15 !important;
+  bottom: 20px !important; /* Ensure minimap is not cut off */
+  right: 20px !important;
 }
 
 .react-flow__minimap-mask {

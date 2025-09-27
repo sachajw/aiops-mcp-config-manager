@@ -123,7 +123,7 @@ const createWindow = (): void => {
 }
 
 // App event handlers
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   createWindow()
 
   // Register all modular IPC handlers
@@ -132,8 +132,22 @@ app.whenReady().then(() => {
   // Register simplified handlers
   registerSimplifiedHandlers()
 
-  // Register discovery handlers
+  // Register discovery handlers (separate from InstallationHandler until migration complete)
   registerDiscoveryHandlers()
+
+  // Prefetch metrics for all installed servers on startup
+  // This runs in background and doesn't block app startup
+  setTimeout(async () => {
+    try {
+      console.log('[Main] Starting metrics prefetch for all installed servers...')
+      const { container } = await import('./container')
+      const metricsService = container.getMetricsService()
+      await (metricsService as any).prefetchMetricsForAllServers()
+      console.log('[Main] Metrics prefetch complete')
+    } catch (error) {
+      console.error('[Main] Failed to prefetch metrics:', error)
+    }
+  }, 5000) // Delay by 5 seconds to let the app fully initialize
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {

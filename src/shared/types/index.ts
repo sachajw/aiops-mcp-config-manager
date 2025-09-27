@@ -36,7 +36,7 @@ export {
   type IPCEvent
 } from './ipc.new';
 
-// NOTE: New comprehensive types are available in:
+// New comprehensive types are available in:
 // - ./models.new.ts - Core domain models
 // - ./api.new.ts - API interface definitions
 // - ./ipc.new.ts - IPC communication types

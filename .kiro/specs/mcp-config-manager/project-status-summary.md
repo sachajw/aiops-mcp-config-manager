@@ -9,6 +9,7 @@ Create a unified desktop application for managing MCP server configurations acro
 - Easy extensibility
 
 ## 📊 Overall Progress: 90%+ Complete
+*Latest Update: Bug-001 Fixed (Performance Insights now displaying real metrics)*
 
 ### Sprint Completion Status
 

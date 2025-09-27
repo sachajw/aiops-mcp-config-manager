@@ -18,11 +18,14 @@ import { ServerLibrary } from './ServerLibrary';
 import { ClientDock } from './ClientDock';
 // Removed ConnectionRenderer import - was causing white rectangle
 import { InsightsPanel } from './InsightsPanel';
+import { RefreshCw, Code2, Eye } from 'lucide-react';
 import { ServerNode } from './nodes/ServerNode';
 import { ClientNode } from './nodes/ClientNode';
 import { CableEdge } from './edges/CableEdge';
 import { useConfigStore } from '@/renderer/store/simplifiedStore';
+import { useSettingsStore } from '@/renderer/store/settingsStore';
 import { MCPServer } from '@/main/services/UnifiedConfigService';
+import JsonEditor from '../editor/JsonEditor';
 
 // Define node types for React Flow
 const nodeTypes = {
@@ -45,8 +48,16 @@ export const VisualWorkspace: React.FC = () => {
     deleteServer,
     activeScope,
     setServers,
-    setActiveClient
+    setActiveClient,
+    detectClients,
+    selectClient
   } = useConfigStore() as any;
+
+  const { settings } = useSettingsStore();
+  // Check for dark mode from settings or system preference
+  const isDarkMode = settings?.theme?.mode === 'dark' ||
+    (settings?.theme?.mode === 'system' && window.matchMedia?.('(prefers-color-scheme: dark)')?.matches);
+  const theme = isDarkMode ? 'vs-dark' : 'vs-light';
 
   // Canvas drop zone ref
   const { setNodeRef: setCanvasDropRef, isOver: isOverCanvas } = useDroppable({
@@ -73,10 +84,55 @@ export const VisualWorkspace: React.FC = () => {
   // Drag state
   const [isDragging, setIsDragging] = useState(false);
   const [draggedItem, setDraggedItem] = useState<{ id: string; type: string; data: any } | null>(null);
-  const [autoSave, setAutoSave] = useState(true);
+  const [autoSave, setAutoSave] = useState(false);
 
   // Panel visibility
   const [showInsights, setShowInsights] = useState(true);
+  const [showJsonEditor, setShowJsonEditor] = useState(false);
+  const [isJsonEditorCollapsed, setIsJsonEditorCollapsed] = useState(false);
+  const [jsonEditorContent, setJsonEditorContent] = useState('{}');
+  const [jsonErrors, setJsonErrors] = useState<string[]>([]);
+  const [jsonEditorHeight, setJsonEditorHeight] = useState(300);
+  const [isResizingJson, setIsResizingJson] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Metrics cache to avoid repeated fetches
+  const metricsCache = React.useRef<Map<string, { data: any; timestamp: number }>>(new Map());
+  const METRICS_CACHE_TTL = 5 * 60 * 1000; // 5 minutes cache TTL
+
+  // Initialize clients on mount
+  React.useEffect(() => {
+    const initializeClients = async () => {
+      console.log('[VisualWorkspace] Initializing clients...');
+
+      // Detect available clients if not already loaded
+      if (clients.length === 0) {
+        await detectClients();
+      }
+
+      // If no active client, select claude-desktop by default
+      if (!activeClient) {
+        // Wait a bit for clients to load
+        setTimeout(async () => {
+          const updatedClients = useConfigStore.getState().clients;
+          const claudeDesktop = updatedClients.find((c: any) => c.name === 'claude-desktop' && c.installed);
+          if (claudeDesktop) {
+            console.log('[VisualWorkspace] Auto-selecting claude-desktop');
+            await selectClient('claude-desktop');
+          } else {
+            // Select first installed client
+            const firstInstalled = updatedClients.find((c: any) => c.installed);
+            if (firstInstalled) {
+              console.log(`[VisualWorkspace] Auto-selecting ${firstInstalled.name}`);
+              await selectClient(firstInstalled.name);
+            }
+          }
+        }, 500);
+      }
+    };
+
+    initializeClients();
+  }, []); // Only run once on mount
 
   // Load actual server counts for each client
   React.useEffect(() => {
@@ -108,54 +164,67 @@ export const VisualWorkspace: React.FC = () => {
     }
   }, [clients, activeScope]);
 
-  // Initialize nodes from current configuration - Client-specific view
-  React.useEffect(() => {
-    // Fetch real metrics for servers
-    const fetchMetrics = async () => {
+  // Function to fetch metrics with optional force refresh
+  const fetchMetrics = async (forceRefresh = false) => {
+      console.log(`[VisualWorkspace] Servers from store:`, servers);
       const serverNames = Object.keys(servers);
+      console.log(`[VisualWorkspace] Server names:`, serverNames);
       const metrics: Record<string, any> = {};
 
       // Fetch metrics for each server
       for (const name of serverNames) {
+        const cacheKey = `${name}-${JSON.stringify(servers[name])}`;
+        const cached = metricsCache.current.get(cacheKey);
+
+        // Use cache if available and not expired (unless force refresh)
+        if (!forceRefresh && cached && (Date.now() - cached.timestamp < METRICS_CACHE_TTL)) {
+          console.log(`[VisualWorkspace] Using cached metrics for ${name}`);
+          metrics[name] = cached.data;
+          continue;
+        }
+
         try {
-          const serverMetrics = await (window as any).electronAPI?.getServerMetrics?.(name);
+          console.log(`[VisualWorkspace] Fetching fresh metrics for server: ${name}`);
+          const serverConfig = servers[name]; // Pass the actual server config
+          console.log(`[VisualWorkspace] Server config for ${name}:`, serverConfig);
+          const serverMetrics = await (window as any).electronAPI?.getServerMetrics?.(name, serverConfig, forceRefresh);
+          console.log(`[VisualWorkspace] Received metrics for ${name}:`, serverMetrics);
+
           // Use real metrics if available, otherwise use unique generated values
           if (serverMetrics && typeof serverMetrics.toolCount === 'number') {
             metrics[name] = serverMetrics;
+            // Cache the successful result
+            metricsCache.current.set(cacheKey, {
+              data: serverMetrics,
+              timestamp: Date.now()
+            });
           } else {
-            // Generate unique metrics based on server name hash
-            const hash = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+            // No real metrics available - show loading state
             metrics[name] = {
-              toolCount: 5 + (hash % 20),
-              tokenUsage: 1000 + (hash % 4000)
+              toolCount: undefined,
+              tokenUsage: undefined,
+              loading: true
             };
           }
         } catch (err) {
           console.warn(`Failed to fetch metrics for ${name}:`, err);
-          // Generate unique fallback metrics on error
-          const hash = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+          // No real metrics available - show error state
           metrics[name] = {
-            toolCount: 5 + (hash % 20),
-            tokenUsage: 1000 + (hash % 4000)
+            toolCount: undefined,
+            tokenUsage: undefined,
+            error: true
           };
         }
       }
 
       return metrics;
-    };
+  };
 
-    fetchMetrics().then((metrics) => {
-      // Helper to generate varied demo metrics for servers without real data
-      const generateDemoMetrics = (serverName: string, index: number) => {
-        const hash = serverName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-        const tools = 3 + (hash % 25) + Math.floor(index * 2);
-        const tokens = 500 + (hash % 2000) + (index * 300);
-        return { tools: Math.min(50, tools), tokens: Math.min(10000, tokens) };
-      };
-
-      // Only show servers for the active client
+  // Initialize nodes from current configuration - Client-specific view
+  React.useEffect(() => {
+    fetchMetrics(false).then((metrics) => {
+      // Only show servers for the active client - NO FAKE DATA
       const serverNodes: Node[] = Object.entries(servers).map(([name, server], index) => {
-        const demoMetrics = generateDemoMetrics(name, index);
         return {
           id: `server-${name}`,
           type: 'server',
@@ -164,8 +233,10 @@ export const VisualWorkspace: React.FC = () => {
             label: name,
             server,
             icon: '📦',
-            tools: metrics[name]?.toolCount || demoMetrics.tools,
-            tokens: metrics[name]?.tokenUsage || demoMetrics.tokens
+            tools: metrics[name]?.loading ? '—' : (typeof metrics[name]?.toolCount === 'number' ? metrics[name].toolCount : '—'),  // Show actual value or dash
+            tokens: metrics[name]?.loading ? '—' : (typeof metrics[name]?.tokenUsage === 'number' ? metrics[name].tokenUsage : '—'), // Show actual value or dash
+            loading: metrics[name]?.loading === true, // Explicit loading check
+            error: metrics[name]?.error === true // Explicit error check, no fallback
           },
         };
       });
@@ -294,11 +365,28 @@ export const VisualWorkspace: React.FC = () => {
           metricsQueueRef.current.add(node.id);
 
           try {
-            console.log(`Fetching metrics for server: ${node.data.label}`);
-            const serverMetrics = await (window as any).electronAPI?.getServerMetrics?.(
-              node.data.label,
-              node.data.server
-            );
+            const cacheKey = `${node.data.label}-${JSON.stringify(node.data.server)}`;
+            const cached = metricsCache.current.get(cacheKey);
+
+            // Check cache first
+            let serverMetrics;
+            if (cached && (Date.now() - cached.timestamp < METRICS_CACHE_TTL)) {
+              console.log(`Using cached metrics for server: ${node.data.label}`);
+              serverMetrics = cached.data;
+            } else {
+              console.log(`Fetching fresh metrics for server: ${node.data.label}`);
+              serverMetrics = await (window as any).electronAPI?.getServerMetrics?.(
+                node.data.label,
+                node.data.server
+              );
+              // Cache the result
+              if (serverMetrics && typeof serverMetrics.toolCount === 'number') {
+                metricsCache.current.set(cacheKey, {
+                  data: serverMetrics,
+                  timestamp: Date.now()
+                });
+              }
+            }
 
             if (serverMetrics && typeof serverMetrics.toolCount === 'number') {
               setNodes(nds => nds.map(n => {
@@ -308,7 +396,7 @@ export const VisualWorkspace: React.FC = () => {
                     data: {
                       ...n.data,
                       tools: serverMetrics.toolCount,
-                      tokens: serverMetrics.tokenUsage || 0,
+                      tokens: serverMetrics.tokenUsage ?? 0,
                       loading: false,
                       metricsLoaded: true,
                       metricsTimestamp: Date.now()
@@ -440,7 +528,7 @@ export const VisualWorkspace: React.FC = () => {
             label: (clientData as any).displayName || clientData.name,
             client: clientData,
             icon: '🤖',
-            serverCount: clientServerCounts[clientName] || 0,
+            serverCount: clientServerCounts[clientName] ?? 0,
             maxServers: 20,
             isMain: false
           },
@@ -495,10 +583,9 @@ export const VisualWorkspace: React.FC = () => {
         if (!serverExists && !serverInConfig) {
           const nodeIndex = nodes.filter(n => n.type === 'server').length;
 
-          // Generate unique initial metrics based on server name
-          const hash = serverName.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
-          const initialTools = 5 + (hash % 20);
-          const initialTokens = 1000 + (hash % 4000);
+          // No fake metrics - use zeros until real data loads
+          const initialTools = 0;
+          const initialTokens = 0;
 
           // Start with unique generated values
           const newServerNode: Node = {
@@ -580,10 +667,9 @@ export const VisualWorkspace: React.FC = () => {
 
         // Add server node if it doesn't exist
         if (!serverExists) {
-          // Generate unique initial metrics based on server name
-          const hash = serverName.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
-          const initialTools = 5 + (hash % 20);
-          const initialTokens = 1000 + (hash % 4000);
+          // No fake metrics - use zeros until real data loads
+          const initialTools = 0;
+          const initialTokens = 0;
 
           // Start with unique generated values
           const newServerNode: Node = {
@@ -662,9 +748,147 @@ export const VisualWorkspace: React.FC = () => {
       }
     });
 
-    // TODO: Save multi-client configurations
+    // Multi-client save not yet implemented
     console.log('Configuration saved');
   };
+
+  // Load configuration as JSON for the editor
+  const loadConfigurationAsJson = React.useCallback(async () => {
+    try {
+      if (!activeClient || activeClient === 'catalog') {
+        setJsonEditorContent(JSON.stringify({ mcpServers: {} }, null, 2));
+        return;
+      }
+
+      // Get the current servers configuration
+      const config = {
+        mcpServers: servers || {}
+      };
+
+      const jsonString = JSON.stringify(config, null, 2);
+      setJsonEditorContent(jsonString);
+      setJsonErrors([]);
+    } catch (error) {
+      console.error('Failed to load configuration as JSON:', error);
+      setJsonErrors(['Failed to load configuration']);
+    }
+  }, [activeClient, servers]);
+
+  // Track if JSON has unsaved changes
+  const [hasUnsavedJsonChanges, setHasUnsavedJsonChanges] = React.useState(false);
+  const [showSaveSuccess, setShowSaveSuccess] = React.useState(false);
+
+  // Handle JSON editor changes (validation only, no auto-save)
+  const handleJsonChange = React.useCallback((newContent: string) => {
+    setJsonEditorContent(newContent);
+    setHasUnsavedJsonChanges(true);
+
+    // Validate JSON for error display only
+    try {
+      JSON.parse(newContent);
+      setJsonErrors([]);
+    } catch (error: any) {
+      setJsonErrors([error.message || 'Invalid JSON']);
+    }
+  }, []);
+
+  // Save JSON changes explicitly
+  const saveJsonChanges = React.useCallback(() => {
+    // Only save if valid JSON
+    try {
+      const parsed = JSON.parse(jsonEditorContent);
+
+      // Update servers if valid
+      if (parsed.mcpServers && typeof parsed.mcpServers === 'object') {
+        setServers(parsed.mcpServers);
+        setHasUnsavedJsonChanges(false);
+
+        // Show success feedback
+        setShowSaveSuccess(true);
+        console.log('[JsonEditor] Changes saved successfully');
+
+        // Clear success message after 2 seconds
+        setTimeout(() => {
+          setShowSaveSuccess(false);
+        }, 2000);
+      }
+    } catch (error: any) {
+      // Don't save if JSON is invalid
+      console.error('[JsonEditor] Cannot save invalid JSON:', error.message);
+    }
+  }, [jsonEditorContent, setServers]);
+
+  // Handle keyboard shortcuts for JSON editor
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Save on Ctrl+S or Cmd+S when JSON editor is open
+      if (showJsonEditor && (e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        saveJsonChanges();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showJsonEditor, saveJsonChanges]);
+
+  // Toggle JSON editor and load config when opening
+  const toggleJsonEditor = React.useCallback(() => {
+    const newState = !showJsonEditor;
+
+    // Check for unsaved changes when closing
+    if (!newState && hasUnsavedJsonChanges) {
+      const confirmClose = window.confirm('You have unsaved changes. Do you want to discard them?');
+      if (!confirmClose) {
+        return; // Don't close if user cancels
+      }
+    }
+
+    setShowJsonEditor(newState);
+    setHasUnsavedJsonChanges(false);
+
+    if (newState) {
+      loadConfigurationAsJson();
+    }
+  }, [showJsonEditor, hasUnsavedJsonChanges, loadConfigurationAsJson]);
+
+  // Sync servers changes with JSON editor when it's visible
+  React.useEffect(() => {
+    if (showJsonEditor) {
+      loadConfigurationAsJson();
+      setHasUnsavedJsonChanges(false); // Reset unsaved changes when loading fresh config
+    }
+  }, [servers, showJsonEditor]);
+
+  // Handle JSON editor resize
+  React.useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isResizingJson) return;
+
+      const container = document.querySelector('.visual-workspace');
+      if (!container) return;
+
+      const containerRect = container.getBoundingClientRect();
+      const newHeight = containerRect.bottom - e.clientY;
+      if (newHeight > 100 && newHeight < 600) {
+        setJsonEditorHeight(newHeight);
+      }
+    };
+
+    const handleMouseUp = () => {
+      setIsResizingJson(false);
+    };
+
+    if (isResizingJson) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isResizingJson]);
 
   return (
     <DndContext
@@ -691,6 +915,52 @@ export const VisualWorkspace: React.FC = () => {
                 {activeClient ? `${activeClient} Configuration` : 'Select a Client'}
               </h2>
               <div className="flex items-center gap-2">
+                <button
+                  className={`btn btn-sm btn-ghost ${isRefreshing ? 'loading' : ''}`}
+                  onClick={async () => {
+                    setIsRefreshing(true);
+                    try {
+                      const metrics = await fetchMetrics(true);
+                      // Update nodes with refreshed metrics
+                      setNodes(prevNodes => {
+                        return prevNodes.map(node => {
+                          if (node.type === 'server' && node.data) {
+                            const serverName = (node.data.server && typeof node.data.server === 'object' && 'name' in node.data.server && typeof node.data.server.name === 'string' && node.data.server.name) || node.id.replace('server-', '');
+                            const metric = typeof serverName === 'string' ? metrics[serverName] : undefined;
+                            if (metric) {
+                              return {
+                                ...node,
+                                data: {
+                                  ...node.data,
+                                  tools: metric.toolCount ?? 0,
+                                  tokens: metric.tokenUsage ?? 0
+                                }
+                              };
+                            }
+                          }
+                          return node;
+                        });
+                      });
+                    } catch (error) {
+                      console.error('Failed to refresh metrics:', error);
+                    } finally {
+                      setIsRefreshing(false);
+                    }
+                  }}
+                  title="Refresh all metrics"
+                  disabled={!activeClient || isRefreshing || showJsonEditor}
+                >
+                  <RefreshCw size={14} className={isRefreshing ? 'animate-spin' : ''} />
+                  <span className="text-xs">Refresh</span>
+                </button>
+                <button
+                  className={`btn btn-sm btn-ghost ${showJsonEditor ? 'btn-active' : ''}`}
+                  onClick={toggleJsonEditor}
+                  title="Toggle JSON editor"
+                >
+                  {showJsonEditor ? <Eye size={14} /> : <Code2 size={14} />}
+                  <span className="text-xs">{showJsonEditor ? 'Visual' : 'JSON'}</span>
+                </button>
                 <label className="flex items-center gap-2 text-xs">
                   <input
                     type="checkbox"
@@ -700,7 +970,7 @@ export const VisualWorkspace: React.FC = () => {
                   />
                   <span>Auto-save</span>
                 </label>
-                {!autoSave && (
+                {!autoSave && !showJsonEditor && (
                   <button
                     className="btn btn-primary btn-xs"
                     onClick={handleSaveConfiguration}
@@ -713,13 +983,26 @@ export const VisualWorkspace: React.FC = () => {
 
             <ReactFlowProvider>
               <div
-                className={`h-full w-full pt-10 transition-all duration-300 ${
+                className={`transition-all duration-300 ${
                   isDragging && isOverCanvas ? 'drop-zone-hover' : ''
                 } ${
                   isDragging && !isOverCanvas ? 'drop-zone-active' : ''
                 }`}
                 id="react-flow-wrapper"
                 ref={setCanvasDropRef}
+                style={{
+                  position: 'absolute',
+                  top: '40px',
+                  left: 0,
+                  right: 0,
+                  bottom: showJsonEditor
+                    ? `${(isJsonEditorCollapsed ? 32 : jsonEditorHeight) + (showInsights ? 150 : 0)}px`
+                    : showInsights ? '150px' : '0',
+                  width: '100%',
+                  height: showJsonEditor
+                    ? `calc(100% - ${40 + (isJsonEditorCollapsed ? 32 : jsonEditorHeight) + (showInsights ? 150 : 0)}px)`
+                    : `calc(100% - ${40 + (showInsights ? 150 : 0)}px)`
+                }}
               >
                 <ReactFlow
                   nodes={nodes}
@@ -753,6 +1036,101 @@ export const VisualWorkspace: React.FC = () => {
             </ReactFlowProvider>
 
             {/* Removed ConnectionRenderer - was causing white rectangle */}
+
+            {/* JSON Editor Panel - Resizable split panel */}
+            {showJsonEditor && (
+              <>
+                {/* Collapsed JSON Editor */}
+                {isJsonEditorCollapsed ? (
+                  <div
+                    className="absolute left-0 right-0 bg-base-100 border-t border-base-300 z-20"
+                    style={{ bottom: showInsights ? '150px' : '0' }}
+                  >
+                    <div
+                      className="flex items-center justify-between px-4 py-1 cursor-pointer hover:bg-base-200"
+                      onClick={() => setIsJsonEditorCollapsed(false)}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium">JSON Configuration</span>
+                        {hasUnsavedJsonChanges && (
+                          <span className="text-xs text-warning">● Unsaved</span>
+                        )}
+                      </div>
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                      </svg>
+                    </div>
+                  </div>
+                ) : (
+                  /* Expanded JSON Editor */
+                  <div
+                    className="absolute left-0 right-0 bg-base-100 border-t border-base-300 z-20"
+                    style={{
+                      bottom: showInsights ? '150px' : '0',
+                      height: `${jsonEditorHeight}px`
+                    }}
+                  >
+                {/* Resize Handle */}
+                <div
+                  className="h-1 bg-base-300 hover:bg-primary cursor-ns-resize transition-colors"
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    setIsResizingJson(true);
+                  }}
+                />
+
+                {/* JSON Editor Header Bar */}
+                <div className="flex items-center justify-between px-4 py-2 bg-base-200 border-b border-base-300">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium">JSON Configuration</span>
+                    {showSaveSuccess ? (
+                      <span className="text-xs text-success">✓ Saved successfully</span>
+                    ) : hasUnsavedJsonChanges ? (
+                      <span className="text-xs text-warning">● Unsaved changes</span>
+                    ) : null}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      className={`btn btn-sm ${
+                        showSaveSuccess ? 'btn-success' :
+                        hasUnsavedJsonChanges ? 'btn-primary' : 'btn-disabled'
+                      }`}
+                      onClick={saveJsonChanges}
+                      disabled={(!hasUnsavedJsonChanges || jsonErrors.length > 0) && !showSaveSuccess}
+                      title="Save changes (Ctrl+S)"
+                    >
+                      {showSaveSuccess ? '✓ Saved' : 'Save'}
+                    </button>
+                    <span className="text-xs text-base-content/60">
+                      Ctrl+S to save
+                    </span>
+                    <button
+                      className="btn btn-ghost btn-xs"
+                      onClick={() => setIsJsonEditorCollapsed(true)}
+                      title="Minimize JSON editor"
+                    >
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+
+                {/* JSON Editor Container */}
+                <div className="h-full overflow-hidden" style={{ paddingTop: '4px', paddingBottom: '40px' }}>
+                  <JsonEditor
+                    value={jsonEditorContent}
+                    onChange={handleJsonChange}
+                    errors={jsonErrors}
+                    readonly={false}
+                    height={jsonEditorHeight - 50} // Account for header bar
+                    theme={theme}
+                  />
+                </div>
+                  </div>
+                )}
+              </>
+            )}
 
             {/* Bottom Panel - Insights (Within canvas area) */}
             {showInsights && <InsightsPanel />}

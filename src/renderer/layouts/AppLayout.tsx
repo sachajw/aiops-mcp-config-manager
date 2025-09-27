@@ -32,7 +32,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   }, [isMobile]);
 
   // For now, we'll manage selected key through the menu selection
-  // TODO: Add proper routing in Phase 3
+  // Routing planned for Phase 3
 
   const handleMenuToggle = () => {
     setSidebarCollapsed(!sidebarCollapsed);
@@ -63,7 +63,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
     id: client.id,
     name: client.name,
     status: (client.isActive ? 'active' : 'warning') as 'active' | 'warning' | 'inactive',
-    capabilityCount: configurations[client.id]?.metadata?.serverCount || 0
+    capabilityCount: configurations[client.id]?.metadata?.serverCount ?? 0
   }));
 
   // Determine system status

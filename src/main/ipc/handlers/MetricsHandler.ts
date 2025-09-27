@@ -17,27 +17,61 @@ export class MetricsHandler extends BaseHandler {
   register(): void {
     const metricsService = container.getMetricsService();
 
-    // Get server metrics
-    this.handle<[string, any?], any>(
+    // Get server metrics with optional force refresh
+    this.handle<[string, any?, boolean?], any>(
       'getServerMetrics',
-      async (_, serverName: string, serverConfig?: any) => {
-        console.log(`[IPC] getServerMetrics called for ${serverName}`);
+      async (_, serverName: string, serverConfig?: any, forceRefresh: boolean = false) => {
+        console.log(`[MetricsHandler] getServerMetrics called for ${serverName}, forceRefresh: ${forceRefresh}`);
+        console.log(`[MetricsHandler] Server config provided:`, serverConfig);
+
+        // Check cache first (unless force refresh)
+        if (!forceRefresh) {
+          const cached = metricsService.getCachedMetrics(serverName);
+          if (cached) {
+            console.log(`[MetricsHandler] Using cached metrics for ${serverName}`);
+            return cached;
+          }
+        }
 
         // If server config provided, use real MCP inspection
         if (serverConfig && serverConfig.command) {
           const { MCPServerInspector } = await import('../../services/MCPServerInspector');
           try {
-            console.log(`[IPC] Attempting real MCP inspection for ${serverName}`);
-            const metrics = await MCPServerInspector.getServerMetrics(serverName, serverConfig);
-            console.log(`[IPC] Real metrics for ${serverName}:`, metrics);
-            return metrics;
+            console.log(`[MetricsHandler] Attempting real MCP inspection for ${serverName}`);
+            console.log(`[MetricsHandler] Command: ${serverConfig.command}, Args:`, serverConfig.args);
+            const inspectionResult = await MCPServerInspector.inspectServer(serverName, serverConfig, forceRefresh);
+            console.log(`[MetricsHandler] Inspection result for ${serverName}:`, inspectionResult);
+
+            // Only cache and return if we got valid metrics
+            if (inspectionResult && typeof inspectionResult.toolCount === 'number') {
+              const metrics = {
+                toolCount: inspectionResult.toolCount,
+                tokenUsage: inspectionResult.tokenUsage ?? undefined, // Use calculated token count
+                responseTime: 0, // Will be updated by actual connection
+                lastUpdated: inspectionResult.timestamp,
+                isConnected: !inspectionResult.error
+              };
+              console.log(`[MetricsHandler] Converted metrics for ${serverName}:`, metrics);
+
+              // Cache the successful metrics
+              metricsService.setCachedMetrics(serverName, metrics, serverConfig);
+              return metrics;
+            } else {
+              console.log(`[MetricsHandler] Invalid metrics received for ${serverName}, returning undefined`);
+              return undefined;
+            }
           } catch (error) {
-            console.error(`[IPC] Failed to get real metrics for ${serverName}:`, error);
+            console.error(`[MetricsHandler] Failed to get real metrics for ${serverName}:`, error);
+            console.error(`[MetricsHandler] Error details:`, (error as Error).message);
           }
+        } else {
+          console.log(`[MetricsHandler] No valid server config provided for ${serverName}, falling back to MetricsService`);
         }
 
-        // Fall back to metrics service
-        return metricsService.getServerMetrics(serverName);
+        // Fall back to metrics service (with force refresh if requested)
+        const fallbackMetrics = metricsService.getServerMetrics(serverName, forceRefresh);
+        console.log(`[MetricsHandler] Fallback metrics for ${serverName}:`, fallbackMetrics);
+        return fallbackMetrics;
       }
     );
 
@@ -68,7 +102,10 @@ export class MetricsHandler extends BaseHandler {
     this.handle<[string[]], any>(
       'getTotal',
       async (_, serverNames: string[]) => {
-        return metricsService.getTotalMetrics(serverNames);
+        console.log('[MetricsHandler] getTotal called with serverNames:', serverNames);
+        const result = metricsService.getTotalMetrics(serverNames);
+        console.log('[MetricsHandler] getTotal returning:', result);
+        return result;
       }
     );
 
@@ -76,7 +113,16 @@ export class MetricsHandler extends BaseHandler {
     this.handle<[string, any], void>(
       'update',
       async (_, serverName: string, metrics: any) => {
-        metricsService.updateMetrics(serverName, metrics);
+        metricsService.updateServerMetrics(serverName, metrics);
+      }
+    );
+
+    // Force refresh metrics for a server
+    this.handle<[string], any>(
+      'refresh',
+      async (_, serverName: string) => {
+        console.log(`[MetricsHandler] Force refreshing metrics for ${serverName}`);
+        return metricsService.forceRefreshMetrics(serverName);
       }
     );
 

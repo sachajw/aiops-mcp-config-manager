@@ -44,8 +44,8 @@ export function useDiscovery(): UseDiscoveryResult {
       ]);
 
       if (catalogResult.success && catalogResult.catalog) {
-        setServers(catalogResult.catalog.servers || []);
-        setInstalledServerIds(catalogResult.catalog.installed || []);
+        setServers(catalogResult.catalog.servers ?? []);
+        setInstalledServerIds(catalogResult.catalog.installed ?? []);
       } else {
         throw new Error(catalogResult.error || 'Failed to fetch catalog');
       }
@@ -69,8 +69,8 @@ export function useDiscovery(): UseDiscoveryResult {
       const result = await apiService.refreshCatalog();
 
       if (result.success && result.catalog) {
-        setServers(result.catalog.servers || []);
-        setInstalledServerIds(result.catalog.installed || []);
+        setServers(result.catalog.servers ?? []);
+        setInstalledServerIds(result.catalog.installed ?? []);
       } else {
         throw new Error(result.error || 'Failed to refresh catalog');
       }
@@ -200,7 +200,7 @@ export function useDiscoveredServer(serverId: string) {
       if (result.success && result.server) {
         setServer(result.server);
         setDetails(result.details);
-        setIsInstalled(result.isInstalled || false);
+        setIsInstalled(result.isInstalled ?? false);
       } else {
         throw new Error(result.error || 'Failed to fetch server details');
       }

@@ -49,7 +49,7 @@ const ScopeManagementPanel: React.FC<ScopeManagementPanelProps> = ({
   const [conflictDialogVisible, setConflictDialogVisible] = useState(false);
   const [migrationDialogVisible, setMigrationDialogVisible] = useState(false);
 
-  const conflicts = configuration?.conflicts || [];
+  const conflicts = configuration?.conflicts ?? [];
   const servers = configuration ? Object.entries(configuration.servers) : [];
   const sources = configuration?.sources || {};
 
@@ -62,7 +62,7 @@ const ScopeManagementPanel: React.FC<ScopeManagementPanelProps> = ({
     };
 
     Object.entries(sources).forEach(([, scope]) => {
-      scopeCounts[scope] = (scopeCounts[scope] || 0) + 1;
+      scopeCounts[scope] = (scopeCounts[scope] ?? 0) + 1;
     });
 
     return scopeCounts;

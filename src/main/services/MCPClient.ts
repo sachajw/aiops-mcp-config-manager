@@ -57,6 +57,7 @@ export class MCPClient extends EventEmitter {
   private metrics: MCPClientMetrics;
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 3;
+  private messageBuffer = ''; // Buffer for partial JSON messages
 
   constructor(config: MCPServerConfig) {
     super();
@@ -105,15 +106,32 @@ export class MCPClient extends EventEmitter {
         }
       });
 
-      // Handle stdout data (MCP messages)
+      // Handle stdout data (MCP messages with proper buffering)
       this.process.stdout?.on('data', (data) => {
         try {
-          const lines = data.toString().split('\n').filter(Boolean);
+          // Append new data to buffer
+          this.messageBuffer += data.toString();
+
+          // Process complete messages (split by newlines)
+          const lines = this.messageBuffer.split('\n');
+
+          // Keep the last partial line in the buffer
+          this.messageBuffer = lines.pop() || '';
+
+          // Process each complete line
           for (const line of lines) {
-            this.handleMessage(JSON.parse(line));
+            if (line.trim()) {
+              try {
+                const message = JSON.parse(line);
+                this.handleMessage(message);
+              } catch (parseError) {
+                // Log but don't crash on individual message parse errors
+                console.warn(`[MCPClient] Skipping malformed message from ${this.config.name}:`, line.substring(0, 100));
+              }
+            }
           }
         } catch (error) {
-          console.error(`[MCPClient] Failed to parse message:`, error);
+          console.error(`[MCPClient] Fatal error processing messages:`, error);
           this.metrics.errorCount++;
         }
       });

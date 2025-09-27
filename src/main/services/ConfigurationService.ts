@@ -119,7 +119,7 @@ export class ConfigurationService {
       }
 
       // Format for client and save
-      const formattedContent = ConfigurationParser.formatForClient(config, clientType);
+      const formattedContent = ConfigurationParser.formatForClient(config, clientType, filePath);
       await fs.writeFile(filePath, formattedContent, 'utf-8');
 
       return {

@@ -124,7 +124,7 @@ const ClientListPanel: React.FC<ClientListPanelProps> = ({
         }
       }
 
-      const conflictCount = config?.conflicts?.length || 0;
+      const conflictCount = config?.conflicts?.length ?? 0;
       const serverCount = config ? Object.keys(config.servers).length : 0;
 
       return {

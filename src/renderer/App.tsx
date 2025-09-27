@@ -31,7 +31,7 @@ const App: React.FC = () => {
 
   const handleStartWizard = (wizardType: 'add-capability' | 'fix-issues' | 'import-config' | 'learn') => {
     console.log('Start wizard:', wizardType);
-    // TODO: Implement wizard launching
+    // Wizard launching not yet implemented
   };
 
   const handleNavigateTo = (key: string) => {

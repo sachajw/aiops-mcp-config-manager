@@ -47,10 +47,10 @@ const LandingPage: React.FC<LandingPageProps> = ({
   // Calculate stats
   const activeClients = clients.filter(c => c.isActive);
   const totalCapabilities = Object.values(configurations).reduce(
-    (sum, config) => sum + (config?.metadata?.serverCount || 0), 0
+    (sum, config) => sum + (config?.metadata?.serverCount ?? 0), 0
   );
   const issuesCount = clients.filter(c => !c.isActive).length +
-    Object.values(configurations).reduce((sum, config) => sum + (config?.conflicts?.length || 0), 0);
+    Object.values(configurations).reduce((sum, config) => sum + (config?.conflicts?.length ?? 0), 0);
 
   // Determine overall health
   const getHealthStatus = () => {

@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useConfigStore } from '@/renderer/store/simplifiedStore';
 
 export const InsightsPanel: React.FC = () => {
-  const { servers } = useConfigStore();
+  const { servers, activeClient, activeScope } = useConfigStore();
   const [height, setHeight] = useState(150); // Default height
   const [isResizing, setIsResizing] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -13,31 +13,96 @@ export const InsightsPanel: React.FC = () => {
   // Fetch real metrics from servers
   React.useEffect(() => {
     const fetchMetrics = async () => {
-      const serverNames = Object.keys(servers);
+      // Get servers directly from the active client configuration instead of the store
+      let serverConfigs: Record<string, any> = {};
+      let serverNames: string[] = [];
+
+      if (activeClient && activeClient !== 'catalog') {
+        try {
+          console.log('[InsightsPanel] Loading config for activeClient:', activeClient, 'scope:', activeScope);
+          const config = await window.electronAPI?.readConfig?.(activeClient, activeScope);
+          if (config?.success && config.data) {
+            serverConfigs = config.data;
+            serverNames = Object.keys(config.data);
+            console.log('[InsightsPanel] Found servers from active client config:', serverNames);
+            console.log('[InsightsPanel] Server configs:', serverConfigs);
+          } else {
+            console.log('[InsightsPanel] No config data for active client:', config);
+          }
+        } catch (err) {
+          console.error('[InsightsPanel] Failed to load config for active client:', err);
+        }
+      }
+
+      // Fallback to store servers if direct config loading failed
       if (serverNames.length === 0) {
+        serverNames = Object.keys(servers);
+        // Try to get configs from store servers
+        Object.entries(servers).forEach(([name, server]) => {
+          serverConfigs[name] = server;
+        });
+        console.log('[InsightsPanel] Falling back to store servers:', serverNames);
+      }
+
+      if (serverNames.length === 0) {
+        console.log('[InsightsPanel] No servers found anywhere, setting zero metrics');
         setMetrics({ totalTokens: 0, totalTools: 0, avgResponseTime: 0, connectedCount: 0 });
         return;
       }
 
       try {
-        const totalMetrics = await (window as any).electronAPI?.getTotalMetrics?.(serverNames);
-        if (totalMetrics) {
-          setMetrics({
-            totalTokens: totalMetrics.totalTokens || 0,
-            totalTools: totalMetrics.totalTools || 0,
-            avgResponseTime: totalMetrics.avgResponseTime || 0,
-            connectedCount: totalMetrics.connectedCount || 0
-          });
+        // First, get individual server metrics with their configs
+        console.log('[InsightsPanel] Fetching individual server metrics with configs...');
+        let totalTokens = 0;
+        let totalTools = 0;
+        let totalResponseTime = 0;
+        let connectedCount = 0;
+        let responseCount = 0;
+
+        for (const serverName of serverNames) {
+          const serverConfig = serverConfigs[serverName];
+          if (serverConfig) {
+            try {
+              console.log(`[InsightsPanel] Fetching metrics for ${serverName} with config:`, serverConfig);
+              // Use the getServerMetrics method from preload which passes both parameters correctly
+              const serverMetrics = await window.electronAPI?.getServerMetrics?.(serverName, serverConfig);
+              console.log(`[InsightsPanel] Metrics for ${serverName}:`, serverMetrics);
+
+              if (serverMetrics) {
+                totalTools += serverMetrics.toolCount ?? 0;
+                totalTokens += serverMetrics.tokenUsage ?? 0;
+                if (serverMetrics.responseTime > 0) {
+                  totalResponseTime += serverMetrics.responseTime;
+                  responseCount++;
+                }
+                if (serverMetrics.isConnected) {
+                  connectedCount++;
+                }
+              }
+            } catch (err) {
+              console.error(`[InsightsPanel] Failed to get metrics for ${serverName}:`, err);
+            }
+          }
         }
+
+        const newMetrics = {
+          totalTokens,
+          totalTools,
+          avgResponseTime: responseCount > 0 ? Math.round(totalResponseTime / responseCount) : 0,
+          connectedCount
+        };
+        console.log('[InsightsPanel] Calculated total metrics:', newMetrics);
+        setMetrics(newMetrics);
+
       } catch (err) {
-        console.warn('Failed to fetch total metrics:', err);
+        console.error('[InsightsPanel] Failed to fetch metrics:', err);
       }
     };
 
     fetchMetrics();
-  }, [servers]);
+  }, [servers, activeClient, activeScope]);
 
-  const { totalTokens, avgResponseTime, connectedCount } = metrics;
+  const { totalTokens, totalTools, avgResponseTime, connectedCount } = metrics;
   const activeConnections = connectedCount;
 
   // Handle resize
@@ -131,7 +196,24 @@ export const InsightsPanel: React.FC = () => {
       {/* Scrollable Content */}
       <div className="flex-1 overflow-y-auto px-3 py-2">
         {/* Quick Stats - Always visible */}
-        <div className="grid grid-cols-3 gap-2 mb-3">
+        <div className="grid grid-cols-4 gap-2 mb-3">
+          {/* Tools Available */}
+          <div className="bg-base-200 rounded p-2">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-xs text-base-content/60">Tools</span>
+              {totalTools > 100 && (
+                <span className="text-xs badge badge-info badge-xs">Many</span>
+              )}
+            </div>
+            <div className="text-sm font-bold">{totalTools.toLocaleString()}</div>
+            <div className="w-full bg-base-300 rounded-full h-1 mt-1">
+              <div
+                className="bg-info h-1 rounded-full transition-all duration-300"
+                style={{ width: `${Math.min((totalTools / 100) * 100, 100)}%` }}
+              />
+            </div>
+          </div>
+
           {/* Token Usage */}
           <div className="bg-base-200 rounded p-2">
             <div className="flex items-center justify-between mb-1">
@@ -153,10 +235,14 @@ export const InsightsPanel: React.FC = () => {
           <div className="bg-base-200 rounded p-2">
             <div className="flex items-center justify-between mb-1">
               <span className="text-xs text-base-content/60">Response</span>
-              <span className="text-xs badge badge-success badge-xs">Good</span>
+              <span className={`text-xs badge badge-xs ${
+                avgResponseTime < 100 ? 'badge-success' : avgResponseTime < 500 ? 'badge-warning' : 'badge-error'
+              }`}>
+                {avgResponseTime < 100 ? 'Fast' : avgResponseTime < 500 ? 'OK' : 'Slow'}
+              </span>
             </div>
             <div className="text-sm font-bold">{avgResponseTime}ms</div>
-            <div className="text-xs text-base-content/50">Last 5 min</div>
+            <div className="text-xs text-base-content/50">Avg</div>
           </div>
 
           {/* Active Connections */}
@@ -165,9 +251,9 @@ export const InsightsPanel: React.FC = () => {
               <span className="text-xs text-base-content/60">Active</span>
               <span className="text-xs badge badge-info badge-xs">Live</span>
             </div>
-            <div className="text-sm font-bold">{activeConnections}/10</div>
+            <div className="text-sm font-bold">{activeConnections}/{Object.keys(servers).length || 10}</div>
             <div className="flex gap-0.5 mt-1">
-              {[...Array(10)].map((_, i) => (
+              {[...Array(Math.min(Object.keys(servers).length || 10, 10))].map((_, i) => (
                 <div
                   key={i}
                   className={`h-1 flex-1 rounded ${
@@ -193,10 +279,10 @@ export const InsightsPanel: React.FC = () => {
                       <div className="w-16 bg-base-300 rounded-full h-1">
                         <div
                           className="bg-info h-1 rounded-full"
-                          style={{ width: `${Math.random() * 100}%` }}
+                          style={{ width: `0%` }}
                         />
                       </div>
-                      <span className="text-xs text-base-content/60">{Math.round(Math.random() * 3000)}</span>
+                      <span className="text-xs text-base-content/60">—</span>
                     </div>
                   </div>
                 ))}

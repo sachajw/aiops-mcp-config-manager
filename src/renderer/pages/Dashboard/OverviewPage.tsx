@@ -120,7 +120,7 @@ const OverviewPage: React.FC<OverviewPageProps> = ({
     (sum, config) => sum + Object.values(config?.servers || {}).filter(s => s.enabled).length, 0
   );
   const totalConflicts = Object.values(configurations).reduce(
-    (sum, config) => sum + (config?.conflicts?.length || 0), 0
+    (sum, config) => sum + (config?.conflicts?.length ?? 0), 0
   );
 
   if (clients.length === 0) {
@@ -247,7 +247,7 @@ const OverviewPage: React.FC<OverviewPageProps> = ({
           const servers = config?.servers || {};
           const serverCount = Object.keys(servers).length;
           const enabledCount = Object.values(servers).filter(s => s.enabled).length;
-          const conflicts = config?.conflicts || [];
+          const conflicts = config?.conflicts ?? [];
 
           return (
             <Card

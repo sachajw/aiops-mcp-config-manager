@@ -34,7 +34,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onClose, onSave, cur
   // Ensure enabledClients is initialized
   const initialSettings: AppSettings = {
     ...currentSettings,
-    enabledClients: currentSettings.enabledClients || {}
+    enabledClients: currentSettings.enabledClients ?? {}
   };
 
   const [settings, setSettings] = useState<AppSettings>(initialSettings);
@@ -60,7 +60,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onClose, onSave, cur
     if (customClientForm.name && customClientForm.configPath) {
       setSettings(prev => ({
         ...prev,
-        customClients: [...(prev.customClients || []), { ...customClientForm }]
+        customClients: [...(prev.customClients ?? []), { ...customClientForm }]
       }));
       setCustomClientForm({ name: '', configPath: '' });
     }
@@ -69,7 +69,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onClose, onSave, cur
   const handleRemoveCustomClient = (index: number) => {
     setSettings(prev => ({
       ...prev,
-      customClients: prev.customClients?.filter((_, i) => i !== index) || []
+      customClients: prev.customClients?.filter((_, i) => i !== index) ?? []
     }));
   };
 
@@ -286,7 +286,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onClose, onSave, cur
                   <input
                     type="checkbox"
                     className="toggle toggle-primary"
-                    checked={settings.experimental?.enableMcpDiscovery || false}
+                    checked={settings.experimental?.enableMcpDiscovery ?? false}
                     onChange={(e) => setSettings(prev => ({
                       ...prev,
                       experimental: {
@@ -316,7 +316,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onClose, onSave, cur
                   <input
                     type="checkbox"
                     className="toggle toggle-primary"
-                    checked={settings.experimental?.visualWorkspaceEnabled || false}
+                    checked={settings.experimental?.visualWorkspaceEnabled ?? false}
                     onChange={(e) => setSettings(prev => ({
                       ...prev,
                       experimental: {
@@ -347,7 +347,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onClose, onSave, cur
                         <input
                           type="checkbox"
                           className="toggle toggle-sm"
-                          checked={settings.experimental?.visualWorkspaceDefault || false}
+                          checked={settings.experimental?.visualWorkspaceDefault ?? false}
                           onChange={(e) => setSettings(prev => ({
                             ...prev,
                             experimental: {
@@ -370,7 +370,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onClose, onSave, cur
                       <div className="ml-4">
                         <select
                           className="select select-bordered select-sm w-32"
-                          value={settings.experimental?.animationLevel || 'full'}
+                          value={settings.experimental?.animationLevel ?? 'full'}
                           onChange={(e) => setSettings(prev => ({
                             ...prev,
                             experimental: {
@@ -397,7 +397,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onClose, onSave, cur
                       <div className="ml-4">
                         <select
                           className="select select-bordered select-sm w-32"
-                          value={settings.experimental?.canvasRenderer || 'auto'}
+                          value={settings.experimental?.canvasRenderer ?? 'auto'}
                           onChange={(e) => setSettings(prev => ({
                             ...prev,
                             experimental: {

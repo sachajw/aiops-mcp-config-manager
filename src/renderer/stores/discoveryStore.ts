@@ -331,10 +331,10 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
           comparison = (a.name || '').localeCompare(b.name || '');
           break;
         case 'downloads':
-          comparison = (a.stats?.downloads || 0) - (b.stats?.downloads || 0);
+          comparison = (a.stats?.downloads ?? 0) - (b.stats?.downloads ?? 0);
           break;
         case 'stars':
-          comparison = (a.stats?.stars || 0) - (b.stats?.stars || 0);
+          comparison = (a.stats?.stars ?? 0) - (b.stats?.stars ?? 0);
           break;
         case 'date':
           const aDate = a.stats?.lastUpdated ? new Date(a.stats.lastUpdated).getTime() : 0;

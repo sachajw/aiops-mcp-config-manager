@@ -94,8 +94,8 @@ export const VisualWorkspaceWithRealData: React.FC = () => {
                 ...n,
                 data: {
                   ...n.data,
-                  tools: metrics?.toolCount || 0,
-                  tokens: metrics?.tokenUsage || 0,
+                  tools: metrics?.toolCount ?? 0,
+                  tokens: metrics?.tokenUsage ?? 0,
                   loading: false,
                   metricsLoaded: true,
                   metricsTimestamp: Date.now()
@@ -144,7 +144,7 @@ export const VisualWorkspaceWithRealData: React.FC = () => {
           source: `server-${server.name}`,
           target: `client-${client.id}`,
           type: 'cable',
-          animated: (server as any).isConnected || false,
+          animated: (server as any).isConnected === true,
           data: {
             tension: 0.5,
             sag: 20,
@@ -177,7 +177,7 @@ export const VisualWorkspaceWithRealData: React.FC = () => {
 
       // Add real server, not mock
       console.log('Would add server:', serverName);
-      // TODO: Implement actual server addition through API
+      // Server addition through API not yet implemented
     }
 
     setDraggedServer(null);

@@ -124,7 +124,7 @@ const detectedToMCPClient = (detected: any): MCPClient => {
       scopePaths: {} as any
     },
     status: detected.installed ? ClientStatus.ACTIVE : ClientStatus.INACTIVE,
-    isActive: detected.installed || false
+    isActive: detected.installed === true
   };
 };
 
@@ -184,7 +184,7 @@ export const ClientDock: React.FC = () => {
 
   // Get server count for a client
   const getServerCount = (clientName: string) => {
-    return clientServerCounts[clientName] || 0;
+    return clientServerCounts[clientName] ?? 0;
   };
 
   // Handle settings click

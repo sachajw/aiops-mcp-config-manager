@@ -20,6 +20,7 @@ export interface JsonEditorProps {
   readonly?: boolean;
   client?: MCPClient;
   height?: number;
+  theme?: 'vs-light' | 'vs-dark';
 }
 
 const JsonEditor: React.FC<JsonEditorProps> = ({
@@ -28,7 +29,8 @@ const JsonEditor: React.FC<JsonEditorProps> = ({
   errors = [],
   readonly = false,
   client,
-  height = 500
+  height = 500,
+  theme = 'vs-light'
 }) => {
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
   const [isFormatted, setIsFormatted] = useState(true);
@@ -164,7 +166,7 @@ const JsonEditor: React.FC<JsonEditorProps> = ({
 
   // Configure Monaco Editor options
   const editorOptions: editor.IStandaloneEditorConstructionOptions = {
-    theme: 'vs-light',
+    theme: theme,
     language: 'json',
     readOnly: readonly,
     minimap: { enabled: false },

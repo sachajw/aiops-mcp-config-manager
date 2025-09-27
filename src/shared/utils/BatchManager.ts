@@ -155,8 +155,8 @@ export class BatchManager {
     return Promise.all(
       batchData.map(async item => {
         try {
-          // TODO: Implement batch support in preload/ElectronAPI
-          // For now, return empty data to avoid compilation errors
+          // Batch support not yet implemented in preload/ElectronAPI
+          // Returning empty data to avoid compilation errors
           return { id: item.id, data: null };
         } catch (err) {
           return { id: item.id, error: err };

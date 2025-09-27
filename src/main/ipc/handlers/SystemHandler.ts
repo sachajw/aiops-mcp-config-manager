@@ -5,10 +5,14 @@
 
 import { BaseHandler } from './BaseHandler';
 import { container } from '../../container';
-import { shell } from 'electron';
+import { shell, ipcMain } from 'electron';
 import { Configuration } from '../../../shared/types';
+import * as chokidar from 'chokidar';
+import * as path from 'path';
 
 export class SystemHandler extends BaseHandler {
+  private fileWatchers: Map<string, chokidar.FSWatcher> = new Map();
+
   constructor() {
     super('');  // No prefix for system handlers
   }
@@ -59,17 +63,83 @@ export class SystemHandler extends BaseHandler {
     // File monitoring handlers
     this.handle<[string[]], void>(
       'files:watch',
-      async (_, paths: string[]) => {
-        console.log('File watching requested for:', paths);
-        // TODO: Implement file monitoring
+      async (event, paths: string[]) => {
+        console.log('[FileMonitor] Starting file watch for:', paths);
+
+        for (const filePath of paths) {
+          // Skip if already watching this path
+          if (this.fileWatchers.has(filePath)) {
+            console.log(`[FileMonitor] Already watching: ${filePath}`);
+            continue;
+          }
+
+          try {
+            // Create a new watcher for this path
+            const watcher = chokidar.watch(filePath, {
+              persistent: true,
+              ignoreInitial: true,
+              awaitWriteFinish: {
+                stabilityThreshold: 500,
+                pollInterval: 100
+              }
+            });
+
+            // Set up event handlers
+            watcher
+              .on('change', () => {
+                console.log(`[FileMonitor] File changed: ${filePath}`);
+                // Notify all renderer windows about the file change
+                event.sender.send('file:changed', {
+                  path: filePath,
+                  type: 'change',
+                  timestamp: new Date().toISOString()
+                });
+              })
+              .on('add', () => {
+                console.log(`[FileMonitor] File added: ${filePath}`);
+                event.sender.send('file:changed', {
+                  path: filePath,
+                  type: 'add',
+                  timestamp: new Date().toISOString()
+                });
+              })
+              .on('unlink', () => {
+                console.log(`[FileMonitor] File removed: ${filePath}`);
+                event.sender.send('file:changed', {
+                  path: filePath,
+                  type: 'unlink',
+                  timestamp: new Date().toISOString()
+                });
+              })
+              .on('error', (error) => {
+                console.error(`[FileMonitor] Watch error for ${filePath}:`, error);
+              });
+
+            // Store the watcher
+            this.fileWatchers.set(filePath, watcher);
+            console.log(`[FileMonitor] Now watching: ${filePath}`);
+          } catch (error) {
+            console.error(`[FileMonitor] Failed to watch ${filePath}:`, error);
+          }
+        }
       }
     );
 
     this.handle<[string[]], void>(
       'files:unwatch',
       async (_, paths: string[]) => {
-        console.log('File unwatching requested for:', paths);
-        // TODO: Implement file monitoring
+        console.log('[FileMonitor] Stopping file watch for:', paths);
+
+        for (const filePath of paths) {
+          const watcher = this.fileWatchers.get(filePath);
+          if (watcher) {
+            await watcher.close();
+            this.fileWatchers.delete(filePath);
+            console.log(`[FileMonitor] Stopped watching: ${filePath}`);
+          } else {
+            console.log(`[FileMonitor] Not watching: ${filePath}`);
+          }
+        }
       }
     );
 
@@ -137,5 +207,24 @@ export class SystemHandler extends BaseHandler {
     );
 
     console.log('[SystemHandler] Registered all system handlers');
+  }
+
+  /**
+   * Override unregister to cleanup file watchers
+   */
+  unregister(): void {
+    console.log('[SystemHandler] Cleaning up file watchers...');
+
+    // Close all file watchers
+    for (const [path, watcher] of this.fileWatchers.entries()) {
+      watcher.close().catch(error => {
+        console.error(`[FileMonitor] Error closing watcher for ${path}:`, error);
+      });
+    }
+    this.fileWatchers.clear();
+
+    // Call parent unregister
+    super.unregister();
+    console.log('[SystemHandler] Cleanup complete');
   }
 }

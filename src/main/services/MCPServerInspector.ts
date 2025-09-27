@@ -11,6 +11,7 @@ export interface ServerInspectionResult {
   toolCount: number;
   resourceCount: number;
   promptCount?: number;
+  tokenUsage?: number;  // Calculated token usage based on tools and resources
   tools?: Array<{
     name: string;
     description?: string;
@@ -36,23 +37,28 @@ export interface ServerInspectionResult {
 
 export class MCPServerInspector {
   private static inspectionCache: Map<string, ServerInspectionResult> = new Map();
-  private static cacheTimeout = 5 * 60 * 1000; // 5 minutes cache
+  private static cacheTimeout = Infinity; // Never expire cache until force refresh
   private static activeClients: Map<string, MCPClient> = new Map();
+  private static readonly CONNECTION_TIMEOUT = 30000; // 30 seconds max connection time
 
   /**
    * Inspect a server to get its real metrics
    */
   public static async inspectServer(
     serverName: string,
-    serverConfig: MCPServer
+    serverConfig: MCPServer,
+    forceRefresh: boolean = false
   ): Promise<ServerInspectionResult> {
-    console.log(`[MCPServerInspector] Inspecting server: ${serverName}`);
+    console.log(`[MCPServerInspector] Inspecting server: ${serverName}, forceRefresh: ${forceRefresh}`);
+    console.log(`[MCPServerInspector] Server config:`, serverConfig);
 
-    // Check cache first
-    const cached = this.inspectionCache.get(serverName);
-    if (cached && Date.now() - cached.timestamp.getTime() < this.cacheTimeout) {
-      console.log(`[MCPServerInspector] Returning cached results for ${serverName}`);
-      return cached;
+    // Check cache first (unless force refresh)
+    if (!forceRefresh) {
+      const cached = this.inspectionCache.get(serverName);
+      if (cached && cached.toolCount !== undefined) {
+        console.log(`[MCPServerInspector] Returning cached results for ${serverName}`);
+        return cached;
+      }
     }
 
     // Create inspection result
@@ -80,8 +86,17 @@ export class MCPServerInspector {
           cwd: serverConfig.cwd
         };
 
+        console.log(`[MCPServerInspector] Creating new MCPClient for ${serverName} with config:`, clientConfig);
         client = new MCPClient(clientConfig);
-        await client.connect();
+
+        // Add timeout for connection
+        const connectPromise = client.connect();
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error(`Connection timeout after ${this.CONNECTION_TIMEOUT}ms`)), this.CONNECTION_TIMEOUT);
+        });
+
+        await Promise.race([connectPromise, timeoutPromise]);
+        console.log(`[MCPServerInspector] Successfully connected to ${serverName}`);
         this.activeClients.set(serverName, client);
       }
 
@@ -126,22 +141,33 @@ export class MCPServerInspector {
         console.log(`[MCPServerInspector] ${serverName} doesn't support prompts`);
       }
 
+      // Calculate estimated token usage based on tools and resources
+      result.tokenUsage = this.calculateTokenUsage(result);
+
       // Cache the successful result
       this.inspectionCache.set(serverName, result);
 
     } catch (error) {
       console.error(`[MCPServerInspector] Failed to inspect ${serverName}:`, error);
+      console.error(`[MCPServerInspector] Error stack:`, (error as Error).stack);
       result.error = error instanceof Error ? error.message : 'Unknown error';
 
-      // If connection failed, remove from active clients
+      // Return undefined for metrics on error
+      result.toolCount = undefined as any;
+      result.tokenUsage = undefined as any;
+
+      // If connection failed, remove from active clients and cleanup
       if (client) {
         this.activeClients.delete(serverName);
         try {
           await client.disconnect();
         } catch (e) {
-          // Ignore disconnect errors
+          console.error(`[MCPServerInspector] Error disconnecting failed client:`, e);
         }
       }
+
+      // Don't cache failed results
+      return result;
     }
 
     return result;
@@ -189,10 +215,17 @@ export class MCPServerInspector {
    */
   public static getCachedMetrics(serverName: string): ServerInspectionResult | null {
     const cached = this.inspectionCache.get(serverName);
-    if (cached && Date.now() - cached.timestamp.getTime() < this.cacheTimeout) {
+    if (cached && cached.toolCount !== undefined) {
       return cached;
     }
     return null;
+  }
+
+  /**
+   * Force clear cache for a specific server
+   */
+  public static clearServerCache(serverName: string): void {
+    this.inspectionCache.delete(serverName);
   }
 
   /**
@@ -239,6 +272,48 @@ export class MCPServerInspector {
       tokenUsage: Math.min(10000, estimatedTokens), // Cap at 10k for display
       isConnected: !inspection.error && inspection.toolCount > 0
     };
+  }
+
+  /**
+   * Calculate estimated token usage based on tools and resources
+   */
+  private static calculateTokenUsage(result: ServerInspectionResult): number {
+    let tokenCount = 0;
+
+    // Estimate tokens from tool descriptions (roughly 4 chars per token)
+    if (result.tools && result.tools.length > 0) {
+      result.tools.forEach(tool => {
+        // Tool name and description
+        tokenCount += Math.ceil((tool.name?.length || 0) / 4);
+        tokenCount += Math.ceil((tool.description?.length || 0) / 4);
+
+        // Tool parameters/schema
+        if (tool.inputSchema) {
+          const schemaStr = JSON.stringify(tool.inputSchema);
+          tokenCount += Math.ceil(schemaStr.length / 4);
+        }
+      });
+    }
+
+    // Estimate tokens from resource descriptions
+    if (result.resources && result.resources.length > 0) {
+      result.resources.forEach(resource => {
+        tokenCount += Math.ceil((resource.name?.length || 0) / 4);
+        tokenCount += Math.ceil((resource.description?.length || 0) / 4);
+        tokenCount += Math.ceil((resource.uri?.length || 0) / 4);
+      });
+    }
+
+    // Estimate tokens from prompts
+    if (result.prompts && result.prompts.length > 0) {
+      result.prompts.forEach(prompt => {
+        tokenCount += Math.ceil((prompt.name?.length || 0) / 4);
+        tokenCount += Math.ceil((prompt.description?.length || 0) / 4);
+      });
+    }
+
+    console.log(`[MCPServerInspector] Calculated ${tokenCount} tokens for server`);
+    return tokenCount;
   }
 }
 

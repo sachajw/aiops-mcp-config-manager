@@ -237,18 +237,14 @@ export const useSettingsStore = create<SettingsState>()(
         saveSettings: async () => {
           const { settings } = get();
           set({ isLoading: true });
-          
+
           try {
-            // TODO: Call Electron IPC to save settings to file
-            // await window.electronAPI.saveSettings(settings);
-            
-            // Simulate async save
-            await new Promise(resolve => setTimeout(resolve, 500));
-            
-            set({ 
-              isDirty: false, 
+            await window.electronAPI.saveSettings(settings);
+
+            set({
+              isDirty: false,
               lastSaved: new Date(),
-              isLoading: false 
+              isLoading: false
             });
           } catch (error) {
             console.error('Failed to save settings:', error);
@@ -259,20 +255,24 @@ export const useSettingsStore = create<SettingsState>()(
         
         loadSettings: async () => {
           set({ isLoading: true });
-          
+
           try {
-            // TODO: Call Electron IPC to load settings from file
-            // const loadedSettings = await window.electronAPI.loadSettings();
-            
-            // Simulate async load
-            await new Promise(resolve => setTimeout(resolve, 300));
-            
-            // For now, use persisted settings or defaults
-            set({ 
-              isLoading: false,
-              isDirty: false,
-              lastSaved: new Date()
-            });
+            const loadedSettings = await window.electronAPI.loadSettings();
+
+            if (loadedSettings) {
+              set({
+                settings: { ...DEFAULT_SETTINGS, ...loadedSettings },
+                isLoading: false,
+                isDirty: false,
+                lastSaved: new Date()
+              });
+            } else {
+              // No settings file exists yet, use defaults
+              set({
+                isLoading: false,
+                isDirty: false
+              });
+            }
           } catch (error) {
             console.error('Failed to load settings:', error);
             set({ isLoading: false });

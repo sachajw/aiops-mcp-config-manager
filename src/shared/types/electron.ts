@@ -45,6 +45,32 @@ export interface ElectronAPI {
   openExternal: (url: string) => Promise<void>;
   showItemInFolder: (filePath: string) => Promise<void>;
 
+  // Metrics operations
+  getTotalMetrics: (serverNames: string[]) => Promise<{
+    totalTokens: number;
+    totalTools: number;
+    avgResponseTime: number;
+    connectedCount: number;
+  }>;
+  getServerMetrics: (serverName: string, serverConfig?: any) => Promise<any>;
+
+  // Catalog operations
+  getCatalogServers: () => Promise<any>;
+  searchCatalogServers: (query: string) => Promise<any>;
+  getCatalogServersByCategory: (category: string) => Promise<any>;
+  getPopularServers: (limit?: number) => Promise<any>;
+
+  // Connection operations
+  getConnectionStatus: (serverName: string) => Promise<any>;
+  connectToServer: (serverName: string, config: any) => Promise<any>;
+  disconnectFromServer: (serverName: string) => Promise<any>;
+
+  // Settings operations
+  loadSettings: () => Promise<any>;
+  saveSettings: (settings: any) => Promise<void>;
+  resetSettings: () => Promise<void>;
+  getSettingsPath: () => Promise<string>;
+
   // Discovery operations (if available)
   discovery?: {
     getCatalog: () => Promise<any>;

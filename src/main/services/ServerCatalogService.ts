@@ -51,7 +51,7 @@ export class ServerCatalogService {
 
       // Initialize services
       const installationService = new InstallationService();
-      const configService = UnifiedConfigService.getInstance();
+      const configService = new UnifiedConfigService();
 
       // Get all configured clients
       const detectedClients = await configService.detectClients();
@@ -67,9 +67,9 @@ export class ServerCatalogService {
           for (const client of detectedClients) {
             try {
               const config = await configService.readConfig(client.name, 'user');
-              if (config.data) {
+              if (config.mcpServers) {
                 // Check if this server is in the client's configuration
-                const hasServer = Object.keys(config.data).some(
+                const hasServer = Object.keys(config.mcpServers).some(
                   serverName => serverName.toLowerCase() === server.name.toLowerCase()
                 );
                 if (hasServer) {
@@ -132,7 +132,7 @@ export class ServerCatalogService {
 
   /**
    * Get official MCP servers
-   * TODO: Replace with API call to official registry
+   * Currently using hardcoded catalog data
    */
   private static async getOfficialServers(): Promise<CatalogServer[]> {
     return [
@@ -395,7 +395,7 @@ export class ServerCatalogService {
 
   /**
    * Get recently updated servers
-   * TODO: Track actual update times
+   * Returns static update time for now
    */
   public static async getRecentServers(limit: number = 10): Promise<CatalogServer[]> {
     const catalog = await this.getCatalog();

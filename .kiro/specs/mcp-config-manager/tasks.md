@@ -37,6 +37,15 @@
   - ✅ Task 117: Visual feedback improvements
   - ✅ Task 131: Advanced animations and transitions
 
+### ✅ Recently Fixed Bugs (September 20, 2025):
+- **Bug-001**: ✅ FIXED - Performance Insights panel showing zero/empty stats
+  - Location: Visual Workspace → Performance Insights panel
+  - Root Cause: Data source mismatch - InsightsPanel relied on store.servers but needed direct client config access
+  - Solution: Modified InsightsPanel to fetch server list directly from activeClient config via IPC
+  - Files Modified: `InsightsPanel.tsx` (data source logic), `electron.ts` (interface definitions)
+  - Technical: Changed from `Object.keys(servers)` to direct `readConfig(activeClient, activeScope)` call
+  - Status: Fixed and tested - Performance Insights now displays real metrics data
+
 ---
 
 ## ⚠️ CRITICAL: UI Elements Currently Using Mock/Hardcoded Data [RESOLVED ✅]
@@ -1519,4 +1528,571 @@ The following UI features were displaying mock data and have been resolved:
 ### Sprint 4 Completion Status: 100% ✅
 
 All Sprint 4 objectives achieved. Project is production-ready with comprehensive server lifecycle management, real-time validation, and robust backup/restore capabilities.
+
+---
+
+## 📋 Backlog Tasks (From TODO Cleanup)
+
+### Story: Complete Unimplemented Features
+*These tasks were discovered during TODO comment cleanup on 2025-09-21*
+
+- [x] **Task 149: Fix Settings Persistence** ✅
+  - Location: `src/renderer/store/settingsStore.ts:242,264`
+  - Issue: Save/load settings via IPC not wired up
+  - Currently using setTimeout simulation
+  - Priority: HIGH - Core functionality
+  - **COMPLETED**: SettingsHandler implemented with file persistence, IPC wired up correctly
+
+- [x] **Task 150: Implement File Monitoring** ✅
+  - Location: `src/main/ipc/handlers/SystemHandler.ts:64,72`
+  - Issue: startFileMonitor/stopFileMonitor are stubs
+  - Would enable auto-reload on config changes
+  - Priority: MEDIUM - Quality of life feature
+  - **Implementation Plan**:
+    1. Add chokidar imports to SystemHandler (already in package.json)
+    2. Add private watchers Map to track active file watchers
+    3. Implement `files:watch` handler:
+       - Create chokidar watcher for each path
+       - Listen for 'change', 'add', 'unlink' events
+       - Emit IPC events for file changes to notify renderer
+       - Store watcher instances in Map for cleanup
+    4. Implement `files:unwatch` handler:
+       - Close and remove watchers for specified paths
+       - Clean up from watchers Map
+    5. Override unregister() method to cleanup all watchers on shutdown
+    6. Add file change event handlers in renderer to auto-refresh configs
+
+- [ ] **Task 151: Implement Bulk Operations**
+  - Location: `src/main/ipc/handlers/SystemHandler.ts:89,97`
+  - Issue: applyBulkOperations/undoBulkOperations are stubs
+  - Needed for multi-server operations
+  - Priority: MEDIUM - Enterprise feature
+
+- [ ] **Task 152: Connect Server Catalog API**
+  - Location: `src/main/services/ServerCatalogService.ts:135,398`
+  - Issue: Using hardcoded catalog instead of API
+  - Also need actual update time tracking
+  - Priority: LOW - Works with hardcoded data
+
+- [ ] **Task 153: Implement Custom Client Config Loading**
+  - Location: `src/renderer/SimplifiedApp.tsx:340,1266`
+  - Issue: Gear icon doesn't load custom paths
+  - Settings not applied to client detection
+  - Priority: MEDIUM - Advanced user feature
+
+- [ ] **Task 154: Add Batch Support to Preload**
+  - Location: `src/shared/utils/BatchManager.ts:158`
+  - Issue: BatchManager needs ElectronAPI integration
+  - Would improve bulk operations performance
+  - Priority: LOW - Performance optimization
+
+- [ ] **Task 155: Implement Wizard System**
+  - Location: `src/renderer/App.tsx:34`
+  - Issue: launchWizard function is empty
+  - Setup wizard referenced but not built
+  - Priority: LOW - Future enhancement
+
+- [ ] **Task 156: Add Routing System**
+  - Location: `src/renderer/layouts/AppLayout.tsx:35`
+  - Issue: Planned for Phase 3, currently single-page
+  - Priority: LOW - Future architecture
+
+- [ ] **Task 157: Complete Visual Workspace Features**
+  - Locations: Multiple Visual Workspace components
+  - Issues:
+    - Server addition not connected (VisualWorkspaceWithRealData.tsx:180)
+    - Settings button no-op (ServerLibrary.tsx:146)
+    - Add to canvas not implemented (ServerLibrary.tsx:159)
+    - Multi-client save not implemented (index.tsx:664)
+  - Priority: MEDIUM - Visual Workspace completeness
+
+- [ ] **Task 158: Clean Up Unused collectRealMetrics Method**
+  - Location: `src/main/services/MetricsService.ts:380`
+  - Issue: Method stub exists but functionality moved to MCPServerInspector
+  - Priority: LOW - Code cleanup
+
+- [x] **Task 160: Fix MetricsService Client Configuration Detection** ✅
+  - **Context**: Bug-001 verification revealed metrics service disconnect
+  - **Issue**: UnifiedConfigService finds servers but MetricsService reports "No servers configured"
+  - **Evidence**:
+    - UnifiedConfigService: "Found 14 MCP servers for claude-desktop"
+    - MetricsService: "No servers configured for client: claude-desktop"
+  - **Root Cause**: Metrics service using different client detection logic than configuration service
+  - **Files to Check**:
+    - `src/main/services/MetricsService.ts` - prefetch logic
+    - Client config format compatibility between services
+  - **Impact**: Performance Insights panel showing zeros due to this disconnect
+  - Priority: HIGH - Core bug affecting user-visible metrics
+
+- [x] **Task 161: Verify VS Code MCP Config Paths** (P1 - HIGH) ✅
+  - **Context**: Ensure VS Code MCP configuration paths are correctly implemented
+  - **Official VS Code Paths** (confirmed via research):
+    - Workspace config: `.vscode/mcp.json` (project-specific)
+    - User settings: `settings.json` with MCP settings
+    - Discovery mode: `chat.mcp.discovery.enabled: true` in settings
+  - **Action Required**:
+    1. Verify ClientDetector.ts has correct VS Code paths
+    2. Check for `.vscode/mcp.json` in workspace
+    3. Parse VS Code settings.json for MCP configurations
+    4. Test with VS Code 1.86+ (MCP generally available)
+  - **Files to Update**:
+    - `src/main/services/ClientDetector.ts`
+    - VS Code client configuration definitions
+  - Priority: HIGH - Major IDE support
+
+- [x] **Task 162: Verify Cursor IDE MCP Config Paths** (P1 - HIGH) ✅
+  - **Context**: Ensure Cursor MCP configuration paths are correctly implemented
+  - **Official Cursor Paths** (confirmed via research):
+    - Global config: `~/.cursor/mcp.json` (user-level)
+    - Project config: `.cursor/mcp.json` (project-specific)
+  - **Action Required**:
+    1. Update ClientDetector.ts with correct Cursor paths
+    2. Support both global and project-level configs
+    3. Parse mcpServers structure correctly
+    4. Test loading/saving affects Cursor
+  - **Files to Update**:
+    - `src/main/services/ClientDetector.ts`
+    - Cursor client configuration definitions
+  - Priority: HIGH - Popular IDE support
+
+- [x] **Task 163: Verify Windsurf IDE MCP Config Paths** (P1 - HIGH) ✅
+  - **Context**: Ensure Windsurf MCP configuration paths are correctly implemented
+  - **Official Windsurf Path** (confirmed via research):
+    - Config location: `~/.codeium/windsurf/mcp_config.json`
+    - Uses same schema as Claude Desktop
+    - Supports stdio and http transports
+  - **Action Required**:
+    1. Add/update Windsurf support in ClientDetector.ts
+    2. Check for `~/.codeium/windsurf/` directory
+    3. Parse mcp_config.json with Claude Desktop schema
+    4. Test configuration loading/saving
+  - **Files to Update**:
+    - `src/main/services/ClientDetector.ts`
+    - Add Windsurf to client types if missing
+  - Priority: HIGH - Growing IDE market share
+
+- [ ] **Task 164: Verify Codex MCP Config Paths** (P2 - MEDIUM)
+  - **Context**: Ensure Codex configuration paths are correctly implemented
+  - **Current Implementation**: Need to verify against actual Codex behavior
+  - **Action Required**:
+    1. Research actual Codex config file locations
+    2. Verify both macOS and cross-platform paths
+    3. Test with latest Codex version
+    4. Update ClientDetector.ts if needed
+  - Priority: MEDIUM - Less common client
+
+- [ ] **Task 165: Verify Gemini Desktop/CLI Config Paths** (P2 - MEDIUM)
+  - **Context**: Ensure Gemini configuration paths are correctly implemented
+  - **Current Implementation**: Need to verify against actual Gemini behavior
+  - **Action Required**:
+    1. Research Gemini Desktop config locations
+    2. Research Gemini CLI config locations
+    3. Test with latest Gemini versions
+    4. Update ClientDetector.ts if needed
+  - Priority: MEDIUM - Newer clients
+
+- [x] **Task 166: Visual Workspace Live JSON Editor Pane** ✅
+  - **Context**: Users need to see/edit JSON while working in Visual Workspace
+  - **IMPORTANT FINDING**: Monaco Editor component EXISTS but is NOT USED in UI!
+  - **Status**: INTEGRATED (2025-01-22) - JSON/Visual toggle button working
+    - `JsonEditor.tsx` - Full Monaco implementation with validation (297 lines)
+    - `ConfigurationEditor.tsx` - Wrapper component (unused)
+    - These components are built but never integrated into the app!
+  - **User Story**: As a developer, I want to see live JSON updates as I modify Visual Workspace, and edit JSON directly with immediate visual feedback
+  - **Features Required**:
+    1. Split-pane view: Visual Workspace + JSON editor
+    2. Live JSON updates as visual changes occur
+    3. Edit JSON and see visual updates immediately
+    4. Syntax highlighting and validation (already in JsonEditor.tsx)
+    5. Toggle between visual-only, JSON-only, or split view
+  - **Implementation Plan**:
+    1. First, integrate existing JsonEditor into current UI (SimplifiedApp.tsx)
+    2. Add toggle button in Visual Workspace header
+    3. Create split-pane layout with resizable divider
+    4. Implement bidirectional sync:
+       - Visual changes → Update JSON in editor
+       - JSON edits → Update visual representation
+    5. Highlight changed lines in real-time
+    6. Add keyboard shortcuts (Cmd+J for JSON toggle)
+  - **Files to Modify**:
+    - `src/renderer/components/VisualWorkspace/index.tsx` - Add JSON pane
+    - `src/renderer/SimplifiedApp.tsx` - Add JSON editor option
+    - Use existing `JsonEditor.tsx` and `ConfigurationEditor.tsx`
+  - Priority: HIGH - Major missing feature that's already partially built!
+
+- [ ] **Task 170: Fix JSON Editor Hiding Visual Canvas (Bug-016)**
+  - **Context**: CRITICAL BUG - JSON editor completely hides the visual canvas when active
+  - **Problem**: Line 863 in index.tsx uses `showJsonEditor ? 'hidden' : 'block'`
+  - **Impact**: Users cannot see servers/clients while editing JSON - breaks core feature
+  - **Requirements**:
+    1. Visual canvas must remain visible when JSON editor is open
+    2. Implement split-pane or overlay layout
+    3. Both views should be usable simultaneously
+    4. Real-time sync between JSON edits and visual updates
+  - **Solution Options**:
+    - **Option A**: Split-pane view (50/50 or adjustable)
+    - **Option B**: JSON editor as bottom panel (like Insights)
+    - **Option C**: Side panel for JSON (right side)
+  - **Files to Fix**:
+    - `src/renderer/components/VisualWorkspace/index.tsx` line 863
+    - Remove 'hidden' class logic
+    - Implement proper layout structure
+  - **Acceptance Criteria**:
+    - [✅] Visual canvas visible when JSON editor open
+    - [✅] Can see and interact with both views
+    - [✅] Changes sync between views in real-time
+    - [✅] Proper sizing for both panels
+    - [✅] Only ONE save button visible (context-aware)
+    - [✅] Save button disabled when no pending changes
+    - [ ] Unified save logic - both canvas and editor use same save mechanism
+    - [ ] TOML support for VS Code configurations (not just JSON)
+    - [ ] Format-aware UI labels ("JSON Configuration" vs "TOML Configuration")
+    - [ ] Monaco Editor language switching (json/toml based on client)
+  - Priority: CRITICAL - Core functionality broken
+  - Time: 3 hours
+  - Bug fix
+
+- [ ] **Task 175: Fix Project Scope Config Loading (Bug-019)**
+  - **Context**: CRITICAL BUG - Project scope canvas doesn't load project directory configuration
+  - **Problem**: When switching to project scope, Visual Workspace remains empty despite project having .mcp directory
+  - **Impact**: Users cannot view/edit project-specific server configurations
+  - **Root Cause Investigation**:
+    1. Scope change not triggering config reload
+    2. Project directory detection failing
+    3. Canvas not refreshing when scope switches
+    4. Missing project config loading logic
+  - **Implementation Requirements**:
+    1. **Scope Change Handler**: Detect when scope changes to "project"
+    2. **Project Directory Detection**: Find .mcp directory in current project
+    3. **Config Loading**: Load project-specific configuration file
+    4. **Canvas Refresh**: Update Visual Workspace with project servers
+    5. **Error Handling**: Show proper message if no project config found
+  - **Files to Fix**:
+    - `src/renderer/components/VisualWorkspace/index.tsx` - Add scope change effect
+    - Scope switching logic and config store updates
+    - Project directory detection service
+  - **Technical Details**:
+    - Add useEffect to watch activeScope changes
+    - Trigger config reload when scope becomes "project"
+    - Ensure canvas redraws with new server data
+    - Handle project config file parsing
+  - **Acceptance Criteria**:
+    - [ ] Canvas loads project config when switching to project scope
+    - [ ] Project servers appear in Visual Workspace immediately
+    - [ ] Scope switching triggers proper config reload
+    - [ ] Empty project shows appropriate message
+    - [ ] Error states handled gracefully
+  - Priority: CRITICAL - Core project functionality broken
+  - Time: 3 hours
+  - Bug fix
+
+- [ ] **Task 172: Fix Project Scope Layout & Save Accessibility (Bug-018)**
+  - **Context**: CRITICAL BUG - Project scope cuts off top UI, save functionality inaccessible
+  - **Problems**:
+    1. Top of screen cut off in project scope
+    2. Save buttons not accessible
+    3. Canvas and libraries partially hidden
+    4. Scope selector order illogical (User | Project | System)
+  - **Impact**: Users cannot save project configurations
+  - **Layout Fixes Needed**:
+    1. Adjust top padding/margins in project scope
+    2. Ensure save button area always visible
+    3. Maintain canvas usability
+    4. Keep libraries panel accessible
+  - **Scope Selector Reorder**:
+    - **Current**: User | Project | System
+    - **Required**: System | User | Project (logical hierarchy)
+  - **Files to Fix**:
+    - `src/renderer/components/VisualWorkspace/index.tsx` - Layout calculations
+    - Scope selector component - Button order
+    - CSS/styling for project scope layout
+  - **Acceptance Criteria**:
+    - [ ] All UI elements visible in project scope
+    - [ ] Save functionality fully accessible
+    - [ ] Canvas fully interactive
+    - [ ] Libraries panel not cut off
+    - [ ] Scope order: System | User | Project
+    - [ ] Consistent layout across all scopes
+  - Priority: CRITICAL - Blocks project configuration workflow
+  - Time: 2 hours
+  - Bug fix
+
+- [ ] **Task 171: Fix Discovery Page Installation & Duplicate Keys (Bug-017)**
+  - **Context**: CRITICAL BUG - Discovery page server installation completely broken
+  - **Errors Found**:
+    1. Duplicate React keys for same server (com.apple-rag/mcp-server)
+    2. Missing IPC handler: electronAPI.discovery.installServer not available
+  - **Impact**: Users cannot install servers from Discovery page
+  - **Root Causes**:
+    - Server being added multiple times to catalog (discoveryStore.ts:194)
+    - IPC handler not registered or exposed
+  - **Files to Fix**:
+    1. `src/renderer/pages/Discovery/DiscoveryPage.tsx` - fix duplicate keys
+    2. `src/renderer/store/discoveryStore.ts:135` - fix IPC call
+    3. `src/main/ipc/handlers/DiscoveryHandler.ts` - ensure handler exists
+    4. `src/main/preload.ts` - expose discovery.installServer
+  - **Implementation Steps**:
+    1. Add unique key generation for server list items
+    2. Prevent duplicate server additions
+    3. Register discovery.installServer IPC handler
+    4. Expose handler in preload.ts electronAPI
+  - **Acceptance Criteria**:
+    - [ ] No React duplicate key warnings
+    - [ ] Install button works without errors
+    - [ ] Server appears only once in Discovery list
+    - [ ] IPC handler properly registered and callable
+  - Priority: CRITICAL - Core Discovery functionality broken
+  - Time: 2 hours
+  - Bug fix
+
+- [ ] **Task 167: Add Expand/Collapse Control to JSON Editor Panel**
+  - **Context**: JSON Editor panel should have expand/collapse control similar to Performance Insights panel
+  - **User Story**: As a user, I want to minimize/expand the JSON editor to maximize canvas space when needed
+  - **Requirements**:
+    1. Add minimize/maximize button to JSON editor header (matching Insights panel pattern)
+    2. When collapsed, show only a thin bar at bottom with expand button
+    3. Remember collapsed state during session
+    4. Ensure smooth animation when toggling (matching Insights panel)
+    5. Update React Flow canvas height accordingly when collapsed/expanded
+  - **Implementation Details**:
+    - Follow the pattern used by InsightsPanel component
+    - Add `showJsonEditor` and `isJsonCollapsed` states
+    - Use same transition classes for consistency
+    - Ensure z-index layering is correct
+  - **Files to Modify**:
+    - `src/renderer/components/VisualWorkspace/index.tsx` - Add collapse state and controls
+    - Reference `InsightsPanel.tsx` for implementation pattern
+  - **Acceptance Criteria**:
+    - [ ] Collapse/expand button visible in JSON editor header
+    - [ ] Panel collapses to minimal height (like Insights panel)
+    - [ ] Canvas adjusts height when panel collapses/expands
+    - [ ] Smooth transition animation (300ms duration)
+    - [ ] State persists during session
+  - Priority: MEDIUM - Improves workspace usability and consistency
+  - Time: 2 hours
+  - UI enhancement
+
+- [ ] **Task 168: Docker-Based Test Environment for Full Validation**
+  - **Context**: Need isolated, reproducible test environment for complete app validation
+  - **User Story**: As a QA engineer, I need a containerized environment to test MCP server connections without affecting my local setup
+  - **Requirements**:
+    1. Docker compose setup with:
+       - Electron app container with X11 forwarding for GUI testing
+       - Multiple MCP server containers (mock servers for testing)
+       - Network isolation for connection testing
+       - Volume mounts for config persistence testing
+    2. Pre-configured test scenarios:
+       - Fresh install validation
+       - Multi-client configuration testing
+       - Server connection/disconnection cycles
+       - Error recovery scenarios
+    3. Automated test execution:
+       - Run full test suite in container
+       - Generate test reports
+       - Screenshot capture for UI validation
+  - **Implementation Plan**:
+    1. Create `docker/` directory with:
+       - `Dockerfile.app` - Electron app container
+       - `Dockerfile.mcp-server` - Mock MCP server
+       - `docker-compose.yml` - Full test environment
+       - `test-scripts/` - Automated test scenarios
+    2. Mock MCP servers with configurable behaviors:
+       - Success responses
+       - Timeout scenarios
+       - Connection failures
+       - Various tool/resource counts
+    3. Test data fixtures:
+       - Sample configurations
+       - Expected outputs
+       - Validation schemas
+  - **Acceptance Criteria**:
+    - [ ] Single command to spin up test environment
+    - [ ] All 13 active bugs can be validated in container
+    - [ ] Test reports generated automatically
+    - [ ] Can test without affecting local MCP setup
+    - [ ] Reproducible across team members
+  - Priority: HIGH - Critical for release validation
+  - Time: 8 hours
+  - Testing infrastructure
+
+- [ ] **Task 169: Add Reusable Context Menu for Server Cards**
+  - **Context**: Users need quick actions on server cards across multiple UI locations
+  - **User Story**: As a user, I want to right-click server cards anywhere they appear (Visual Workspace, Server Library, Discovery, etc.) to access quick actions
+  - **Requirements**:
+    1. **REUSABLE COMPONENT**: Create a generic ServerContextMenu that can be used anywhere servers are displayed
+    2. Context menu options:
+       - **Refresh**: Re-fetch metrics for this server
+       - **Delete**: Remove server from configuration
+       - **Separator line**
+       - **Test Connection**: Run connection test
+       - **View Details**: Open server details modal
+       - **Disable/Enable**: Toggle server active state
+    3. Visual feedback:
+       - Context menu appears at cursor position
+       - Highlight server card on right-click
+       - Smooth animation for menu appearance
+    4. Keyboard support:
+       - ESC to close menu
+       - Arrow keys to navigate options
+       - Enter to select
+    5. **Reusability Requirements**:
+       - Works in Visual Workspace canvas (React Flow nodes)
+       - Works in Server Library panel (list items)
+       - Works in Discovery page (server cards)
+       - Works in any future server display location
+       - Consistent behavior across all locations
+  - **Implementation Details**:
+    - Create reusable `ServerContextMenu` component
+    - Use React Context API or props for server data passing
+    - Create custom hook `useServerContextMenu` for logic reuse
+    - Ensure works with different rendering contexts (React Flow, regular DOM)
+    - Single source of truth for menu actions
+  - **Files to Create/Modify**:
+    - NEW: `src/renderer/components/common/ServerContextMenu.tsx` - Reusable component
+    - NEW: `src/renderer/hooks/useServerContextMenu.ts` - Reusable hook
+    - `src/renderer/components/VisualWorkspace/nodes/ServerNode.tsx` - Integrate context menu
+    - `src/renderer/components/VisualWorkspace/ServerLibrary.tsx` - Add context menu
+    - `src/renderer/components/Discovery/ServerCard.tsx` - Add context menu
+  - **Acceptance Criteria**:
+    - [ ] Right-click on server shows context menu in ALL locations
+    - [ ] Same context menu works in Visual Workspace, Server Library, Discovery
+    - [ ] Delete option removes server from config
+    - [ ] Refresh option updates metrics immediately
+    - [ ] Menu positioned correctly at cursor
+    - [ ] Keyboard navigation works
+    - [ ] Visual feedback on hover/selection
+    - [ ] Component is truly reusable (no location-specific code)
+  - Priority: MEDIUM - Improves user workflow efficiency and code maintainability
+  - Time: 5 hours (increased for reusability requirements)
+  - UI enhancement + Architecture improvement
+
+- [ ] **Task 173: Design & Implement Project Management System**
+  - **Context**: Extend UI to support project-based organization of MCP configurations
+  - **User Story**: As a developer, I want to organize my MCP servers by projects to manage different development contexts
+  - **Current State**: Project scope exists but no project management UI
+  - **Project Concept Design**:
+    1. **Project Entity**: Collection of servers + metadata
+       - Name, description, created date
+       - Server configurations specific to project
+       - Environment variables per project
+       - Team sharing capabilities (future)
+    2. **Project-Server Relationship**:
+       - Projects contain multiple servers
+       - Servers can be shared across projects (reference vs copy)
+       - Project-specific server configurations/overrides
+  - **UI Extensions Needed**:
+    1. **Project Selector** (top navigation):
+       - Dropdown showing all projects
+       - "Create New Project" option
+       - "Project Settings" for metadata
+    2. **Project Dashboard** (new page):
+       - Grid/list view of all projects
+       - Project statistics (server count, last modified)
+       - Import/export project configurations
+    3. **Visual Workspace Enhancements**:
+       - Project context indicator
+       - Project-specific server filtering
+       - Quick project switching without losing workspace state
+    4. **Project Settings Panel**:
+       - Project metadata editing
+       - Server inclusion/exclusion rules
+       - Environment variable management
+       - Export/sharing options
+  - **Technical Implementation**:
+    - New `ProjectService` for CRUD operations
+    - Project storage in `~/.mcp-manager/projects/`
+    - Project schema with server references
+    - IPC handlers for project operations
+  - **Acceptance Criteria**:
+    - [ ] Create new projects with name/description
+    - [ ] Switch between projects seamlessly
+    - [ ] Add/remove servers from projects
+    - [ ] Project-specific configurations preserved
+    - [ ] Export/import project definitions
+  - Priority: HIGH - Major feature for organization
+  - Time: 12 hours
+  - Feature development
+
+- [ ] **Task 174: Validate & Polish Profile Support and Management**
+  - **Context**: Profiles system needs validation, UI polish, and management features
+  - **Current State Assessment Needed**:
+    1. Profile storage and persistence
+    2. Profile switching functionality
+    3. Profile-specific settings isolation
+    4. UI/UX for profile management
+  - **Profile Management Features**:
+    1. **Profile CRUD Operations**:
+       - Create new profiles with templates
+       - Rename/delete existing profiles
+       - Duplicate profiles for branching configs
+       - Import/export profile data
+    2. **Profile Switching UX**:
+       - Quick profile selector (dropdown/tabs)
+       - Visual indicator of active profile
+       - Confirm unsaved changes before switching
+       - Recent profiles list
+    3. **Profile Settings Panel**:
+       - Profile metadata (name, description, icon)
+       - Default client configurations per profile
+       - Profile-specific preferences
+       - Usage statistics and history
+    4. **Profile Templates**:
+       - "Development" profile template
+       - "Production" profile template
+       - "Team Collaboration" template
+       - Custom template creation
+  - **Validation Requirements**:
+    - [ ] Profile data integrity checks
+    - [ ] Profile switching preserves state correctly
+    - [ ] No cross-profile data contamination
+    - [ ] Performance with multiple profiles
+    - [ ] Profile backup and recovery
+  - **Polish Requirements**:
+    - [ ] Smooth profile switching animations
+    - [ ] Clear visual differentiation between profiles
+    - [ ] Intuitive profile management workflow
+    - [ ] Comprehensive profile settings
+    - [ ] Error handling for corrupted profiles
+  - **Files to Review/Modify**:
+    - Profile storage implementation
+    - Profile UI components
+    - Profile switching logic
+    - Settings integration
+  - **Acceptance Criteria**:
+    - [ ] Profile system fully functional and tested
+    - [ ] Profile management UI polished
+    - [ ] No profile-related bugs or data loss
+    - [ ] Performance benchmarks met
+    - [ ] User documentation complete
+  - Priority: MEDIUM - System validation and polish
+  - Time: 8 hours
+  - Feature validation + UI polish
+
+- [x] **Task 159: Align Claude Code MCP Config Paths** ✅
+  - **Context**: Claude Code shows different MCP config scope paths than our app
+  - **Claude Code Paths**:
+    - User config: `/Users/briandawson/.claude.json`
+    - Project config: `/Users/briandawson/workspace/claude-config-mgr/.mcp.json`
+    - Local config: `/Users/briandawson/.claude.json [project: /path]`
+  - **Our Current Paths**: Need to audit against Claude Code's actual paths
+  - **Action Required**:
+    1. Update ClientDetector.ts with correct Claude Code config paths
+    2. Update scope hierarchy to match Claude Code's behavior
+    3. Test config loading/saving with actual Claude Code
+    4. Ensure our app can read/write Claude Code configs properly
+  - **Files to Check**:
+    - `src/main/services/ClientDetector.ts`
+    - Client configuration definitions
+    - Scope resolution logic
+  - Priority: HIGH - Core compatibility with Claude Code
+  - **Implementation Plan**:
+    1. Research current Claude Code config file locations and format
+    2. Compare with our ClientDetector claude-code client definition
+    3. Update config paths to match Claude Code's actual behavior:
+       - User: `~/.claude.json` (not `~/.claude/claude_code_config.json`)
+       - Project: `./.mcp.json` in project root
+       - Test scope resolution matches Claude Code's hierarchy
+    4. Verify config format compatibility (JSON structure)
+    5. Test loading/saving configs through our app affects Claude Code
+    6. Update documentation to reflect correct paths
 

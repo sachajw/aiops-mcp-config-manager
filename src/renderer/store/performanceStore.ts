@@ -250,7 +250,7 @@ export const usePerformanceStore = create<PerformanceState>()(
           return { count: 0, averageDuration: 0, successRate: 0, failures: 0 };
         }
         
-        const totalDuration = relevantOps.reduce((sum, op) => sum + (op.duration || 0), 0);
+        const totalDuration = relevantOps.reduce((sum, op) => sum + (op.duration ?? 0), 0);
         const successfulOps = relevantOps.filter(op => op.success !== false);
         const failedOps = relevantOps.filter(op => op.success === false);
         
