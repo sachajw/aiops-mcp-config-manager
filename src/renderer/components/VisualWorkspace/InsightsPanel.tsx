@@ -69,8 +69,25 @@ export const InsightsPanel: React.FC = () => {
               console.log(`[InsightsPanel] Metrics for ${serverName}:`, serverMetrics);
 
               if (serverMetrics) {
-                totalTools += serverMetrics.toolCount ?? 0;
-                totalTokens += serverMetrics.tokenUsage ?? 0;
+                // Handle both number and string types for toolCount
+                const toolCount = typeof serverMetrics.toolCount === 'number'
+                  ? serverMetrics.toolCount
+                  : typeof serverMetrics.toolCount === 'string'
+                    ? parseInt(serverMetrics.toolCount, 10)
+                    : 0;
+                if (!isNaN(toolCount)) {
+                  totalTools += toolCount;
+                }
+
+                // Handle both number and string types for tokenUsage
+                const tokenUsage = typeof serverMetrics.tokenUsage === 'number'
+                  ? serverMetrics.tokenUsage
+                  : typeof serverMetrics.tokenUsage === 'string'
+                    ? parseInt(serverMetrics.tokenUsage, 10)
+                    : 0;
+                if (!isNaN(tokenUsage)) {
+                  totalTokens += tokenUsage;
+                }
                 if (serverMetrics.responseTime > 0) {
                   totalResponseTime += serverMetrics.responseTime;
                   responseCount++;

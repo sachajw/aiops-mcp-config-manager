@@ -76,7 +76,7 @@ const ServerCard: React.FC<ServerCardProps> = ({
             : source === 'official'
             ? { text: 'Official', variant: 'info' }
             : source === 'user'
-            ? { text: 'Custom', variant: 'secondary' }
+            ? { text: 'Custom', variant: 'ghost' }
             : undefined
         }
         onActionClick={(e) => {
@@ -300,15 +300,8 @@ export const ServerLibrary: React.FC<ServerLibraryProps> = ({ activeClient, clie
     });
   } else {
     // Show all catalog servers when "Server Catalog" is selected or no client
-    // Optionally filter to only show installed servers
-    serversToShow = catalog.filter((server: any) => {
-      // If we have installation status, only show installed/configured servers in catalog view
-      if (server.installationStatus) {
-        return server.installationStatus === 'installed' || server.installationStatus === 'configured';
-      }
-      // Otherwise show all for backward compatibility
-      return true;
-    });
+    // In catalog view, show all servers regardless of installation status
+    serversToShow = catalog;
   }
 
   const availableServers = serversToShow

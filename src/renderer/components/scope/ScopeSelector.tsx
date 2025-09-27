@@ -35,36 +35,36 @@ interface ScopeOption {
 
 const scopeOptions: ScopeOption[] = [
   {
-    value: ConfigScope.PROJECT,
-    label: 'Project',
-    icon: <ProjectOutlined />,
-    description: 'Highest priority - applies only to current project',
-    priority: 1,
-    color: '#722ed1'
-  },
-  {
-    value: ConfigScope.LOCAL,
-    label: 'Local',
-    icon: <FolderOutlined />,
-    description: 'High priority - applies to current working directory',
-    priority: 2,
-    color: '#13c2c2'
+    value: ConfigScope.GLOBAL,
+    label: 'System',  // Changed from 'Global' to 'System' for clarity
+    icon: <GlobalOutlined />,
+    description: 'System-wide - lowest priority, applies to all users',
+    priority: 4,
+    color: '#fa8c16'
   },
   {
     value: ConfigScope.USER,
     label: 'User',
     icon: <UserOutlined />,
-    description: 'Medium priority - applies to current user',
+    description: 'User-specific - applies to current user only',
     priority: 3,
     color: '#52c41a'
   },
   {
-    value: ConfigScope.GLOBAL,
-    label: 'Global',
-    icon: <GlobalOutlined />,
-    description: 'Lowest priority - applies system-wide',
-    priority: 4,
-    color: '#fa8c16'
+    value: ConfigScope.LOCAL,
+    label: 'Local',
+    icon: <FolderOutlined />,
+    description: 'Directory-specific - applies to current working directory',
+    priority: 2,
+    color: '#13c2c2'
+  },
+  {
+    value: ConfigScope.PROJECT,
+    label: 'Project',
+    icon: <ProjectOutlined />,
+    description: 'Project-specific - highest priority, applies only to current project',
+    priority: 1,
+    color: '#722ed1'
   }
 ];
 

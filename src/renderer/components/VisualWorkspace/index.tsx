@@ -395,8 +395,8 @@ export const VisualWorkspace: React.FC = () => {
                     ...n,
                     data: {
                       ...n.data,
-                      tools: serverMetrics.toolCount,
-                      tokens: serverMetrics.tokenUsage ?? 0,
+                      tools: typeof serverMetrics.toolCount === 'number' ? serverMetrics.toolCount : '—',
+                      tokens: typeof serverMetrics.tokenUsage === 'number' ? serverMetrics.tokenUsage : '—',
                       loading: false,
                       metricsLoaded: true,
                       metricsTimestamp: Date.now()
@@ -583,9 +583,9 @@ export const VisualWorkspace: React.FC = () => {
         if (!serverExists && !serverInConfig) {
           const nodeIndex = nodes.filter(n => n.type === 'server').length;
 
-          // No fake metrics - use zeros until real data loads
-          const initialTools = 0;
-          const initialTokens = 0;
+          // No fake metrics - use placeholders until real data loads
+          const initialTools = '—';
+          const initialTokens = '—';
 
           // Start with unique generated values
           const newServerNode: Node = {
@@ -667,9 +667,9 @@ export const VisualWorkspace: React.FC = () => {
 
         // Add server node if it doesn't exist
         if (!serverExists) {
-          // No fake metrics - use zeros until real data loads
-          const initialTools = 0;
-          const initialTokens = 0;
+          // No fake metrics - use placeholders until real data loads
+          const initialTools = '—';
+          const initialTokens = '—';
 
           // Start with unique generated values
           const newServerNode: Node = {
@@ -932,8 +932,8 @@ export const VisualWorkspace: React.FC = () => {
                                 ...node,
                                 data: {
                                   ...node.data,
-                                  tools: metric.toolCount ?? 0,
-                                  tokens: metric.tokenUsage ?? 0
+                                  tools: typeof metric.toolCount === 'number' ? metric.toolCount : '—',
+                                  tokens: typeof metric.tokenUsage === 'number' ? metric.tokenUsage : '—'
                                 }
                               };
                             }

@@ -70,23 +70,91 @@ export class MetricsService {
    */
   private persistCache(): void {
     try {
+      // Convert Map to array with deduplication - Map already ensures unique keys
       const cacheData = Array.from(this.metricsCache.entries()).map(([key, value]) => ({
         serverName: key,
         metrics: value.metrics,
         timestamp: value.timestamp,
         serverConfig: value.serverConfig
       }));
+
+      // Additional safety: Validate serverNames are not truncated versions of each other
+      const validatedData = this.deduplicateServerNames(cacheData);
+
       // Note: In Electron main process, we need to use a different storage mechanism
       // We'll use a file-based cache instead
       const fs = require('fs');
       const path = require('path');
       const { app } = require('electron');
       const cacheFile = path.join(app.getPath('userData'), 'metrics-cache.json');
-      fs.writeFileSync(cacheFile, JSON.stringify(cacheData, null, 2));
-      console.log(`[MetricsService] Persisted cache to ${cacheFile}`);
+      fs.writeFileSync(cacheFile, JSON.stringify(validatedData, null, 2));
+      console.log(`[MetricsService] Persisted ${validatedData.length} unique entries to ${cacheFile}`);
     } catch (error) {
       console.error('[MetricsService] Failed to persist cache:', error);
     }
+  }
+
+  /**
+   * Deduplicate server names to prevent truncation duplicates
+   * Keeps only the longest/most complete version of each server name
+   */
+  private deduplicateServerNames(cacheData: any[]): any[] {
+    const serverGroups = new Map<string, any[]>();
+
+    // Group entries by normalized base name
+    cacheData.forEach(entry => {
+      const baseName = this.getBaseServerName(entry.serverName);
+      if (!serverGroups.has(baseName)) {
+        serverGroups.set(baseName, []);
+      }
+      serverGroups.get(baseName)!.push(entry);
+    });
+
+    // For each group, keep only the most recent or most complete entry
+    const deduplicated: any[] = [];
+    serverGroups.forEach((entries, baseName) => {
+      if (entries.length === 1) {
+        deduplicated.push(entries[0]);
+      } else {
+        // Sort by timestamp (most recent first) and name length (longest first)
+        entries.sort((a, b) => {
+          // First by timestamp (newer first)
+          const timeDiff = (b.timestamp || 0) - (a.timestamp || 0);
+          if (timeDiff !== 0) return timeDiff;
+          // Then by name length (longer first - more complete names)
+          return b.serverName.length - a.serverName.length;
+        });
+
+        // Keep only the best entry
+        deduplicated.push(entries[0]);
+
+        // Log if we're removing duplicates
+        if (entries.length > 1) {
+          console.warn(`[MetricsService] Deduplicating ${entries.length} entries for server "${baseName}". Keeping: "${entries[0].serverName}"`);
+        }
+      }
+    });
+
+    return deduplicated;
+  }
+
+  /**
+   * Get the base name of a server, handling common truncation patterns
+   */
+  private getBaseServerName(serverName: string): string {
+    // Normalize the name by removing common truncation artifacts
+    // Handle cases like "Ship APE", "Ship AP", "Ship A", "Ship ", "Ship", "ship", "ship-", "ship-p", etc.
+
+    // Convert to lowercase for comparison
+    const lower = serverName.toLowerCase().trim();
+
+    // Special handling for known problematic servers
+    if (lower.startsWith('ship')) {
+      return 'ship-ape'; // Known correct full name
+    }
+
+    // For other servers, use the lowercase trimmed version
+    return lower.replace(/[-_\s]+$/, ''); // Remove trailing separators
   }
 
   /**
@@ -100,15 +168,26 @@ export class MetricsService {
       const cacheFile = path.join(app.getPath('userData'), 'metrics-cache.json');
 
       if (fs.existsSync(cacheFile)) {
-        const cacheData = JSON.parse(fs.readFileSync(cacheFile, 'utf-8'));
-        cacheData.forEach((item: any) => {
+        const rawCacheData = JSON.parse(fs.readFileSync(cacheFile, 'utf-8'));
+
+        // Clean up duplicates before loading into memory
+        const cleanedData = this.deduplicateServerNames(rawCacheData);
+
+        // If we removed duplicates, immediately save the cleaned cache
+        if (cleanedData.length < rawCacheData.length) {
+          console.log(`[MetricsService] Cleaning cache: removing ${rawCacheData.length - cleanedData.length} duplicate entries`);
+          fs.writeFileSync(cacheFile, JSON.stringify(cleanedData, null, 2));
+        }
+
+        // Load the cleaned data into the cache Map
+        cleanedData.forEach((item: any) => {
           this.metricsCache.set(item.serverName, {
             metrics: item.metrics,
             timestamp: item.timestamp,
             serverConfig: item.serverConfig
           });
         });
-        console.log(`[MetricsService] Loaded ${this.metricsCache.size} cached metrics from ${cacheFile}`);
+        console.log(`[MetricsService] Loaded ${this.metricsCache.size} unique cached metrics from ${cacheFile}`);
       }
     } catch (error) {
       console.error('[MetricsService] Failed to load cache:', error);

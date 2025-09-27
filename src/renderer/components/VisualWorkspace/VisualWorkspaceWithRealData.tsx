@@ -94,8 +94,8 @@ export const VisualWorkspaceWithRealData: React.FC = () => {
                 ...n,
                 data: {
                   ...n.data,
-                  tools: metrics?.toolCount ?? 0,
-                  tokens: metrics?.tokenUsage ?? 0,
+                  tools: typeof metrics?.toolCount === 'number' ? metrics.toolCount : '—',
+                  tokens: typeof metrics?.tokenUsage === 'number' ? metrics.tokenUsage : '—',
                   loading: false,
                   metricsLoaded: true,
                   metricsTimestamp: Date.now()

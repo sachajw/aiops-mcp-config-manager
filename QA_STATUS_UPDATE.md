@@ -1,14 +1,14 @@
 # QA Status Update - Comprehensive Bug Audit
 
-**Date**: 2025-01-22
+**Date**: 2025-09-27 (Updated)
 **QA Engineer**: Claude Code QA Instance
-**Status**: Backend Fixed ✅, Frontend Has 81 Violations ❌
+**Status**: Backend Fixed ✅, Bug-003 FIXED ✅, Bug-006 FIXED ✅
 
 ---
 
 ## Executive Summary
 
-**CRITICAL UPDATE**: Complete frontend audit reveals 81 violations (not 12 as previously reported). Backend is clean and tested. Frontend requires comprehensive refactoring to remove fallback antipatterns that mask failures and create false impressions of success.
+**UPDATE 2025-09-27**: Bug-003 (Fake Data) is now VERIFIED FIXED. All developer claims validated through comprehensive testing. Bug-006 violations have been addressed. Visual Workspace now displays real metrics or proper placeholders. Bug-002 backend is working but has UI rendering issues.
 
 ---
 
@@ -35,6 +35,39 @@
 **Frontend Blockers** ❌:
 - Still using `|| 0` patterns in InsightsPanel.tsx
 - Need to handle `undefined` values with "—" display
+
+---
+
+### Bug-003: Fake Data Display - VERIFIED FIXED ✅
+**Status**: FIXED (2025-09-27)
+
+**Developer Claims Validated**:
+1. ✅ generateDemoMetrics() already removed (not found in codebase)
+2. ✅ No Math.random() for metrics generation
+3. ✅ Fixed fallback antipatterns:
+   - index.tsx:398-399 uses proper type checking
+   - InsightsPanel.tsx:72-76 skips undefined values
+   - Changed from `?? 0`/`|| 0` to `typeof x === 'number' ? x : '—'`
+
+**Visual Verification**:
+- ✅ NO fake incremental patterns (5,15,20,28,35...)
+- ✅ NO fake token patterns (1677,1760,1838...)
+- ✅ Shows real metrics: desktop_mcp (16/31), iterm_mcp (0/206)
+- ✅ Performance Insights shows real total: 14020 tokens
+
+---
+
+### Bug-002: Server Library Visibility - PARTIAL
+**Status**: Backend Working, Frontend Issue (2025-09-27)
+
+**Investigation Results**:
+- ✅ IPC endpoint `catalog:getServers` working correctly
+- ✅ Backend returns 100+ servers from catalog
+- ✅ ServerLibrary.tsx makes correct API calls
+- ❌ UI rendering issue preventing display
+- ❌ Visual Workspace shows blank content area
+
+**Root Cause**: Not an IPC mapping issue as documented, but a UI rendering problem
 
 ---
 

@@ -157,10 +157,12 @@ Quick access bar for switching between AI clients:
 
 #### 4. Insights Panel (Right)
 Real-time analytics and metrics dashboard:
-- **Token Usage**: Track token consumption per server
+- **Token Usage**: Track token consumption per server (displays actual metrics or "—" when unavailable)
 - **Active Tools**: See which MCP tools are currently in use
 - **Performance Metrics**: Monitor response times and throughput
 - **Connection Health**: View connection status and errors
+
+> **Note**: Metrics display real data from connected servers. When metrics are unavailable, a "—" placeholder is shown instead of zero to indicate no data.
 
 ### Working with Visual Workspace
 
