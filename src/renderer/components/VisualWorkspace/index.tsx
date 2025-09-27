@@ -56,7 +56,7 @@ export const VisualWorkspace: React.FC = () => {
   const { settings } = useSettingsStore();
   // Check for dark mode from settings or system preference
   const isDarkMode = settings?.theme?.mode === 'dark' ||
-    (settings?.theme?.mode === 'system' && window.matchMedia?.('(prefers-color-scheme: dark)')?.matches);
+    (settings?.theme?.mode === 'auto' && window.matchMedia?.('(prefers-color-scheme: dark)')?.matches);
   const theme = isDarkMode ? 'vs-dark' : 'vs-light';
 
   // Canvas drop zone ref
@@ -164,6 +164,15 @@ export const VisualWorkspace: React.FC = () => {
     }
   }, [clients, activeScope]);
 
+  // Clear metrics cache when active client changes to force fresh data
+  React.useEffect(() => {
+    if (activeClient) {
+      console.log(`[VisualWorkspace] Active client changed to ${activeClient}, clearing metrics cache`);
+      // Clear all cached metrics when client changes
+      metricsCache.current.clear();
+    }
+  }, [activeClient]);
+
   // Function to fetch metrics with optional force refresh
   const fetchMetrics = async (forceRefresh = false) => {
       console.log(`[VisualWorkspace] Servers from store:`, servers);
@@ -173,7 +182,8 @@ export const VisualWorkspace: React.FC = () => {
 
       // Fetch metrics for each server
       for (const name of serverNames) {
-        const cacheKey = `${name}-${JSON.stringify(servers[name])}`;
+        // Include activeClient in cache key to avoid conflicts between different clients
+        const cacheKey = `${activeClient}-${name}-${JSON.stringify(servers[name])}`;
         const cached = metricsCache.current.get(cacheKey);
 
         // Use cache if available and not expired (unless force refresh)
@@ -193,7 +203,7 @@ export const VisualWorkspace: React.FC = () => {
           // Use real metrics if available, otherwise use unique generated values
           if (serverMetrics && typeof serverMetrics.toolCount === 'number') {
             metrics[name] = serverMetrics;
-            // Cache the successful result
+            // Cache the successful result with client-specific key
             metricsCache.current.set(cacheKey, {
               data: serverMetrics,
               timestamp: Date.now()
@@ -222,7 +232,11 @@ export const VisualWorkspace: React.FC = () => {
 
   // Initialize nodes from current configuration - Client-specific view
   React.useEffect(() => {
-    fetchMetrics(false).then((metrics) => {
+    // Force refresh metrics when activeClient changes to ensure fresh data
+    const shouldForceRefresh = activeClient !== null;
+    console.log(`[VisualWorkspace] Rebuilding canvas for client: ${activeClient}, forceRefresh: ${shouldForceRefresh}`);
+
+    fetchMetrics(shouldForceRefresh).then((metrics) => {
       // Only show servers for the active client - NO FAKE DATA
       const serverNodes: Node[] = Object.entries(servers).map(([name, server], index) => {
         return {
@@ -273,7 +287,7 @@ export const VisualWorkspace: React.FC = () => {
       setNodes([...serverNodes, ...clientNodes]);
       setEdges(newEdges);
     });
-  }, [servers, clients, activeClient, setNodes, setEdges, clientServerCounts]);
+  }, [servers, clients, activeClient, activeScope, setNodes, setEdges, clientServerCounts]);
 
   // Handle connection creation
   const onConnect = useCallback(

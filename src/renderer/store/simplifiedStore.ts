@@ -216,15 +216,40 @@ export const useConfigStore = create<AppState>((set, get) => ({
 
     // Handle project scope special case
     if (scope === 'project' && !projectDirectory) {
-      // If switching to project scope but no directory selected, show empty state
-      // User will need to select a project directory first
-      set({
-        servers: {},
-        currentConfigPath: null,
-        error: null, // Clear any previous errors
-        isLoading: false
+      // Auto-detect current working directory as project directory
+      console.log('[Store] Project scope selected but no directory set - attempting auto-detection');
+
+      // Try to get current working directory from Electron main process
+      electronAPI.getCurrentWorkingDirectory?.().then((cwd) => {
+        if (cwd) {
+          console.log(`[Store] Auto-detected project directory: ${cwd}`);
+          set({ projectDirectory: cwd });
+          localStorage.setItem('mcp-project-directory', cwd);
+
+          // Now reload config for the detected project directory
+          if (activeClient && activeClient !== 'catalog') {
+            get().selectClient(activeClient);
+          }
+        } else {
+          // Fallback: show empty state if auto-detection fails
+          set({
+            servers: {},
+            currentConfigPath: null,
+            error: 'No project directory detected. Please select a project directory.',
+            isLoading: false
+          });
+          console.log('[Store] Auto-detection failed - showing empty state');
+        }
+      }).catch(() => {
+        // Fallback: show empty state if auto-detection fails
+        set({
+          servers: {},
+          currentConfigPath: null,
+          error: 'No project directory detected. Please select a project directory.',
+          isLoading: false
+        });
+        console.log('[Store] Auto-detection failed - showing empty state');
       });
-      console.log('[Store] Project scope selected but no directory set - showing empty state');
       return;
     }
 

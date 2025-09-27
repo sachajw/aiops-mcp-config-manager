@@ -132,7 +132,7 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
 
     try {
       // Start installation
-      await window.electronAPI.discovery?.installServer?.(serverId) ?? Promise.reject(new Error('electronAPI.discovery.installServer not available'));
+      await window.electronAPI.discovery.installServer(serverId);
 
       // Update installation state
       installState.status = 'completed';
@@ -222,8 +222,7 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
       const state = get();
       const server = state.catalog?.servers.find(s => s.id === serverId);
 
-      // Method name should be uninstallServer but API might not have it yet
-      await (window.electronAPI.discovery as any)?.uninstallServer?.(serverId) ?? Promise.reject(new Error('electronAPI.discovery.uninstallServer not available'));
+      await window.electronAPI.discovery.uninstallServer(serverId);
 
       // Remove the server from the configuration catalog
       if (server) {

@@ -74,6 +74,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   
   // System methods
   openExternal: (url: string) => ipcRenderer.invoke('system:openExternal', url),
+  getCurrentWorkingDirectory: () => ipcRenderer.invoke('system:getCurrentWorkingDirectory'),
 
   // MCP Discovery methods
   discovery: {

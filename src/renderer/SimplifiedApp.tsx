@@ -382,10 +382,10 @@ export const SimplifiedApp: React.FC = () => {
                   <label className="text-sm font-medium text-base-content/70 whitespace-nowrap">Scope:</label>
                   <div className="btn-group">
                     <button
-                      className={`btn btn-sm ${activeScope === 'project' ? 'btn-active' : ''}`}
-                      onClick={() => setScope('project')}
+                      className={`btn btn-sm ${activeScope === 'system' ? 'btn-active' : ''}`}
+                      onClick={() => setScope('system')}
                     >
-                      Project
+                      System
                     </button>
                     <button
                       className={`btn btn-sm ${activeScope === 'user' ? 'btn-active' : ''}`}
@@ -394,10 +394,10 @@ export const SimplifiedApp: React.FC = () => {
                       User
                     </button>
                     <button
-                      className={`btn btn-sm ${activeScope === 'system' ? 'btn-active' : ''}`}
-                      onClick={() => setScope('system')}
+                      className={`btn btn-sm ${activeScope === 'project' ? 'btn-active' : ''}`}
+                      onClick={() => setScope('project')}
                     >
-                      System
+                      Project
                     </button>
                   </div>
                 </div>
@@ -638,7 +638,11 @@ export const SimplifiedApp: React.FC = () => {
 
       {/* Main Content - Conditional rendering based on view mode */}
       {viewMode === 'visual' && appSettings.experimental?.visualWorkspaceEnabled ? (
-        <div style={{ paddingTop: '100px', height: 'calc(100vh - 100px)', overflow: 'hidden' }}>
+        <div style={{
+          paddingTop: activeScope === 'project' && activeClient && activeClient !== 'catalog' ? '140px' : '100px',
+          height: activeScope === 'project' && activeClient && activeClient !== 'catalog' ? 'calc(100vh - 140px)' : 'calc(100vh - 100px)',
+          overflow: 'hidden'
+        }}>
           <VisualWorkspace />
         </div>
       ) : (

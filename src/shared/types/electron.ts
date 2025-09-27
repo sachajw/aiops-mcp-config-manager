@@ -44,6 +44,7 @@ export interface ElectronAPI {
   // System operations
   openExternal: (url: string) => Promise<void>;
   showItemInFolder: (filePath: string) => Promise<void>;
+  getCurrentWorkingDirectory: () => Promise<string>;
 
   // Metrics operations
   getTotalMetrics: (serverNames: string[]) => Promise<{
@@ -71,17 +72,17 @@ export interface ElectronAPI {
   resetSettings: () => Promise<void>;
   getSettingsPath: () => Promise<string>;
 
-  // Discovery operations (if available)
-  discovery?: {
-    getCatalog: () => Promise<any>;
-    fetchCatalog?: () => Promise<any>;
-    searchServers: (query: string) => Promise<any>;
-    getServerDetails: (serverName: string) => Promise<any>;
-    installServer: (serverName: string) => Promise<any>;
-    getInstalledServers?: () => Promise<any>;
-    getSettings?: () => Promise<any>;
-    updateSettings?: (settings: any) => Promise<any>;
-    getInstallationLogs?: (serverId: string) => Promise<string[]>;
+  // Discovery operations
+  discovery: {
+    fetchCatalog: (forceRefresh?: boolean, settings?: any) => Promise<any>;
+    getInstalledServers: () => Promise<any>;
+    isServerInstalled: (serverId: string) => Promise<boolean>;
+    installServer: (serverId: string) => Promise<void>;
+    uninstallServer: (serverId: string) => Promise<void>;
+    getInstallationState: (serverId: string) => Promise<any>;
+    updateSettings: (settings: any) => Promise<void>;
+    getSettings: () => Promise<any>;
+    getInstallationLogs: (serverId: string) => Promise<string[]>;
     onInstallationOutput?: (callback: (event: any, data: {
       serverId: string;
       output: string;

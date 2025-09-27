@@ -206,6 +206,13 @@ export class SystemHandler extends BaseHandler {
       }
     );
 
+    this.handle<[], string>(
+      'system:getCurrentWorkingDirectory',
+      async () => {
+        return process.cwd();
+      }
+    );
+
     console.log('[SystemHandler] Registered all system handlers');
   }
 
