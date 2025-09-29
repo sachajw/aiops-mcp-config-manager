@@ -9,7 +9,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Platform](https://img.shields.io/badge/platform-macOS-lightgrey)](https://github.com/itsocialist/mcp-config-manager)
 [![Release](https://img.shields.io/github/v/release/itsocialist/mcp-config-manager)](https://github.com/itsocialist/mcp-config-manager/releases)
-[![Version](https://img.shields.io/badge/version-0.1.6-blue)](https://github.com/itsocialist/mcp-config-manager/releases/tag/v0.1.6)
+[![Version](https://img.shields.io/badge/version-0.1.7--beta-orange)](https://github.com/itsocialist/mcp-config-manager/releases/tag/v0.1.7-beta)
 
 [Download](#installation) • [Quick Start](#quick-start) • [Documentation](#documentation) • [Community](#community)
 
@@ -17,9 +17,20 @@
 
 ---
 
-> ⚠️ **Beta Version Notice**
+> ⚠️ **Beta Version Notice (v0.1.7-beta)**
 >
-> This application is in active development. Basic functionality has been confirmed and automatic backups are created for all configuration changes. However, further testing is still required. Please [report any bugs or issues](https://github.com/itsocialist/mcp-config-manager/issues) you encounter.
+> **MAJOR PERFORMANCE IMPROVEMENTS**: Client switching now <200ms (was 30+ seconds)!
+>
+> **⚠️ CRITICAL KNOWN ISSUES**:
+> - **Visual Workspace save/load is NON-FUNCTIONAL** (Bug-023 through Bug-026)
+> - Save button doesn't activate after dragging servers
+> - Configuration changes don't persist to disk
+> - Canvas state lost on page refresh
+>
+> **Recommended Use**: Performance testing only. Production use should wait for v0.1.8 (target: Feb 2, 2025)
+> when all save/load issues are resolved.
+>
+> Please [report any bugs or issues](https://github.com/itsocialist/mcp-config-manager/issues) you encounter.
 
 ---
 

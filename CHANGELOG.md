@@ -5,6 +5,63 @@ All notable changes to MCP Configuration Manager will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.7-beta] - 2025-01-27
+
+### 🔥 Major Performance Improvements
+- **FIXED**: Critical metrics performance issue - client switching now <200ms (was 30+ seconds)
+- Implemented cache-first strategy with 5-minute TTL
+- Smart background refresh with exponential backoff
+- Connection pooling (max 3 concurrent connections)
+- Failed servers no longer block UI operations
+
+### 🛠️ Configuration Management
+- **FIXED**: Claude Code project config path to match specification (`.claude/mcp.json`)
+- Updated path resolution for proper project scope detection
+- Enhanced configuration service architecture
+- Improved IPC handler reliability
+
+### 📋 Bug Fixes & Testing Infrastructure
+- Fixed 12 bugs during Sprint 3 Week 2 (exceptional achievement)
+- Added comprehensive debugging framework for save/load operations
+- Implemented real-time file monitoring for testing
+- Enhanced Visual Workspace change detection
+
+### 📚 Documentation & QA
+- Created comprehensive Sprint 4 work items documentation
+- Updated bug audit tracking with verification protocols
+- Added detailed testing procedures for all critical paths
+- Enhanced developer debugging tools
+
+### ⚠️ **Known Issues (Release Blockers)**
+The following critical issues prevent full production use:
+
+#### 🔴 Visual Workspace Save/Load System
+- **Bug-023**: Save button does not activate after dragging nodes on canvas
+- **Bug-024**: Configuration changes not persisting to disk
+- **Bug-025**: Auto-save functionality not implemented
+- **Bug-026**: Canvas state lost on page refresh
+
+#### 🟡 System Stability
+- **Bug-021**: Infinite retry loops for failed server connections
+- **Bug-022**: Claude Desktop launches unexpectedly during app/test runs
+
+#### 🟡 UI Polish (8 remaining issues)
+- Various Visual Workspace layout and interaction improvements needed
+- Project scope display issues
+- Discovery page installation errors
+
+### 🚧 **Beta Release Notes**
+This release significantly improves performance but **Visual Workspace save/load is non-functional**.
+Recommended for testing performance improvements only. Production use should wait for v0.1.8
+when all save/load issues are resolved.
+
+### 🎯 **Next Release (v0.1.8 - Target: Feb 2, 2025)**
+- Fix all Visual Workspace save/load issues (Bug-023 through Bug-026)
+- Implement proper retry limiting for failed connections
+- Complete UI polish for production readiness
+
+---
+
 ## [0.1.6] - 2025-09-19
 
 ### Fixed

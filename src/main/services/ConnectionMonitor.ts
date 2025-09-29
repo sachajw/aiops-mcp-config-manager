@@ -275,6 +275,127 @@ export class ConnectionMonitor extends EventEmitter {
   }
 
   /**
+   * Schedule smart background refresh
+   * Only refreshes servers that need updates, with intelligent batching
+   */
+  public async scheduleSmartRefresh(serverConfigs: Record<string, any>): Promise<void> {
+    const serverNames = Object.keys(serverConfigs);
+    console.log(`[ConnectionMonitor] Scheduling smart refresh for ${serverNames.length} servers`);
+
+    // Filter servers that actually need refresh
+    const serversNeedingRefresh = serverNames.filter(name => {
+      const status = this.connections.get(name);
+
+      // Skip if recently connected and healthy
+      if (status?.status === 'connected' && status.lastPing) {
+        const timeSinceLastPing = Date.now() - status.lastPing.getTime();
+        if (timeSinceLastPing < 5 * 60 * 1000) { // 5 minutes
+          return false;
+        }
+      }
+
+      // Skip servers that failed recently (exponential backoff)
+      if (status?.status === 'error' && status.lastPing) {
+        const timeSinceError = Date.now() - status.lastPing.getTime();
+        const backoffTime = Math.min(30 * 60 * 1000, Math.pow(2, status.errorCount) * 60 * 1000); // Max 30 minutes
+        if (timeSinceError < backoffTime) {
+          console.log(`[ConnectionMonitor] Skipping ${name} due to backoff (${Math.round(backoffTime/1000)}s remaining)`);
+          return false;
+        }
+      }
+
+      return true;
+    });
+
+    if (serversNeedingRefresh.length === 0) {
+      console.log(`[ConnectionMonitor] All servers are fresh or in backoff, skipping refresh`);
+      return;
+    }
+
+    console.log(`[ConnectionMonitor] Smart refresh needed for: ${serversNeedingRefresh.join(', ')}`);
+
+    // Process in small batches with delays
+    const batchSize = 3;
+    for (let i = 0; i < serversNeedingRefresh.length; i += batchSize) {
+      const batch = serversNeedingRefresh.slice(i, i + batchSize);
+
+      // Process batch in parallel
+      await Promise.all(batch.map(async (serverName) => {
+        try {
+          const serverConfig = serverConfigs[serverName];
+          await this.refreshServerConnection(serverName, serverConfig);
+        } catch (error) {
+          console.warn(`[ConnectionMonitor] Smart refresh failed for ${serverName}:`, error);
+        }
+      }));
+
+      // Add delay between batches
+      if (i + batchSize < serversNeedingRefresh.length) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+    }
+  }
+
+  /**
+   * Refresh a single server connection intelligently
+   */
+  private async refreshServerConnection(serverName: string, serverConfig: any): Promise<void> {
+    if (!serverConfig?.command) {
+      console.log(`[ConnectionMonitor] No valid config for ${serverName}, skipping`);
+      return;
+    }
+
+    console.log(`[ConnectionMonitor] Refreshing connection for ${serverName}`);
+
+    try {
+      // Start monitoring with a short timeout for background refresh
+      await Promise.race([
+        this.startMonitoring(
+          serverName,
+          serverName,
+          serverConfig.command,
+          serverConfig.args,
+          serverConfig.env,
+          serverConfig.cwd
+        ),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Connection timeout')), 10000) // 10 second timeout
+        )
+      ]);
+
+      console.log(`[ConnectionMonitor] Successfully refreshed ${serverName}`);
+    } catch (error) {
+      console.warn(`[ConnectionMonitor] Failed to refresh ${serverName}:`, error);
+
+      // Update status to reflect the failure
+      const status = this.connections.get(serverName);
+      if (status) {
+        status.status = 'error';
+        status.errorCount = (status.errorCount || 0) + 1;
+        status.lastPing = new Date();
+        this.emit('statusChange', status);
+      }
+    }
+  }
+
+  /**
+   * Get servers that need background refresh
+   */
+  public getServersNeedingRefresh(): string[] {
+    const needRefresh: string[] = [];
+
+    for (const [serverId, status] of this.connections) {
+      // Check if server needs refresh based on last activity
+      if (status.status === 'disconnected' ||
+          (status.lastPing && Date.now() - status.lastPing.getTime() > 5 * 60 * 1000)) {
+        needRefresh.push(serverId);
+      }
+    }
+
+    return needRefresh;
+  }
+
+  /**
    * Stop all monitoring
    */
   public async stopAll(): Promise<void> {

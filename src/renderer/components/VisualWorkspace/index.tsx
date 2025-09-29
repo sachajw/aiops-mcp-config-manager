@@ -50,7 +50,10 @@ export const VisualWorkspace: React.FC = () => {
     setServers,
     setActiveClient,
     detectClients,
-    selectClient
+    selectClient,
+    isDirty,
+    saveConfig,
+    setDirty
   } = useConfigStore() as any;
 
   const { settings } = useSettingsStore();
@@ -75,8 +78,65 @@ export const VisualWorkspace: React.FC = () => {
   );
 
   // React Flow state
-  const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
+  const [nodes, setNodes, defaultOnNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
+
+  // Custom onNodesChange handler that detects moves and sets dirty state
+  const onNodesChange = useCallback((changes: any[]) => {
+    console.log('[VisualWorkspace] onNodesChange called with changes:', JSON.stringify(changes, null, 2));
+
+    // Log each change type for debugging
+    changes.forEach((change, index) => {
+      console.log(`[VisualWorkspace] Change ${index}:`, {
+        type: change.type,
+        id: change.id,
+        dragging: change.dragging,
+        position: change.position,
+        positionAbsolute: change.positionAbsolute,
+        selected: change.selected,
+        keys: Object.keys(change)
+      });
+    });
+
+    // Check for ANY type of change that should trigger dirty state
+    const shouldSetDirty = changes.some(change => {
+      // Position changes (dragging)
+      if (change.type === 'position') {
+        console.log('[VisualWorkspace] Detected position change');
+        return true;
+      }
+
+      // Selection changes with dragging
+      if (change.type === 'select' && change.dragging) {
+        console.log('[VisualWorkspace] Detected select with dragging');
+        return true;
+      }
+
+      // Dimension changes with dragging
+      if (change.type === 'dimensions' && change.dragging) {
+        console.log('[VisualWorkspace] Detected dimensions change with dragging');
+        return true;
+      }
+
+      // Any change that includes position data
+      if (change.position || change.positionAbsolute) {
+        console.log('[VisualWorkspace] Detected change with position data');
+        return true;
+      }
+
+      return false;
+    });
+
+    if (shouldSetDirty) {
+      console.log('[VisualWorkspace] Setting dirty state due to node changes');
+      setDirty(true);
+    } else {
+      console.log('[VisualWorkspace] No dirty-triggering changes detected');
+    }
+
+    // Apply the changes to React Flow
+    defaultOnNodesChange(changes);
+  }, [defaultOnNodesChange, setDirty]);
 
   // Track client server counts
   const [clientServerCounts, setClientServerCounts] = React.useState<Record<string, number>>({});
@@ -232,62 +292,152 @@ export const VisualWorkspace: React.FC = () => {
 
   // Initialize nodes from current configuration - Client-specific view
   React.useEffect(() => {
-    // Force refresh metrics when activeClient changes to ensure fresh data
-    const shouldForceRefresh = activeClient !== null;
-    console.log(`[VisualWorkspace] Rebuilding canvas for client: ${activeClient}, forceRefresh: ${shouldForceRefresh}`);
+    console.log(`[VisualWorkspace] Rebuilding canvas for client: ${activeClient}`);
 
-    fetchMetrics(shouldForceRefresh).then((metrics) => {
-      // Only show servers for the active client - NO FAKE DATA
-      const serverNodes: Node[] = Object.entries(servers).map(([name, server], index) => {
-        return {
-          id: `server-${name}`,
-          type: 'server',
-          position: { x: 200, y: 100 + index * 100 },
-          data: {
-            label: name,
-            server,
-            icon: '📦',
-            tools: metrics[name]?.loading ? '—' : (typeof metrics[name]?.toolCount === 'number' ? metrics[name].toolCount : '—'),  // Show actual value or dash
-            tokens: metrics[name]?.loading ? '—' : (typeof metrics[name]?.tokenUsage === 'number' ? metrics[name].tokenUsage : '—'), // Show actual value or dash
-            loading: metrics[name]?.loading === true, // Explicit loading check
-            error: metrics[name]?.error === true // Explicit error check, no fallback
-          },
-        };
+    // CACHE-FIRST APPROACH: Show cached metrics immediately, then refresh in background
+    const getCachedMetricsSync = () => {
+      const metrics: Record<string, any> = {};
+      Object.keys(servers).forEach(name => {
+        const cacheKey = `${activeClient}-${name}-${JSON.stringify(servers[name])}`;
+        const cached = metricsCache.current.get(cacheKey);
+        if (cached && (Date.now() - cached.timestamp < METRICS_CACHE_TTL)) {
+          metrics[name] = cached.data;
+        } else {
+          // Show cached data with loading indicator
+          metrics[name] = {
+            toolCount: cached?.data?.toolCount ?? undefined,
+            tokenUsage: cached?.data?.tokenUsage ?? undefined,
+            loading: true
+          };
+        }
       });
+      return metrics;
+    };
 
-      // Show the active client as the main node
-      const activeClientData = clients.find((c: any) => c.name === activeClient);
-      const clientNodes: Node[] = activeClientData ? [{
-        id: `client-${activeClient}`,
-        type: 'client',
-        position: { x: 600, y: 250 },
+    // Get cached metrics immediately (no blocking)
+    const cachedMetrics = getCachedMetricsSync();
+
+    // Build UI immediately with cached data
+    const serverNodes: Node[] = Object.entries(servers).map(([name, server], index) => {
+      return {
+        id: `server-${name}`,
+        type: 'server',
+        position: { x: 200, y: 100 + index * 100 },
         data: {
-          label: (activeClientData as any).displayName || activeClientData.name,
-          client: activeClientData,
-          icon: '🤖',
-          serverCount: clientServerCounts[activeClient as string] || Object.keys(servers).length,
-          maxServers: 20,
-          isMain: true
+          label: name,
+          server,
+          icon: '📦',
+          tools: cachedMetrics[name]?.loading ? '—' : (typeof cachedMetrics[name]?.toolCount === 'number' ? cachedMetrics[name].toolCount : '—'),
+          tokens: cachedMetrics[name]?.loading ? '—' : (typeof cachedMetrics[name]?.tokenUsage === 'number' ? cachedMetrics[name].tokenUsage : '—'),
+          loading: cachedMetrics[name]?.loading === true,
+          error: cachedMetrics[name]?.error === true
         },
-      }] : [];
+      };
+    });
 
-      // Create edges between servers and the active client
-      const newEdges: Edge[] = serverNodes.map((serverNode) => ({
-        id: `${serverNode.id}-client-${activeClient}`,
-        source: serverNode.id,
-        target: `client-${activeClient}`,
-        type: 'cable',
-        animated: true,
-        data: {
-          tension: 0.5,
-          sag: 20,
+    // Show the active client as the main node
+    const activeClientData = clients.find((c: any) => c.name === activeClient);
+    const clientNodes: Node[] = activeClientData ? [{
+      id: `client-${activeClient}`,
+      type: 'client',
+      position: { x: 600, y: 250 },
+      data: {
+        label: (activeClientData as any).displayName || activeClientData.name,
+        client: activeClientData,
+        icon: '🤖',
+        serverCount: clientServerCounts[activeClient as string] || Object.keys(servers).length,
+        maxServers: 20,
+        isMain: true
+      },
+    }] : [];
+
+    // Create edges between servers and the active client
+    const newEdges: Edge[] = serverNodes.map((serverNode) => ({
+      id: `${serverNode.id}-client-${activeClient}`,
+      source: serverNode.id,
+      target: `client-${activeClient}`,
+      type: 'cable',
+      animated: true,
+      data: {
+        tension: 0.5,
+        sag: 20,
+      }
+    }));
+
+    // Update UI immediately with cached data
+    setNodes([...serverNodes, ...clientNodes]);
+    setEdges(newEdges);
+
+    // Start background refresh for stale data (non-blocking)
+    setTimeout(() => {
+      refreshMetricsInBackground();
+    }, 100); // Small delay to ensure UI renders first
+  }, [servers, clients, activeClient, activeScope, setNodes, setEdges, clientServerCounts]);
+
+  // Background refresh function (non-blocking)
+  const refreshMetricsInBackground = React.useCallback(async () => {
+    if (!activeClient || activeClient === 'catalog') return;
+
+    console.log(`[VisualWorkspace] Starting background metrics refresh for ${activeClient}`);
+    const serverNames = Object.keys(servers);
+
+    // Batch process servers (max 3 concurrent)
+    const batchSize = 3;
+    for (let i = 0; i < serverNames.length; i += batchSize) {
+      const batch = serverNames.slice(i, i + batchSize);
+
+      // Process batch in parallel
+      await Promise.all(batch.map(async (name) => {
+        try {
+          const serverConfig = servers[name];
+          const cacheKey = `${activeClient}-${name}-${JSON.stringify(serverConfig)}`;
+          const cached = metricsCache.current.get(cacheKey);
+
+          // Skip if cache is fresh (< 5 minutes)
+          if (cached && (Date.now() - cached.timestamp < METRICS_CACHE_TTL)) {
+            return;
+          }
+
+          console.log(`[VisualWorkspace] Background refresh for server: ${name}`);
+          const serverMetrics = await (window as any).electronAPI?.getServerMetrics?.(name, serverConfig, false);
+
+          if (serverMetrics && typeof serverMetrics.toolCount === 'number') {
+            // Update cache
+            metricsCache.current.set(cacheKey, {
+              data: serverMetrics,
+              timestamp: Date.now()
+            });
+
+            // Update UI nodes silently
+            setNodes(prevNodes => prevNodes.map(node => {
+              if (node.id === `server-${name}`) {
+                return {
+                  ...node,
+                  data: {
+                    ...node.data,
+                    tools: typeof serverMetrics.toolCount === 'number' ? serverMetrics.toolCount : '—',
+                    tokens: typeof serverMetrics.tokenUsage === 'number' ? serverMetrics.tokenUsage : '—',
+                    loading: false,
+                    error: false
+                  }
+                };
+              }
+              return node;
+            }));
+          }
+        } catch (error) {
+          console.warn(`[VisualWorkspace] Background refresh failed for ${name}:`, error);
         }
       }));
 
-      setNodes([...serverNodes, ...clientNodes]);
-      setEdges(newEdges);
-    });
-  }, [servers, clients, activeClient, activeScope, setNodes, setEdges, clientServerCounts]);
+      // Small delay between batches
+      if (i + batchSize < serverNames.length) {
+        await new Promise(resolve => setTimeout(resolve, 200));
+      }
+    }
+
+    console.log(`[VisualWorkspace] Background metrics refresh completed for ${activeClient}`);
+  }, [activeClient, servers, setNodes]);
 
   // Handle connection creation
   const onConnect = useCallback(
@@ -511,7 +661,13 @@ export const VisualWorkspace: React.FC = () => {
     const wasJustDragging = isDragging; // Store the value before resetting
     setIsDragging(false);
 
-    console.log('Drag ended', { activeId: active.id, overId: over?.id, wasJustDragging });
+    console.log('[VisualWorkspace] handleDragEnd:', { activeId: active.id, overId: over?.id, wasJustDragging });
+
+    // Always set dirty when any drag ends (covers any dragging action)
+    if (wasJustDragging) {
+      console.log('[VisualWorkspace] Setting dirty state due to drag end');
+      setDirty(true);
+    }
 
     // Handle client drag
     if (active.id.toString().startsWith('client-')) {
@@ -651,13 +807,21 @@ export const VisualWorkspace: React.FC = () => {
             setEdges((eds) => [...eds, newEdge]);
           }
 
-          // Save to configuration if auto-save is enabled
-          if (autoSave && activeClient && activeClient !== 'catalog' && serverData) {
+          // Always add to configuration (save button will handle persistence)
+          if (activeClient && activeClient !== 'catalog' && serverData) {
             const serverConfig = {
               ...serverData,
               name: serverName
             };
+            console.log(`[VisualWorkspace] Drag end - adding server ${serverName} to store`, serverConfig);
             addServer(serverName, serverConfig);
+            console.log('[VisualWorkspace] After addServer, isDirty should be true:', isDirty);
+
+            // Auto-save if enabled
+            if (autoSave) {
+              console.log('[VisualWorkspace] Auto-save enabled, saving configuration...');
+              saveConfig();
+            }
           }
         }
       }
@@ -733,13 +897,18 @@ export const VisualWorkspace: React.FC = () => {
         };
         setEdges((eds) => [...eds, newEdge]);
 
-        // Save to configuration if auto-save is enabled
-        if (autoSave && activeClient && activeClient !== 'catalog' && serverData) {
+        // Always add to configuration (save button will handle persistence)
+        if (activeClient && activeClient !== 'catalog' && serverData) {
           const serverConfig = {
             ...serverData,
             name: serverName
           };
           addServer(serverName, serverConfig);
+
+          // Auto-save if enabled
+          if (autoSave) {
+            saveConfig();
+          }
         }
       }
     }
@@ -748,21 +917,32 @@ export const VisualWorkspace: React.FC = () => {
   };
 
   // Save current configuration
-  const handleSaveConfiguration = () => {
+  const handleSaveConfiguration = async () => {
+    console.log('[VisualWorkspace] Save button clicked');
+    console.log('[VisualWorkspace] Current isDirty state:', isDirty);
+    console.log('[VisualWorkspace] Current servers in store:', servers);
+
     // Save all nodes and edges to the active client's configuration
     const serverNodes = nodes.filter(n => n.type === 'server');
     const clientNodes = nodes.filter(n => n.type === 'client');
+
+    console.log('[VisualWorkspace] Server nodes to save:', serverNodes.map(n => ({ name: n.data.label, data: n.data.server })));
 
     // For each server node, save it to configuration
     serverNodes.forEach(node => {
       const serverName = node.data.label;
       const serverData = node.data.server;
       if (serverData) {
+        console.log(`[VisualWorkspace] Adding server ${serverName} to store`);
         addServer(serverName, serverData);
       }
     });
 
-    // Multi-client save not yet implemented
+    // Call saveConfig to persist to disk
+    console.log('[VisualWorkspace] Calling saveConfig()...');
+    const result = await saveConfig();
+    console.log('[VisualWorkspace] saveConfig result:', result);
+    console.log('[VisualWorkspace] New isDirty state:', isDirty);
     console.log('Configuration saved');
   };
 
@@ -934,27 +1114,11 @@ export const VisualWorkspace: React.FC = () => {
                   onClick={async () => {
                     setIsRefreshing(true);
                     try {
-                      const metrics = await fetchMetrics(true);
-                      // Update nodes with refreshed metrics
-                      setNodes(prevNodes => {
-                        return prevNodes.map(node => {
-                          if (node.type === 'server' && node.data) {
-                            const serverName = (node.data.server && typeof node.data.server === 'object' && 'name' in node.data.server && typeof node.data.server.name === 'string' && node.data.server.name) || node.id.replace('server-', '');
-                            const metric = typeof serverName === 'string' ? metrics[serverName] : undefined;
-                            if (metric) {
-                              return {
-                                ...node,
-                                data: {
-                                  ...node.data,
-                                  tools: typeof metric.toolCount === 'number' ? metric.toolCount : '—',
-                                  tokens: typeof metric.tokenUsage === 'number' ? metric.tokenUsage : '—'
-                                }
-                              };
-                            }
-                          }
-                          return node;
-                        });
-                      });
+                      // Clear cache to force fresh data
+                      metricsCache.current.clear();
+
+                      // Trigger background refresh
+                      await refreshMetricsInBackground();
                     } catch (error) {
                       console.error('Failed to refresh metrics:', error);
                     } finally {
@@ -986,10 +1150,11 @@ export const VisualWorkspace: React.FC = () => {
                 </label>
                 {!autoSave && !showJsonEditor && (
                   <button
-                    className="btn btn-primary btn-xs"
+                    className={`btn btn-primary btn-xs ${!isDirty ? 'btn-disabled' : ''}`}
                     onClick={handleSaveConfiguration}
+                    disabled={!isDirty}
                   >
-                    Save Configuration
+                    {isDirty ? 'Save Configuration *' : 'Save Configuration'}
                   </button>
                 )}
               </div>
@@ -1024,6 +1189,14 @@ export const VisualWorkspace: React.FC = () => {
                   onNodesChange={onNodesChange}
                   onEdgesChange={onEdgesChange}
                   onConnect={onConnect}
+                  onNodeDragStop={(event, node) => {
+                    console.log('[VisualWorkspace] onNodeDragStop triggered for node:', node.id);
+                    setDirty(true);
+                  }}
+                  onNodeDrag={(event, node) => {
+                    console.log('[VisualWorkspace] onNodeDrag triggered for node:', node.id);
+                    setDirty(true);
+                  }}
                   nodeTypes={nodeTypes}
                   edgeTypes={edgeTypes}
                   fitView

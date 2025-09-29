@@ -70,7 +70,7 @@ export class MacOSPathResolver {
             [ConfigScope.GLOBAL]: '/etc/claude/claude_code_config.json',
             [ConfigScope.USER]: join(homeDir, '.config', 'claude', 'claude_code_config.json'),
             [ConfigScope.LOCAL]: join(process.cwd(), '.claude', 'claude_code_config.json'),
-            [ConfigScope.PROJECT]: join(process.cwd(), 'claude_code.config.json')
+            [ConfigScope.PROJECT]: join(process.cwd(), '.claude/mcp.json')
           }
         };
 

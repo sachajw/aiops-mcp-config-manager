@@ -19,12 +19,24 @@ export function registerSimplifiedHandlers() {
   });
 
   ipcMain.handle('config:write', async (_, clientName: string, scope: string, servers: any, projectDirectory?: string) => {
+    console.log('[IPC Handler] config:write called with:', {
+      clientName,
+      scope,
+      serverCount: Object.keys(servers || {}).length,
+      servers: JSON.stringify(servers, null, 2),
+      projectDirectory
+    });
+
     try {
       const config = configService.denormalizeServers(servers, clientName);
+      console.log('[IPC Handler] Denormalized config:', JSON.stringify(config, null, 2));
+
       await configService.writeConfig(clientName, scope as any, config, projectDirectory);
+      console.log('[IPC Handler] Config written successfully to disk');
+
       return { success: true };
     } catch (error) {
-      console.error('Error writing config:', error);
+      console.error('[IPC Handler] Error writing config:', error);
       return { success: false, error: (error as Error).message };
     }
   });

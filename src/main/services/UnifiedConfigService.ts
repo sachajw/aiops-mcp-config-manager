@@ -51,7 +51,7 @@ class UnifiedConfigService {
         path.join(os.homedir(), '.claude.json') // Fallback if it's actually JSON (not HTML)
       ],
       project: (projectDir?: string) => [
-        path.join(projectDir || process.cwd(), '.mcp.json') // Project root MCP config
+        path.join(projectDir || process.cwd(), '.claude/mcp.json') // Claude Code project MCP config
       ],
       format: 'json' as const
     },
@@ -348,23 +348,34 @@ class UnifiedConfigService {
   }
 
   async writeConfig(clientName: string, scope: ConfigScope, config: MCPConfig, projectDirectory?: string): Promise<void> {
+    console.log('[UnifiedConfigService] writeConfig called:', {
+      clientName,
+      scope,
+      projectDirectory,
+      configServers: Object.keys(config.mcpServers || config.servers || {})
+    });
+
     try {
       const configPath = await this.resolvePath(clientName, scope, projectDirectory);
+      console.log('[UnifiedConfigService] Resolved config path:', configPath);
+
       const client = this.configLocations[clientName as keyof typeof this.configLocations];
-      
+
       await fs.ensureDir(path.dirname(configPath));
-      
+      console.log('[UnifiedConfigService] Ensured directory exists:', path.dirname(configPath));
+
       // For VS Code and other clients that may have other settings,
       // we need to merge, not replace
       let finalConfig = config;
-      
+
       if (await fs.pathExists(configPath)) {
+        console.log('[UnifiedConfigService] Config file exists, merging with existing content');
         const existingContent = await fs.readFile(configPath, 'utf-8');
         const existingConfig = this.parseContent(existingContent, client.format);
-        
+
         // Merge configs - preserve existing settings and only update MCP servers
         finalConfig = { ...existingConfig };
-        
+
         // Update the appropriate MCP server field based on client
         if (clientName === 'vscode' || clientName === 'cursor') {
           // VS Code and Cursor might use 'mcp.servers' or just 'servers'
@@ -382,9 +393,26 @@ class UnifiedConfigService {
       }
       
       const content = this.formatContent(finalConfig, client.format);
+      console.log('[UnifiedConfigService] Formatted content to write:', {
+        contentLength: content.length,
+        configPath,
+        serverCount: Object.keys(finalConfig.mcpServers || finalConfig.servers || {}).length
+      });
+
+      console.log('[UnifiedConfigService] Writing to file:', configPath);
       await fs.writeFile(configPath, content, 'utf-8');
+      console.log('[UnifiedConfigService] File write completed successfully');
+
+      // Verify the file was written
+      const exists = await fs.pathExists(configPath);
+      const stats = exists ? await fs.stat(configPath) : null;
+      console.log('[UnifiedConfigService] File verification:', {
+        exists,
+        size: stats?.size,
+        modified: stats?.mtime
+      });
     } catch (error) {
-      console.error(`Error writing config for ${clientName}:`, error);
+      console.error(`[UnifiedConfigService] Error writing config for ${clientName}:`, error);
       throw error;
     }
   }

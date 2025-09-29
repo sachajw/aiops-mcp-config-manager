@@ -2110,3 +2110,41 @@ All Sprint 4 objectives achieved. Project is production-ready with comprehensive
     4. Update ServerCatalogService.ts initialization
   - **Files**: `src/main/services/ServerCatalogService.ts` (interface at line 11)
   - **Priority**: CRITICAL - Core functionality blocked
+
+- [ ] **Task 177: Fix Bug-020 - Metrics Performance Issue (CRITICAL)**
+  - **Context**: Client selection triggers live connections to ALL servers
+  - **Problem**: Causes long delays when switching clients in Visual Workspace
+  - **Evidence**: All servers attempt connection on client switch
+  - **Required**:
+    - Implement lazy loading for server metrics
+    - Only connect to servers when explicitly requested
+    - Add connection pooling and throttling
+    - Cache metrics with appropriate TTL
+  - **Priority**: CRITICAL - Performance blocker for user experience
+  - **Related Bug**: Bug-020
+  - **Sprint**: Sprint 4
+
+- [ ] **Task 178: Fix Bug-021 - Infinite Retry Loop (HIGH)**
+  - **Context**: figma-dev-mode server retrying endlessly after ECONNREFUSED
+  - **Problem**: Floods console with "ECONNREFUSED ::1:9458" messages
+  - **Impact**: Performance degradation and console spam
+  - **Required**:
+    - Handle ECONNREFUSED properly in MCPClient
+    - Implement exponential backoff for retries
+    - Add maximum retry limit
+    - Properly handle server unavailability
+  - **Priority**: HIGH - System stability issue
+  - **Related Bug**: Bug-021
+  - **Sprint**: Sprint 4
+
+- [ ] **Task 179: Investigate Bug-022 - Claude Desktop Auto-Launch (MEDIUM)**
+  - **Context**: Claude Desktop launches when app or tests run
+  - **Problem**: Unwanted application activation
+  - **Required**:
+    - Check if client detection triggers app launch
+    - Review MCPClient connection initialization
+    - Examine test runner setup code
+    - Find and fix unwanted app activations
+  - **Priority**: MEDIUM - User annoyance
+  - **Related Bug**: Bug-022
+  - **Sprint**: Sprint 4

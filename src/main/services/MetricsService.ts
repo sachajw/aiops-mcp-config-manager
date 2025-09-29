@@ -25,7 +25,8 @@ export class MetricsService {
     timestamp: number;
     serverConfig: any;
   }> = new Map();
-  private readonly CACHE_DURATION = Infinity; // Never expire until refresh
+  private readonly CACHE_DURATION = 5 * 60 * 1000; // 5 minutes cache TTL
+  private readonly BACKGROUND_REFRESH_INTERVAL = 30 * 1000; // 30 seconds for background refresh
   private readonly CACHE_STORAGE_KEY = 'mcp-metrics-cache';
   // NO MOCK MODE - Only real metrics from actual servers
 
@@ -35,17 +36,48 @@ export class MetricsService {
   }
 
   /**
-   * Get cached metrics for a server
+   * Get cached metrics for a server (cache-first approach)
+   * @param serverName - Name of the server
+   * @param maxAge - Maximum cache age in milliseconds (default: 5 minutes)
+   * @returns Cached metrics or undefined
+   */
+  public getCachedMetrics(serverName: string, maxAge: number = this.CACHE_DURATION): any {
+    const cached = this.metricsCache.get(serverName);
+    if (cached) {
+      const age = Date.now() - cached.timestamp;
+      if (age <= maxAge) {
+        console.log(`[MetricsService] Using cached metrics for ${serverName} (age: ${Math.round(age/1000)}s)`);
+        return cached.metrics;
+      } else {
+        console.log(`[MetricsService] Cache expired for ${serverName} (age: ${Math.round(age/1000)}s, max: ${Math.round(maxAge/1000)}s)`);
+      }
+    }
+    return undefined;
+  }
+
+  /**
+   * Get cached metrics regardless of age (for immediate display)
    * @param serverName - Name of the server
    * @returns Cached metrics or undefined
    */
-  public getCachedMetrics(serverName: string): any {
+  public getCachedMetricsStale(serverName: string): any {
     const cached = this.metricsCache.get(serverName);
     if (cached) {
-      console.log(`[MetricsService] Using cached metrics for ${serverName}`);
-      return cached.metrics;
+      console.log(`[MetricsService] Using stale cached metrics for ${serverName}`);
+      return { ...cached.metrics, stale: true };
     }
     return undefined;
+  }
+
+  /**
+   * Check if server has fresh cached metrics
+   * @param serverName - Name of the server
+   * @param maxAge - Maximum cache age (default: 5 minutes)
+   * @returns True if fresh cache exists
+   */
+  public hasFreshCache(serverName: string, maxAge: number = this.CACHE_DURATION): boolean {
+    const cached = this.metricsCache.get(serverName);
+    return cached ? (Date.now() - cached.timestamp <= maxAge) : false;
   }
 
   /**
@@ -195,7 +227,7 @@ export class MetricsService {
   }
 
   /**
-   * Get metrics for a specific server with caching
+   * Get metrics for a specific server with cache-first strategy
    * Returns real metrics or default zeros if not connected
    *
    * TOKEN USAGE ESTIMATION FORMULA:
@@ -207,17 +239,28 @@ export class MetricsService {
    *
    * @param serverName - Name of the server to get metrics for
    * @param forceRefresh - Force refresh bypassing cache
+   * @param allowStale - Allow stale cache for immediate response
    * @returns ServerMetrics with estimated token usage
    */
-  public getServerMetrics(serverName: string, forceRefresh: boolean = false): ServerMetrics {
-    console.log(`[MetricsService] getServerMetrics called for: ${serverName}, forceRefresh: ${forceRefresh}`);
+  public getServerMetrics(serverName: string, forceRefresh: boolean = false, allowStale: boolean = false): ServerMetrics {
+    console.log(`[MetricsService] getServerMetrics called for: ${serverName}, forceRefresh: ${forceRefresh}, allowStale: ${allowStale}`);
 
     // Check cache first (unless force refresh)
     if (!forceRefresh) {
+      // Try fresh cache first
       const cached = this.getCachedMetrics(serverName);
       if (cached) {
-        console.log(`[MetricsService] Returning cached metrics for ${serverName}`);
+        console.log(`[MetricsService] Returning fresh cached metrics for ${serverName}`);
         return cached;
+      }
+
+      // If no fresh cache but stale allowed, return stale data
+      if (allowStale) {
+        const stale = this.getCachedMetricsStale(serverName);
+        if (stale) {
+          console.log(`[MetricsService] Returning stale cached metrics for ${serverName}`);
+          return stale;
+        }
       }
     } else {
       console.log(`[MetricsService] Force refresh requested for ${serverName}, bypassing cache`);
@@ -335,10 +378,130 @@ export class MetricsService {
   }
 
   /**
+   * Get cache statistics for debugging
+   */
+  public getCacheStats(): { total: number; fresh: number; stale: number } {
+    const total = this.metricsCache.size;
+    let fresh = 0;
+    let stale = 0;
+
+    for (const [, cached] of this.metricsCache) {
+      const age = Date.now() - cached.timestamp;
+      if (age <= this.CACHE_DURATION) {
+        fresh++;
+      } else {
+        stale++;
+      }
+    }
+
+    return { total, fresh, stale };
+  }
+
+  /**
    * Force refresh metrics for a server (bypasses cache)
    */
   public forceRefreshMetrics(serverName: string): ServerMetrics {
     return this.getServerMetrics(serverName, true);
+  }
+
+  /**
+   * Get metrics with cache-first strategy (for UI performance)
+   * Always returns immediately with cached data if available
+   * @param serverName - Name of the server
+   * @returns ServerMetrics (may be stale) or undefined
+   */
+  public getServerMetricsCacheFirst(serverName: string): ServerMetrics | undefined {
+    // Try fresh cache first
+    const fresh = this.getCachedMetrics(serverName);
+    if (fresh) {
+      return fresh;
+    }
+
+    // Fall back to stale cache for immediate display
+    const stale = this.getCachedMetricsStale(serverName);
+    if (stale) {
+      return stale;
+    }
+
+    return undefined;
+  }
+
+  /**
+   * Schedule background refresh for servers that need updates
+   * @param serverNames - List of server names to refresh
+   * @param serverConfigs - Map of server configurations
+   */
+  public async scheduleBackgroundRefresh(serverNames: string[], serverConfigs: Record<string, any>): Promise<void> {
+    console.log(`[MetricsService] Scheduling background refresh for ${serverNames.length} servers`);
+
+    // Filter servers that need refresh (cache older than 5 minutes or no cache)
+    const serversToRefresh = serverNames.filter(name => !this.hasFreshCache(name));
+
+    if (serversToRefresh.length === 0) {
+      console.log(`[MetricsService] All servers have fresh cache, skipping background refresh`);
+      return;
+    }
+
+    console.log(`[MetricsService] Background refresh needed for: ${serversToRefresh.join(', ')}`);
+
+    // Process servers in batches to avoid overwhelming the system
+    const batchSize = 3;
+    for (let i = 0; i < serversToRefresh.length; i += batchSize) {
+      const batch = serversToRefresh.slice(i, i + batchSize);
+
+      // Process batch in parallel
+      await Promise.all(batch.map(async (serverName) => {
+        try {
+          const serverConfig = serverConfigs[serverName];
+          if (serverConfig) {
+            // This will trigger a real refresh and update the cache
+            const metrics = await this.refreshServerInBackground(serverName, serverConfig);
+            if (metrics) {
+              console.log(`[MetricsService] Background refresh completed for ${serverName}`);
+            }
+          }
+        } catch (error) {
+          console.warn(`[MetricsService] Background refresh failed for ${serverName}:`, error);
+        }
+      }));
+
+      // Small delay between batches
+      if (i + batchSize < serversToRefresh.length) {
+        await new Promise(resolve => setTimeout(resolve, 200));
+      }
+    }
+  }
+
+  /**
+   * Refresh a single server in the background
+   * @param serverName - Name of the server
+   * @param serverConfig - Server configuration
+   * @returns Promise of server metrics or undefined
+   */
+  private async refreshServerInBackground(serverName: string, serverConfig: any): Promise<ServerMetrics | undefined> {
+    try {
+      // Use MCPServerInspector directly for background refresh
+      const { MCPServerInspector } = await import('./MCPServerInspector');
+      const inspection = await MCPServerInspector.inspectServer(serverName, serverConfig, false);
+
+      if (inspection && typeof inspection.toolCount === 'number') {
+        const metrics: ServerMetrics = {
+          toolCount: inspection.toolCount,
+          tokenUsage: inspection.tokenUsage ?? 0,
+          responseTime: 0,
+          lastUpdated: inspection.timestamp,
+          isConnected: !inspection.error
+        };
+
+        // Cache the refreshed metrics
+        this.setCachedMetrics(serverName, metrics, serverConfig);
+        return metrics;
+      }
+    } catch (error) {
+      console.warn(`[MetricsService] Background refresh failed for ${serverName}:`, error);
+    }
+
+    return undefined;
   }
 
   /**

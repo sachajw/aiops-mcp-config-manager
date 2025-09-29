@@ -17,19 +17,33 @@ export class MetricsHandler extends BaseHandler {
   register(): void {
     const metricsService = container.getMetricsService();
 
-    // Get server metrics with optional force refresh
+    // Get server metrics with cache-first strategy
     this.handle<[string, any?, boolean?], any>(
       'getServerMetrics',
       async (_, serverName: string, serverConfig?: any, forceRefresh: boolean = false) => {
         console.log(`[MetricsHandler] getServerMetrics called for ${serverName}, forceRefresh: ${forceRefresh}`);
         console.log(`[MetricsHandler] Server config provided:`, serverConfig);
 
-        // Check cache first (unless force refresh)
+        // CACHE-FIRST STRATEGY: Always try cache first for immediate response
         if (!forceRefresh) {
+          // Try fresh cache first
           const cached = metricsService.getCachedMetrics(serverName);
           if (cached) {
-            console.log(`[MetricsHandler] Using cached metrics for ${serverName}`);
+            console.log(`[MetricsHandler] Using fresh cached metrics for ${serverName}`);
             return cached;
+          }
+
+          // If no fresh cache, try stale cache for immediate response
+          const stale = metricsService.getCachedMetricsStale(serverName);
+          if (stale) {
+            console.log(`[MetricsHandler] Using stale cached metrics for ${serverName} (background refresh will update)`);
+            // Schedule background refresh but return stale data immediately
+            if (serverConfig) {
+              setImmediate(() => {
+                this.refreshInBackground(serverName, serverConfig, metricsService);
+              });
+            }
+            return stale;
           }
         }
 
@@ -67,6 +81,9 @@ export class MetricsHandler extends BaseHandler {
         } else {
           console.log(`[MetricsHandler] No valid server config provided for ${serverName}, falling back to MetricsService`);
         }
+
+        // No cache available - try real connection (blocking for first time)
+        console.log(`[MetricsHandler] No cache available for ${serverName}, attempting real connection`);
 
         // Fall back to metrics service (with force refresh if requested)
         const fallbackMetrics = metricsService.getServerMetrics(serverName, forceRefresh);
@@ -135,5 +152,43 @@ export class MetricsHandler extends BaseHandler {
     );
 
     console.log('[MetricsHandler] Registered all metrics handlers');
+  }
+
+  /**
+   * Refresh server metrics in background (non-blocking)
+   */
+  private async refreshInBackground(serverName: string, serverConfig: any, metricsService: any): Promise<void> {
+    try {
+      console.log(`[MetricsHandler] Starting background refresh for ${serverName}`);
+      const { MCPServerInspector } = await import('../../services/MCPServerInspector');
+      const inspection = await MCPServerInspector.inspectServer(serverName, serverConfig, false);
+
+      if (inspection && typeof inspection.toolCount === 'number') {
+        const metrics = {
+          toolCount: inspection.toolCount,
+          tokenUsage: inspection.tokenUsage ?? 0,
+          responseTime: 0,
+          lastUpdated: inspection.timestamp,
+          isConnected: !inspection.error
+        };
+
+        // Update cache with fresh data
+        metricsService.setCachedMetrics(serverName, metrics, serverConfig);
+        console.log(`[MetricsHandler] Background refresh completed for ${serverName}`);
+      }
+    } catch (error) {
+      console.warn(`[MetricsHandler] Background refresh failed for ${serverName}:`, error);
+    }
+  }
+
+  /**
+   * Schedule batch background refresh for multiple servers
+   */
+  private async scheduleBatchRefresh(serverConfigs: Record<string, any>, metricsService: any): Promise<void> {
+    const serverNames = Object.keys(serverConfigs);
+    console.log(`[MetricsHandler] Scheduling batch refresh for ${serverNames.length} servers`);
+
+    // Use MetricsService's batch refresh functionality
+    await metricsService.scheduleBackgroundRefresh(serverNames, serverConfigs);
   }
 }

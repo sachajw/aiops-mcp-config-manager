@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "test-server": {
+      "command": "echo",
+      "args": ["hello"],
+      "description": "Test server for Bug-024 validation"
+    }
+  }
+}

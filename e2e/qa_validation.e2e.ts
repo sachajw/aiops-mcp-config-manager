@@ -19,7 +19,7 @@ test.describe('QA Validation - Recent Fixes', () => {
   test.beforeAll(async () => {
     // Connect to running Electron app on debug port 9222
     console.log('Connecting to running Electron app...');
-    const browser = await chromium.connectOverCDP('http://localhost:9222');
+    const browser = await chromium.connectOverCDP('http://127.0.0.1:9222');
     const contexts = browser.contexts();
 
     if (contexts.length === 0) {

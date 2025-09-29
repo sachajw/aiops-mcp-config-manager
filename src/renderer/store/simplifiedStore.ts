@@ -385,14 +385,19 @@ export const useConfigStore = create<AppState>((set, get) => ({
   // Save configuration back to file
   saveConfig: async () => {
     const { activeClient, activeScope, servers, projectDirectory } = get();
-    
+
+    console.log('[Store] saveConfig called');
+    console.log('[Store] Active client:', activeClient);
+    console.log('[Store] Active scope:', activeScope);
+    console.log('[Store] Servers to save:', servers);
+
     if (!activeClient) {
       set({ error: 'No client selected' });
       return null;
     }
-    
+
     set({ isLoading: true, error: null });
-    
+
     try {
       // Create backup first
       const backupResult = await electronAPI.backupConfig(
@@ -402,21 +407,32 @@ export const useConfigStore = create<AppState>((set, get) => ({
       );
       
       // Save configuration
+      console.log('[Store] Calling electronAPI.writeConfig with:', {
+        client: activeClient,
+        scope: activeScope,
+        servers: servers,
+        projectDir: activeScope === 'project' ? projectDirectory : 'N/A'
+      });
+
       const result = await electronAPI.writeConfig(
         activeClient,
         activeScope,
         servers as any,
         activeScope === 'project' ? (projectDirectory || undefined) : undefined
       );
+
+      console.log('[Store] writeConfig result:', result);
       
       if (result.success) {
-        set({ 
+        console.log('[Store] Save successful, setting isDirty to false');
+        set({
           isDirty: false,
           isLoading: false,
           error: null
         });
         return backupResult; // Return backup result for UI to use
       } else {
+        console.log('[Store] Save failed:', result.error);
         set({ 
           error: result.error || 'Failed to save configuration',
           isLoading: false
@@ -639,5 +655,11 @@ export const useConfigStore = create<AppState>((set, get) => ({
     } catch (error) {
       set({ error: `Failed to import profile: ${(error as Error).message}` });
     }
+  },
+
+  // Mark configuration as dirty (needs saving)
+  setDirty: (dirty: boolean = true) => {
+    console.log(`[Store] Setting isDirty to ${dirty}`);
+    set({ isDirty: dirty });
   }
 }));

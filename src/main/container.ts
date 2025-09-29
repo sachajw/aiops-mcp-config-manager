@@ -50,13 +50,19 @@ export interface IBackupManager {
 }
 
 export interface IMetricsService {
-  getServerMetrics(serverName: string, forceRefresh?: boolean): any;
+  getServerMetrics(serverName: string, forceRefresh?: boolean, allowStale?: boolean): any;
   getTotalMetrics(serverNames: string[]): any;
   updateServerMetrics(serverName: string, metrics: any): void;
   clearMetrics(): void;
-  getCachedMetrics(serverName: string): any;
+  getCachedMetrics(serverName: string, maxAge?: number): any;
+  getCachedMetricsStale(serverName: string): any;
+  hasFreshCache(serverName: string, maxAge?: number): boolean;
   setCachedMetrics(serverName: string, metrics: any, serverConfig: any): void;
   forceRefreshMetrics(serverName: string): any;
+  getServerMetricsCacheFirst(serverName: string): any;
+  scheduleBackgroundRefresh(serverNames: string[], serverConfigs: Record<string, any>): Promise<void>;
+  clearCacheForServer(serverName: string): void;
+  getCacheStats(): { total: number; fresh: number; stale: number };
   prefetchMetricsForAllServers(): Promise<void>;
 }
 
