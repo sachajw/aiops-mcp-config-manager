@@ -3,6 +3,7 @@ import * as path from 'path';
 import * as os from 'os';
 import * as toml from '@iarna/toml';
 import JSON5 from 'json5';
+import { promises as fsPromises } from 'fs';
 
 export interface MCPServer {
   // Local server config
@@ -37,6 +38,24 @@ export interface DetectedClient {
 type ConfigScope = 'user' | 'project' | 'system';
 
 class UnifiedConfigService {
+  /**
+   * Bug-022 Fix: Read file with explicit read-only flag to prevent triggering macOS Launch Services
+   */
+  private async readFileReadOnly(filePath: string): Promise<string> {
+    try {
+      // Use native fs with 'r' flag (read-only) instead of fs-extra
+      // This prevents macOS from launching the associated application
+      const fileHandle = await fsPromises.open(filePath, 'r');
+      const content = await fileHandle.readFile({ encoding: 'utf-8' });
+      await fileHandle.close();
+      return content;
+    } catch (error) {
+      // Fall back to fs-extra if native fs fails
+      console.warn(`[UnifiedConfigService] Native read failed for ${filePath}, falling back to fs-extra`);
+      return await fs.readFile(filePath, 'utf-8');
+    }
+  }
+
   private configLocations = {
     'claude-desktop': {
       displayName: 'Claude Desktop',
@@ -178,7 +197,8 @@ class UnifiedConfigService {
           // Special check for .claude.json to ensure it's valid JSON
           if (p.endsWith('.claude.json')) {
             try {
-              const content = await fs.readFile(p, 'utf-8');
+              // Bug-022 Fix: Use read-only method
+              const content = await this.readFileReadOnly(p);
               JSON.parse(content); // Will throw if not valid JSON
               return p;
             } catch {
@@ -333,9 +353,10 @@ class UnifiedConfigService {
         return { configPath };
       }
 
-      const content = await fs.readFile(configPath, 'utf-8');
+      // Bug-022 Fix: Use read-only method
+      const content = await this.readFileReadOnly(configPath);
       const client = this.configLocations[clientName as keyof typeof this.configLocations];
-      
+
       const config = this.parseContent(content, client.format);
       const servers = this.normalizeServers(config);
       console.log(`[UnifiedConfigService] Found ${Object.keys(servers).length} MCP servers for ${clientName}`);
@@ -370,7 +391,8 @@ class UnifiedConfigService {
 
       if (await fs.pathExists(configPath)) {
         console.log('[UnifiedConfigService] Config file exists, merging with existing content');
-        const existingContent = await fs.readFile(configPath, 'utf-8');
+        // Bug-022 Fix: Use read-only method
+        const existingContent = await this.readFileReadOnly(configPath);
         const existingConfig = this.parseContent(existingContent, client.format);
 
         // Merge configs - preserve existing settings and only update MCP servers

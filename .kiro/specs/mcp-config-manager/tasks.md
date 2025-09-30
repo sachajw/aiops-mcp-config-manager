@@ -15,14 +15,23 @@
   - Built performance monitoring
 
 ### Current Sprint:
-- **Sprint 3**: 🚀 Server Lifecycle Testing (STARTED - Week 1)
-  - **Theme**: "Production-ready with reliable server management"
-  - **Target**: 80% service coverage + 70% component coverage
-  - ✅ Sprint 3 P0 test implementation complete (131 passing tests)
-  - 🔄 Sprint 3 P1 service testing in progress
-  - 📋 Server lifecycle focus: install → configure → monitor → test
+- **Sprint 4**: 🔴 Critical Bug Fixes (STARTED - January 27, 2025)
+  - **Theme**: "Fix Visual Workspace Save/Load - RELEASE BLOCKERS"
+  - **Critical Bugs (Must Fix)**:
+    - Bug-023: Save button doesn't activate after dragging nodes
+    - Bug-024: Config changes don't persist to disk
+    - Bug-025: Auto-save functionality not implemented
+    - Bug-026: Canvas state lost on page refresh
+    - Bug-021: Infinite retry loops for failed connections
+    - Bug-022: Claude Desktop launches unexpectedly
+  - **Target**: February 2, 2025 completion
+  - **Status**: Bug-023 in progress (previous fix failed QA)
 
 ### Previous Sprints:
+- **Sprint 3**: ✅ Server Lifecycle Testing (COMPLETED - Week 2)
+  - Fixed 12 bugs in Sprint 3 Week 2 (exceptional achievement)
+  - Bug-020 Performance fix: <200ms client switching
+  - Enhanced testing infrastructure and debugging tools
 - **Sprint 2**: ✅ Type System Migration (100% COMPLETE! 🎉)
   - ✅ Created unified ElectronAPI type definition
   - ✅ Migrated ConfigHandler to use new ValidationResult type

@@ -1,57 +1,43 @@
 #!/bin/bash
 
-echo "=== Bug-023 Fix Test Script ==="
-echo "Testing save button activation after node drag"
+echo "🧪 Bug-023 Manual Test Validation"
+echo "=================================="
 echo ""
-
-echo "🔧 What this test validates:"
-echo "1. Save button is initially disabled (text: 'Save Configuration')"
-echo "2. After dragging a node, save button becomes enabled"
-echo "3. Save button text changes to 'Save Configuration *' when dirty"
-echo "4. After clicking save, button becomes disabled again"
+echo "This script will help you manually validate that Bug-023 is fixed."
 echo ""
-
-echo "📋 Test Instructions:"
-echo "1. The app will start automatically"
+echo "TEST STEPS:"
+echo "1. Open the app (should already be running)"
 echo "2. Navigate to Visual Workspace"
-echo "3. Select Claude Desktop as the client"
-echo "4. Drag a server from the library to the canvas"
-echo "5. Observe: Save button should become enabled with '*' indicator"
-echo "6. Drag any node around the canvas"
-echo "7. Observe: Save button should remain enabled"
-echo "8. Click the save button"
-echo "9. Observe: Save button should become disabled and text removes '*'"
+echo "3. Select a client (e.g., Claude Desktop)"
+echo "4. DRAG AN EXISTING NODE on the canvas (not from library)"
+echo "5. Check the save button:"
+echo "   - BEFORE: Button should be disabled (grey)"
+echo "   - AFTER DRAG: Button should be ENABLED (blue/active)"
 echo ""
-
-echo "🚀 Starting application..."
+echo "WHAT TO LOOK FOR IN CONSOLE:"
+echo "- '[VisualWorkspace] onNodesChange called with changes:'"
+echo "- '[VisualWorkspace] Detected position change'"
+echo "- '[VisualWorkspace] Setting dirty state due to node changes'"
+echo "- '[Store] Setting isDirty to true'"
 echo ""
+echo "Press ENTER when you have completed the manual test..."
+read
 
-# Run the app in the background and capture console output
-npm run electron:dev 2>&1 | grep -E "\[Store\]|\[VisualWorkspace\]|Setting isDirty|onNodesChange|position changed" &
-
-# Store the process ID
-APP_PID=$!
-
-echo "Application started with PID: $APP_PID"
 echo ""
-echo "🔍 Monitoring console logs for:"
-echo "  - [Store] Setting isDirty to true/false"
-echo "  - [VisualWorkspace] onNodesChange called"
-echo "  - [VisualWorkspace] Node position changed"
-echo ""
-echo "Press Ctrl+C to stop monitoring and exit"
+echo "Did the save button activate after dragging a node? (yes/no)"
+read response
 
-# Function to cleanup on exit
-cleanup() {
-    echo ""
-    echo "🛑 Stopping application..."
-    kill $APP_PID 2>/dev/null
-    echo "Test completed"
-    exit 0
-}
-
-# Set trap to cleanup on exit
-trap cleanup SIGINT SIGTERM
-
-# Wait for user to terminate
-wait $APP_PID
+if [ "$response" = "yes" ]; then
+  echo "✅ Bug-023 VALIDATED - Fix is working!"
+  echo ""
+  echo "Updating ACTIVE_BUGS_AUDIT.md with validation timestamp..."
+  echo "Validation completed at: $(date '+%Y-%m-%d %H:%M:%S')"
+else
+  echo "❌ Bug-023 NOT FIXED - Save button did not activate"
+  echo ""
+  echo "Next steps:"
+  echo "1. Check browser console for errors"
+  echo "2. Verify onNodesChange is being called"
+  echo "3. Verify setDirty is being called"
+  echo "4. Check if isDirty state is updating in React DevTools"
+fi

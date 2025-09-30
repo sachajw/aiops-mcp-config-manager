@@ -57,6 +57,7 @@ interface AppState {
   deleteProfile: (name: string) => void;
   exportProfile: (name: string) => void;
   importProfile: (profileData: string) => void;
+  setDirty: (dirty?: boolean) => void;
 }
 
 // Import the unified type
@@ -386,12 +387,18 @@ export const useConfigStore = create<AppState>((set, get) => ({
   saveConfig: async () => {
     const { activeClient, activeScope, servers, projectDirectory } = get();
 
-    console.log('[Store] saveConfig called');
+    console.log('═══════════════════════════════════════════════════════');
+    console.log('[Store] 💾 SAVE CONFIG STARTED');
+    console.log('═══════════════════════════════════════════════════════');
     console.log('[Store] Active client:', activeClient);
     console.log('[Store] Active scope:', activeScope);
-    console.log('[Store] Servers to save:', servers);
+    console.log('[Store] Project directory:', projectDirectory);
+    console.log('[Store] Number of servers to save:', Object.keys(servers).length);
+    console.log('[Store] Server names:', Object.keys(servers));
+    console.log('[Store] Full servers object:', JSON.stringify(servers, null, 2));
 
     if (!activeClient) {
+      console.error('[Store] ❌ No client selected, aborting save');
       set({ error: 'No client selected' });
       return null;
     }
@@ -400,19 +407,21 @@ export const useConfigStore = create<AppState>((set, get) => ({
 
     try {
       // Create backup first
+      console.log('[Store] 📋 Creating backup...');
       const backupResult = await electronAPI.backupConfig(
         activeClient,
         activeScope,
         activeScope === 'project' ? (projectDirectory || undefined) : undefined
       );
-      
+      console.log('[Store] Backup result:', backupResult);
+
       // Save configuration
-      console.log('[Store] Calling electronAPI.writeConfig with:', {
-        client: activeClient,
-        scope: activeScope,
-        servers: servers,
-        projectDir: activeScope === 'project' ? projectDirectory : 'N/A'
-      });
+      console.log('[Store] 📤 Calling electronAPI.writeConfig with:');
+      console.log('  - client:', activeClient);
+      console.log('  - scope:', activeScope);
+      console.log('  - servers count:', Object.keys(servers).length);
+      console.log('  - servers:', JSON.stringify(servers, null, 2));
+      console.log('  - projectDir:', activeScope === 'project' ? projectDirectory : 'N/A');
 
       const result = await electronAPI.writeConfig(
         activeClient,
@@ -421,26 +430,30 @@ export const useConfigStore = create<AppState>((set, get) => ({
         activeScope === 'project' ? (projectDirectory || undefined) : undefined
       );
 
-      console.log('[Store] writeConfig result:', result);
-      
+      console.log('[Store] 📥 writeConfig returned:', JSON.stringify(result, null, 2));
+
       if (result.success) {
-        console.log('[Store] Save successful, setting isDirty to false');
+        console.log('[Store] ✅ Save successful, clearing isDirty flag');
         set({
           isDirty: false,
           isLoading: false,
           error: null
         });
+        console.log('═══════════════════════════════════════════════════════');
+        console.log('[Store] 🏁 SAVE CONFIG COMPLETED SUCCESSFULLY');
+        console.log('═══════════════════════════════════════════════════════');
         return backupResult; // Return backup result for UI to use
       } else {
-        console.log('[Store] Save failed:', result.error);
-        set({ 
+        console.error('[Store] ❌ Save failed:', result.error);
+        set({
           error: result.error || 'Failed to save configuration',
           isLoading: false
         });
         return null;
       }
     } catch (error) {
-      set({ 
+      console.error('[Store] ❌ Exception during save:', error);
+      set({
         error: `Failed to save configuration: ${(error as Error).message}`,
         isLoading: false
       });

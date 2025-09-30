@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { ReactFlow, Background, Controls, MiniMap, ReactFlowProvider, Node, Edge, Connection, useNodesState, useEdgesState, addEdge } from '@xyflow/react';
 import {
   DndContext,
@@ -13,6 +13,7 @@ import {
 } from '@dnd-kit/core';
 import '@xyflow/react/dist/style.css';
 import './VisualWorkspace.css';
+import { message } from 'antd';
 
 import { ServerLibrary } from './ServerLibrary';
 import { ClientDock } from './ClientDock';
@@ -54,7 +55,7 @@ export const VisualWorkspace: React.FC = () => {
     isDirty,
     saveConfig,
     setDirty
-  } = useConfigStore() as any;
+  } = useConfigStore();
 
   const { settings } = useSettingsStore();
   // Check for dark mode from settings or system preference
@@ -146,6 +147,10 @@ export const VisualWorkspace: React.FC = () => {
   const [draggedItem, setDraggedItem] = useState<{ id: string; type: string; data: any } | null>(null);
   const [autoSave, setAutoSave] = useState(false);
 
+  // Auto-save timer state
+  const [autoSaveTimer, setAutoSaveTimer] = useState<NodeJS.Timeout | null>(null);
+  const [isAutoSaving, setIsAutoSaving] = useState(false);
+
   // Panel visibility
   const [showInsights, setShowInsights] = useState(true);
   const [showJsonEditor, setShowJsonEditor] = useState(false);
@@ -159,6 +164,98 @@ export const VisualWorkspace: React.FC = () => {
   // Metrics cache to avoid repeated fetches
   const metricsCache = React.useRef<Map<string, { data: any; timestamp: number }>>(new Map());
   const METRICS_CACHE_TTL = 5 * 60 * 1000; // 5 minutes cache TTL
+
+  // Bug-026: Save canvas state to localStorage whenever nodes/edges change
+  useEffect(() => {
+    if (nodes.length > 0) {
+      const storageKey = `visualWorkspace_${activeClient}_nodes`;
+      localStorage.setItem(storageKey, JSON.stringify(nodes));
+      console.log(`[VisualWorkspace] 💾 Saved ${nodes.length} nodes to localStorage for ${activeClient}`);
+    }
+  }, [nodes, activeClient]);
+
+  useEffect(() => {
+    if (edges.length > 0) {
+      const storageKey = `visualWorkspace_${activeClient}_edges`;
+      localStorage.setItem(storageKey, JSON.stringify(edges));
+      console.log(`[VisualWorkspace] 💾 Saved ${edges.length} edges to localStorage for ${activeClient}`);
+    }
+  }, [edges, activeClient]);
+
+  // Bug-026: Restore canvas state from localStorage on mount
+  useEffect(() => {
+    if (!activeClient || activeClient === 'catalog') return;
+
+    const nodesKey = `visualWorkspace_${activeClient}_nodes`;
+    const edgesKey = `visualWorkspace_${activeClient}_edges`;
+
+    const savedNodes = localStorage.getItem(nodesKey);
+    const savedEdges = localStorage.getItem(edgesKey);
+
+    if (savedNodes) {
+      try {
+        const parsedNodes = JSON.parse(savedNodes);
+        console.log(`[VisualWorkspace] 📦 Restored ${parsedNodes.length} nodes from localStorage for ${activeClient}`);
+        setNodes(parsedNodes);
+      } catch (error) {
+        console.error('[VisualWorkspace] Failed to restore nodes from localStorage:', error);
+      }
+    }
+
+    if (savedEdges) {
+      try {
+        const parsedEdges = JSON.parse(savedEdges);
+        console.log(`[VisualWorkspace] 📦 Restored ${parsedEdges.length} edges from localStorage for ${activeClient}`);
+        setEdges(parsedEdges);
+      } catch (error) {
+        console.error('[VisualWorkspace] Failed to restore edges from localStorage:', error);
+      }
+    }
+  }, []); // Only run once on mount
+
+  // Auto-save effect - triggers 30s after last change
+  useEffect(() => {
+    // Only auto-save when:
+    // 1. Auto-save is enabled
+    // 2. There are unsaved changes (isDirty)
+    // 3. Not currently showing JSON editor (avoid conflicts)
+    // 4. Have an active client
+    if (!autoSave || !isDirty || showJsonEditor || !activeClient || activeClient === 'catalog') {
+      return;
+    }
+
+    console.log('[AutoSave] Change detected, scheduling auto-save in 30s');
+
+    // Clear any existing timer
+    if (autoSaveTimer) {
+      clearTimeout(autoSaveTimer);
+    }
+
+    // Set new timer for 30 seconds
+    const timer = setTimeout(async () => {
+      console.log('[AutoSave] Triggering auto-save after 30s inactivity');
+      setIsAutoSaving(true);
+
+      try {
+        await handleSaveConfiguration();
+        console.log('[AutoSave] Configuration auto-saved successfully');
+      } catch (error) {
+        console.error('[AutoSave] Failed to auto-save:', error);
+        message.error('Auto-save failed');
+      } finally {
+        setIsAutoSaving(false);
+      }
+    }, 30000); // 30 seconds
+
+    setAutoSaveTimer(timer);
+
+    // Cleanup: clear timer on unmount or when dependencies change
+    return () => {
+      if (timer) {
+        clearTimeout(timer);
+      }
+    };
+  }, [isDirty, autoSave, showJsonEditor, activeClient]); // React to changes in these values
 
   // Initialize clients on mount
   React.useEffect(() => {
@@ -319,10 +416,19 @@ export const VisualWorkspace: React.FC = () => {
 
     // Build UI immediately with cached data
     const serverNodes: Node[] = Object.entries(servers).map(([name, server], index) => {
+      // Use saved position if available, otherwise calculate default position
+      const savedPosition = (server as any).position;
+      const defaultPosition = { x: 200, y: 100 + index * 100 };
+      const position = savedPosition && typeof savedPosition.x === 'number' && typeof savedPosition.y === 'number'
+        ? savedPosition
+        : defaultPosition;
+
+      console.log(`[VisualWorkspace] Restoring server ${name} at position:`, position, 'saved:', savedPosition);
+
       return {
         id: `server-${name}`,
         type: 'server',
-        position: { x: 200, y: 100 + index * 100 },
+        position,
         data: {
           label: name,
           server,
@@ -470,21 +576,42 @@ export const VisualWorkspace: React.FC = () => {
           // Prevent default browser behavior
           event.preventDefault();
 
+          console.log('[VisualWorkspace] 🗑️ DELETE operation triggered');
+
           // Remove selected nodes
           if (selectedNodes.length > 0) {
             const nodeIdsToRemove = selectedNodes.map(n => n.id);
+            console.log('[VisualWorkspace] Deleting nodes:', nodeIdsToRemove);
+
+            // Remove server nodes from store
+            selectedNodes.forEach(node => {
+              if (node.type === 'server' && node.data?.label) {
+                const serverName = String(node.data.label);
+                console.log(`[VisualWorkspace] Removing server "${serverName}" from store`);
+                deleteServer(serverName);
+              }
+            });
+
             setNodes(nds => nds.filter(n => !nodeIdsToRemove.includes(n.id)));
 
             // Also remove edges connected to deleted nodes
             setEdges(eds => eds.filter(e =>
               !nodeIdsToRemove.includes(e.source) && !nodeIdsToRemove.includes(e.target)
             ));
+
+            // CRITICAL: Mark as dirty to enable save button
+            setDirty(true);
+            console.log('[VisualWorkspace] State marked as dirty after delete');
           }
 
           // Remove selected edges
           if (selectedEdges.length > 0) {
             const edgeIdsToRemove = selectedEdges.map(e => e.id);
+            console.log('[VisualWorkspace] Deleting edges:', edgeIdsToRemove);
             setEdges(eds => eds.filter(e => !edgeIdsToRemove.includes(e.id)));
+
+            // Mark as dirty for edge deletions too
+            setDirty(true);
           }
         }
       }
@@ -497,7 +624,7 @@ export const VisualWorkspace: React.FC = () => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [nodes, edges, setNodes, setEdges]);
+  }, [nodes, edges, setNodes, setEdges, deleteServer, setDirty]);
 
   // Track metrics fetch queue to prevent overwhelming the system
   const metricsQueueRef = React.useRef<Set<string>>(new Set());
@@ -918,32 +1045,90 @@ export const VisualWorkspace: React.FC = () => {
 
   // Save current configuration
   const handleSaveConfiguration = async () => {
-    console.log('[VisualWorkspace] Save button clicked');
+    console.log('═══════════════════════════════════════════════════════');
+    console.log('[VisualWorkspace] 🚀 SAVE CONFIGURATION STARTED');
+    console.log('═══════════════════════════════════════════════════════');
     console.log('[VisualWorkspace] Current isDirty state:', isDirty);
-    console.log('[VisualWorkspace] Current servers in store:', servers);
+    console.log('[VisualWorkspace] Active client:', activeClient);
+    console.log('[VisualWorkspace] Active scope:', activeScope);
+    console.log('[VisualWorkspace] Current servers in store:', JSON.stringify(servers, null, 2));
 
     // Save all nodes and edges to the active client's configuration
     const serverNodes = nodes.filter(n => n.type === 'server');
     const clientNodes = nodes.filter(n => n.type === 'client');
 
-    console.log('[VisualWorkspace] Server nodes to save:', serverNodes.map(n => ({ name: n.data.label, data: n.data.server })));
+    console.log('[VisualWorkspace] 📊 CANVAS STATE:');
+    console.log(`  - Total nodes: ${nodes.length}`);
+    console.log(`  - Server nodes: ${serverNodes.length}`);
+    console.log(`  - Client nodes: ${clientNodes.length}`);
+    console.log('[VisualWorkspace] Server nodes on canvas:', serverNodes.map(n => ({
+      id: n.id,
+      name: n.data.label,
+      position: n.position,
+      hasServerData: !!n.data.server
+    })));
 
-    // For each server node, save it to configuration
+    // Build the new complete server configuration from canvas, including positions
+    const newServers: Record<string, MCPServer> = {};
+
     serverNodes.forEach(node => {
-      const serverName = node.data.label;
+      const serverName = String(node.data.label);
       const serverData = node.data.server;
-      if (serverData) {
-        console.log(`[VisualWorkspace] Adding server ${serverName} to store`);
-        addServer(serverName, serverData);
+      if (serverData && serverName) {
+        console.log(`[VisualWorkspace] ✅ Including server "${serverName}":`, {
+          position: node.position,
+          command: serverData.command,
+          args: serverData.args
+        });
+        // Save server with position data
+        newServers[serverName] = {
+          ...serverData,
+          position: node.position // Save node position
+        };
+      } else {
+        console.warn(`[VisualWorkspace] ⚠️ Skipping node with missing data:`, {
+          serverName,
+          hasServerData: !!serverData
+        });
       }
     });
 
+    console.log('[VisualWorkspace] 📦 NEW CONFIGURATION BUILT:');
+    console.log(`  - Total servers: ${Object.keys(newServers).length}`);
+    console.log(`  - Server names: [${Object.keys(newServers).join(', ')}]`);
+    console.log(`  - Full configuration:`, JSON.stringify(newServers, null, 2));
+
+    // CRITICAL: Replace entire server configuration with canvas state
+    console.log('[VisualWorkspace] 🔄 Calling setServers() to update store...');
+    setServers(newServers);
+
+    // Small delay to ensure state is updated
+    console.log('[VisualWorkspace] ⏳ Waiting 100ms for state update...');
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    // Verify state was actually updated
+    const storeState = useConfigStore.getState();
+    console.log('[VisualWorkspace] 🔍 STORE STATE AFTER setServers:');
+    console.log(`  - Servers in store: ${Object.keys(storeState.servers).length}`);
+    console.log(`  - Store isDirty: ${storeState.isDirty}`);
+    console.log(`  - Store servers:`, JSON.stringify(storeState.servers, null, 2));
+
     // Call saveConfig to persist to disk
-    console.log('[VisualWorkspace] Calling saveConfig()...');
+    console.log('[VisualWorkspace] 💾 Calling saveConfig() to persist to disk...');
     const result = await saveConfig();
-    console.log('[VisualWorkspace] saveConfig result:', result);
-    console.log('[VisualWorkspace] New isDirty state:', isDirty);
-    console.log('Configuration saved');
+    console.log('[VisualWorkspace] 📨 saveConfig() returned:', JSON.stringify(result, null, 2));
+
+    if (result && result.success !== false) {
+      console.log('[VisualWorkspace] ✅ Configuration saved successfully');
+      message.success('Configuration saved successfully');
+    } else {
+      console.error('[VisualWorkspace] ❌ Failed to save configuration:', result);
+      message.error('Failed to save configuration');
+    }
+
+    console.log('═══════════════════════════════════════════════════════');
+    console.log('[VisualWorkspace] 🏁 SAVE CONFIGURATION COMPLETED');
+    console.log('═══════════════════════════════════════════════════════');
   };
 
   // Load configuration as JSON for the editor
@@ -987,30 +1172,46 @@ export const VisualWorkspace: React.FC = () => {
   }, []);
 
   // Save JSON changes explicitly
-  const saveJsonChanges = React.useCallback(() => {
+  const saveJsonChanges = React.useCallback(async () => {
     // Only save if valid JSON
     try {
       const parsed = JSON.parse(jsonEditorContent);
 
       // Update servers if valid
       if (parsed.mcpServers && typeof parsed.mcpServers === 'object') {
+        console.log('[JsonEditor] 💾 Saving JSON changes to store and disk...');
+        console.log('[JsonEditor] Server count:', Object.keys(parsed.mcpServers).length);
+
+        // Update store
         setServers(parsed.mcpServers);
-        setHasUnsavedJsonChanges(false);
 
-        // Show success feedback
-        setShowSaveSuccess(true);
-        console.log('[JsonEditor] Changes saved successfully');
+        // CRITICAL: Wait for store update, then persist to disk
+        await new Promise(resolve => setTimeout(resolve, 100));
 
-        // Clear success message after 2 seconds
-        setTimeout(() => {
-          setShowSaveSuccess(false);
-        }, 2000);
+        // Persist to disk via saveConfig
+        const result = await saveConfig();
+
+        if (result && result.success !== false) {
+          setHasUnsavedJsonChanges(false);
+          setShowSaveSuccess(true);
+          console.log('[JsonEditor] ✅ Changes saved to disk successfully');
+          message.success('JSON configuration saved');
+
+          // Clear success message after 2 seconds
+          setTimeout(() => {
+            setShowSaveSuccess(false);
+          }, 2000);
+        } else {
+          console.error('[JsonEditor] ❌ Failed to save to disk:', result);
+          message.error('Failed to save JSON configuration');
+        }
       }
     } catch (error: any) {
       // Don't save if JSON is invalid
       console.error('[JsonEditor] Cannot save invalid JSON:', error.message);
+      message.error(`Invalid JSON: ${error.message}`);
     }
-  }, [jsonEditorContent, setServers]);
+  }, [jsonEditorContent, setServers, saveConfig]);
 
   // Handle keyboard shortcuts for JSON editor
   React.useEffect(() => {
@@ -1096,7 +1297,7 @@ export const VisualWorkspace: React.FC = () => {
           <div className="w-64 bg-base-100 border-r border-base-300 overflow-y-auto flex-shrink-0">
             <ServerLibrary
               key={`server-library-${activeClient}`}
-              activeClient={activeClient}
+              activeClient={activeClient || undefined}
               clientServers={activeClient === 'catalog' ? undefined : Object.keys(servers)}
             />
           </div>
@@ -1147,6 +1348,9 @@ export const VisualWorkspace: React.FC = () => {
                     onChange={(e) => setAutoSave(e.target.checked)}
                   />
                   <span>Auto-save</span>
+                  {isAutoSaving && (
+                    <span className="text-xs text-info animate-pulse">Saving...</span>
+                  )}
                 </label>
                 {!autoSave && !showJsonEditor && (
                   <button

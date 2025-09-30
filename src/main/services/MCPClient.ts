@@ -46,6 +46,9 @@ export interface MCPClientMetrics {
   errorCount: number;
   isConnected: boolean;
   serverInfo?: MCPServerInfo;
+  status?: 'connected' | 'connecting' | 'disconnected' | 'unavailable';
+  retryAttempts?: number;
+  lastError?: string;
 }
 
 export class MCPClient extends EventEmitter {
@@ -56,8 +59,10 @@ export class MCPClient extends EventEmitter {
   private config: MCPServerConfig;
   private metrics: MCPClientMetrics;
   private reconnectAttempts = 0;
-  private maxReconnectAttempts = 3;
+  private readonly MAX_RETRIES = 5; // Maximum retry attempts before marking unavailable
+  private readonly RETRY_DELAYS = [1000, 2000, 4000, 8000, 16000]; // Exponential backoff in ms
   private messageBuffer = ''; // Buffer for partial JSON messages
+  private isUnavailable = false; // Flag to prevent further retries after max attempts
 
   constructor(config: MCPServerConfig) {
     super();
@@ -68,7 +73,10 @@ export class MCPClient extends EventEmitter {
       responseTime: 0,
       lastActivity: new Date(),
       errorCount: 0,
-      isConnected: false
+      isConnected: false,
+      status: 'disconnected',
+      retryAttempts: 0,
+      lastError: undefined
     };
   }
 
@@ -76,8 +84,17 @@ export class MCPClient extends EventEmitter {
    * Connect to the MCP server
    */
   public async connect(): Promise<void> {
+    // Don't attempt to connect if marked unavailable
+    if (this.isUnavailable) {
+      const error = new Error(`Server ${this.config.name} is marked unavailable after ${this.MAX_RETRIES} failed attempts`);
+      console.error(`[MCPClient] ${error.message}`);
+      throw error;
+    }
+
     try {
-      console.log(`[MCPClient] Connecting to ${this.config.name}...`);
+      console.log(`[MCPClient] Connecting to ${this.config.name}... (attempt ${this.reconnectAttempts + 1}/${this.MAX_RETRIES + 1})`);
+      this.metrics.status = 'connecting';
+      this.metrics.retryAttempts = this.reconnectAttempts;
 
       // Spawn the server process
       this.process = spawn(this.config.command, this.config.args || [], {
@@ -97,12 +114,36 @@ export class MCPClient extends EventEmitter {
         console.log(`[MCPClient] Process exited for ${this.config.name}: code=${code}, signal=${signal}`);
         this.connected = false;
         this.metrics.isConnected = false;
+        this.metrics.status = 'disconnected';
         this.emit('disconnected', { code, signal });
 
-        // Auto-reconnect on unexpected exit
-        if (code !== 0 && this.reconnectAttempts < this.maxReconnectAttempts) {
+        // Auto-reconnect on unexpected exit with exponential backoff
+        if (code !== 0 && this.reconnectAttempts < this.MAX_RETRIES) {
           this.reconnectAttempts++;
-          setTimeout(() => this.connect(), 1000 * this.reconnectAttempts);
+          const delay = this.RETRY_DELAYS[Math.min(this.reconnectAttempts - 1, this.RETRY_DELAYS.length - 1)];
+
+          console.log(`[MCPClient] Scheduling reconnect for ${this.config.name} in ${delay}ms (attempt ${this.reconnectAttempts}/${this.MAX_RETRIES})`);
+
+          setTimeout(() => {
+            if (!this.isUnavailable) {
+              this.connect().catch((error) => {
+                console.error(`[MCPClient] Reconnect attempt ${this.reconnectAttempts} failed for ${this.config.name}:`, error);
+                this.metrics.lastError = error.message;
+              });
+            }
+          }, delay);
+        } else if (code !== 0 && this.reconnectAttempts >= this.MAX_RETRIES) {
+          // Mark as unavailable after max retries
+          this.isUnavailable = true;
+          this.metrics.status = 'unavailable';
+          this.metrics.lastError = `Failed after ${this.MAX_RETRIES} retry attempts`;
+
+          console.error(`[MCPClient] Server ${this.config.name} marked as UNAVAILABLE after ${this.MAX_RETRIES} failed attempts`);
+          this.emit('unavailable', {
+            serverName: this.config.name,
+            attempts: this.MAX_RETRIES,
+            lastError: this.metrics.lastError
+          });
         }
       });
 
@@ -146,14 +187,20 @@ export class MCPClient extends EventEmitter {
 
       this.connected = true;
       this.metrics.isConnected = true;
-      this.reconnectAttempts = 0;
+      this.metrics.status = 'connected';
+      this.reconnectAttempts = 0; // Reset on successful connection
+      this.metrics.retryAttempts = 0;
+      this.metrics.lastError = undefined;
       this.emit('connected');
 
-      console.log(`[MCPClient] Successfully connected to ${this.config.name}`);
+      console.log(`[MCPClient] ✅ Successfully connected to ${this.config.name}`);
 
     } catch (error) {
-      console.error(`[MCPClient] Failed to connect to ${this.config.name}:`, error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error(`[MCPClient] ❌ Failed to connect to ${this.config.name}:`, errorMessage);
       this.metrics.errorCount++;
+      this.metrics.lastError = errorMessage;
+      this.metrics.status = 'disconnected';
       throw error;
     }
   }
@@ -307,6 +354,7 @@ export class MCPClient extends EventEmitter {
 
     this.connected = false;
     this.metrics.isConnected = false;
+    this.metrics.status = 'disconnected';
 
     if (this.process) {
       this.process.kill('SIGTERM');
@@ -328,6 +376,18 @@ export class MCPClient extends EventEmitter {
     this.pendingRequests.clear();
 
     this.emit('disconnected');
+  }
+
+  /**
+   * Reset unavailable status and allow reconnection attempts
+   */
+  public resetUnavailableStatus(): void {
+    console.log(`[MCPClient] Resetting unavailable status for ${this.config.name}`);
+    this.isUnavailable = false;
+    this.reconnectAttempts = 0;
+    this.metrics.status = 'disconnected';
+    this.metrics.retryAttempts = 0;
+    this.metrics.lastError = undefined;
   }
 
   /**

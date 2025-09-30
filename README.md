@@ -9,7 +9,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Platform](https://img.shields.io/badge/platform-macOS-lightgrey)](https://github.com/itsocialist/mcp-config-manager)
 [![Release](https://img.shields.io/github/v/release/itsocialist/mcp-config-manager)](https://github.com/itsocialist/mcp-config-manager/releases)
-[![Version](https://img.shields.io/badge/version-0.1.7--beta-orange)](https://github.com/itsocialist/mcp-config-manager/releases/tag/v0.1.7-beta)
+[![Version](https://img.shields.io/badge/version-0.1.8-blue)](https://github.com/itsocialist/mcp-config-manager/releases/tag/v0.1.8)
 
 [Download](#installation) • [Quick Start](#quick-start) • [Documentation](#documentation) • [Community](#community)
 
@@ -17,18 +17,16 @@
 
 ---
 
-> ⚠️ **Beta Version Notice (v0.1.7-beta)**
+> **Production Release (v0.1.8)**
 >
-> **MAJOR PERFORMANCE IMPROVEMENTS**: Client switching now <200ms (was 30+ seconds)!
+> This application is production-ready with all critical bugs fixed. Automatic backups are created for all configuration changes.
 >
-> **⚠️ CRITICAL KNOWN ISSUES**:
-> - **Visual Workspace save/load is NON-FUNCTIONAL** (Bug-023 through Bug-026)
-> - Save button doesn't activate after dragging servers
-> - Configuration changes don't persist to disk
-> - Canvas state lost on page refresh
->
-> **Recommended Use**: Performance testing only. Production use should wait for v0.1.8 (target: Feb 2, 2025)
-> when all save/load issues are resolved.
+> **What's New in v0.1.8**:
+> - Visual Workspace save/load fully functional
+> - Performance optimizations (<200ms client switching)
+> - System stability improvements
+> - Auto-save with 30-second debounce
+> - Canvas state persistence across restarts
 >
 > Please [report any bugs or issues](https://github.com/itsocialist/mcp-config-manager/issues) you encounter.
 

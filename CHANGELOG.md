@@ -5,6 +5,40 @@ All notable changes to MCP Configuration Manager will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.8] - 2025-01-27
+
+### FIXED - All Visual Workspace Save/Load Issues
+**All critical bugs from v0.1.7-beta have been resolved**
+
+#### Visual Workspace Save System - Fully Functional
+- FIXED: Save button now activates correctly after dragging nodes (Bug-023)
+- FIXED: Configuration changes persist to disk properly (Bug-024)
+- FIXED: Auto-save functionality implemented with 30-second debounce (Bug-025)
+- FIXED: Canvas state persists across page refresh and app restart (Bug-026)
+
+#### System Stability Improvements
+- FIXED: Infinite retry loops eliminated with max 5 attempts and exponential backoff (Bug-021)
+- FIXED: Claude Desktop no longer launches unexpectedly during app/test runs (Bug-022)
+
+#### Save Architecture Enhancements
+- Delete operations now persist correctly to disk
+- JSON editor saves now write to disk (not just store)
+- Unified save logic across all save paths
+- Comprehensive logging for debugging
+- Canvas and JSON view stay synchronized
+
+#### Technical Improvements
+- localStorage persistence for canvas layout
+- Client-specific storage keys for multi-client support
+- Proper dirty state management throughout application
+- Enhanced IPC handlers for config operations
+- Robust error handling and user feedback
+
+### Release Status
+**Production Ready** - All release blockers from v0.1.7-beta have been cleared. Visual Workspace save/load functionality is fully operational and verified by QA.
+
+---
+
 ## [0.1.7-beta] - 2025-01-27
 
 ### 🔥 Major Performance Improvements

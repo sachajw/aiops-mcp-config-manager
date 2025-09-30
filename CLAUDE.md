@@ -43,27 +43,35 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
    - Size of loaded context files
    - Relevance of current context to active work
 
-### Current Sprint Tasks (Auto-update 2025-01-23):
-**Current Focus: Post Bug-006 Fix - Moving to UI Integration**
+### Current Sprint Tasks (Auto-update 2025-01-27):
+**Current Focus: Sprint 4 - Critical Visual Workspace Save/Load Fixes**
 
 **✅ Recently Completed:**
-- [x] Bug-006: Fallback antipatterns FIXED (80/81 violations resolved)
-- [x] Task 150, 159-163: File monitoring & IDE config paths
+- [x] Bug-020: Performance fix - <200ms client switching (was 30+ seconds)
+- [x] Sprint 3 Week 2: Fixed 12 bugs (exceptional achievement)
+- [x] Claude Code project config path fixed (.claude/mcp.json)
 
-**🔄 Active Priority Tasks:**
-- [ ] Task 166: Integrate Monaco JSON Editor (exists but not wired to UI!)
-- [ ] Bug-001: Performance Insights (test with Bug-006 fix)
-- [ ] Bug-002-005, 007-013: Various UI/UX issues
+**🔴 CRITICAL PRIORITY - Visual Workspace Save/Load (RELEASE BLOCKERS):**
+- [ ] Bug-023: Save button doesn't activate after dragging nodes - PRIORITY #1
+- [ ] Bug-024: Config changes don't persist to disk
+- [ ] Bug-025: Auto-save functionality not implemented
+- [ ] Bug-026: Canvas state lost on page refresh
 
-**📋 Remaining Work:**
-- 12 active bugs (was 13, Bug-006 fixed)
-- 1 `|| false` violation remains (ServerLibrary.tsx:301)
+**🟡 System Stability Issues:**
+- [ ] Bug-021: Infinite retry loops for failed connections
+- [ ] Bug-022: Claude Desktop launches unexpectedly
+
+**📋 Sprint 4 Status:**
+- 6 critical bugs blocking release
+- Target completion: February 2, 2025
+- Focus: Save/load system MUST work
 - Monaco Editor integration critical
 
-### Active Bugs (Updated 2025-01-23):
-- **Bug-001**: Performance Insights - Ready for retest with Bug-006 fix
-- **Bug-002-005, 007-013**: Various UI issues documented in ACTIVE_BUGS_AUDIT.md
-- **Note**: Bug-006 FIXED (99% - 1 violation remains)
+### Active Bugs (Updated 2025-01-27):
+- **Bug-023-026**: Visual Workspace save/load BROKEN - TOP PRIORITY
+- **Bug-021**: Infinite retry causing performance issues
+- **Bug-022**: Claude Desktop auto-launch annoyance
+- **Bug-007-013**: UI polish issues (lower priority)
 
 ### Context Files by Work Type:
 - **Visual Workspace**: Load `.kiro/CONTEXT-VISUAL-WORKSPACE.md`

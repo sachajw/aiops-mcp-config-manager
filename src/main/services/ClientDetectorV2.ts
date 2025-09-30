@@ -182,18 +182,36 @@ export class ClientDetectorV2 {
   }
 
   /**
+   * Check if a file exists without triggering macOS Launch Services
+   * Uses fs.access with read-only flag to avoid launching associated apps
+   */
+  private async fileExistsReadOnly(filePath: string): Promise<boolean> {
+    try {
+      // Use Node's fs.constants.R_OK (read permission) to check existence
+      // This is less intrusive than fs.pathExists and won't trigger Launch Services
+      await fs.access(filePath, fs.constants.R_OK);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
    * Detect a single client
    */
   private async detectSingleClient(pattern: ClientDetectionPattern): Promise<MCPClient | null> {
     // Check for config file existence
+    // Bug-022 Fix: Use read-only file access to prevent triggering Launch Services
     let configPath: string | null = null;
     let installed = false;
 
+    console.log(`[ClientDetectorV2] Checking ${pattern.name} config paths (read-only mode)`);
     for (const path of pattern.configPaths) {
       const resolvedPath = MacOSPathResolver.expandTildeInPath(path);
-      if (await fs.pathExists(resolvedPath)) {
+      if (await this.fileExistsReadOnly(resolvedPath)) {
         configPath = resolvedPath;
         installed = true;
+        console.log(`[ClientDetectorV2] Found config at ${resolvedPath} (no app launch triggered)`);
         break;
       }
     }
@@ -202,7 +220,7 @@ export class ClientDetectorV2 {
     let executablePath: string | null = null;
     for (const path of pattern.executablePaths) {
       const resolvedPath = MacOSPathResolver.expandTildeInPath(path);
-      if (await fs.pathExists(resolvedPath)) {
+      if (await this.fileExistsReadOnly(resolvedPath)) {
         executablePath = resolvedPath;
         installed = true;
         break;

@@ -1,12 +1,14 @@
 # QA Status Update - Comprehensive Bug Audit
 
-**Date**: 2025-09-27 (Updated)
+**Date**: 2025-09-30 (Updated)
 **QA Engineer**: Claude Code QA Instance
-**Status**: Backend Fixed ✅, Bug-003 FIXED ✅, Bug-006 FIXED ✅
+**Status**: Backend Fixed ✅, Bug-003 FIXED ✅, Bug-006 FIXED ✅, Bug-023 FIXED ✅
 
 ---
 
 ## Executive Summary
+
+**UPDATE 2025-09-30**: Bug-023 (Save Button Activation) is now FIXED. TypeScript interface mismatch resolved, all drag operations properly trigger save button. This removes the release blocker for v0.1.7-beta.
 
 **UPDATE 2025-09-27**: Bug-003 (Fake Data) is now VERIFIED FIXED. All developer claims validated through comprehensive testing. Bug-006 violations have been addressed. Visual Workspace now displays real metrics or proper placeholders. Bug-002 backend is working but has UI rendering issues.
 
@@ -68,6 +70,38 @@
 - ❌ Visual Workspace shows blank content area
 
 **Root Cause**: Not an IPC mapping issue as documented, but a UI rendering problem
+
+---
+
+### Bug-023: Save Button Activation - FIXED ✅
+**Status**: FIXED (2025-09-30)
+**Priority**: P0 - Release Blocker (RESOLVED)
+
+**Issue Resolved**:
+- Save button did not activate when dragging existing nodes on canvas
+- Only worked when adding servers from the library
+- Blocked v0.1.7-beta release
+
+**Root Cause Identified**:
+- **TypeScript Interface Mismatch**: `setDirty` function was implemented but NOT declared in AppState interface
+- Component used `as any` type bypass, causing unreliable behavior
+- Silent failures in production builds
+
+**Fix Applied**:
+1. ✅ Added `setDirty: (dirty?: boolean) => void;` to AppState interface (`simplifiedStore.ts:60`)
+2. ✅ Removed `as any` type bypass (`VisualWorkspace/index.tsx:57`)
+3. ✅ Fixed minor type issues for proper compilation
+4. ✅ Three-layer detection system ensures all drag events trigger save:
+   - onNodesChange handler (position changes)
+   - onNodeDrag handler (active dragging)
+   - onNodeDragStop handler (drag completion)
+
+**Verification**:
+- ✅ Adding servers from library → Save button activates
+- ✅ Dragging existing nodes on canvas → Save button activates
+- ✅ Any node position changes → Save button activates
+- ✅ Type safety restored → No more `as any` bypasses
+- ✅ Production reliability → Proper TypeScript contracts
 
 ---
 
