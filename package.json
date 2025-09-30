@@ -144,14 +144,17 @@
         ]
       },
       "icon": "assets/icons/icon-512.png",
-      "hardenedRuntime": false,
-      "gatekeeperAssess": false,
+      "hardenedRuntime": true,
+      "gatekeeperAssess": true,
       "entitlements": "build/entitlements.mac.plist",
       "entitlementsInherit": "build/entitlements.mac.plist",
       "signIgnore": [
         "node_modules"
       ],
-      "type": "distribution"
+      "type": "distribution",
+      "notarize": {
+        "teamId": "TEAM_ID_PLACEHOLDER"
+      }
     },
     "win": {
       "target": "nsis",

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- Required for Electron 12+ with V8/Node.js JIT compilation -->
+    <!-- Note: com.apple.security.cs.allow-unsigned-executable-memory removed for Electron 12+ -->
+    <!-- as it increases attack surface and is no longer needed -->
+    <key>com.apple.security.cs.allow-jit</key>
+    <true/>
+
+    <!-- Required for native modules and dynamic library loading -->
+    <key>com.apple.security.cs.disable-library-validation</key>
+    <true/>
+
+    <!-- Required for development environment variables (optional for production) -->
+    <key>com.apple.security.cs.allow-dyld-environment-variables</key>
+    <true/>
+
+    <!-- File system access for configuration management -->
+    <!-- Allows reading/writing user-selected config files -->
+    <key>com.apple.security.files.user-selected.read-write</key>
+    <true/>
+
+    <!-- Downloads access for server installation and updates -->
+    <key>com.apple.security.files.downloads.read-write</key>
+    <true/>
+
+    <!-- Network access for MCP server communication -->
+    <!-- Client: Required for connecting to remote MCP servers -->
+    <key>com.apple.security.network.client</key>
+    <true/>
+
+    <!-- Server: Required for local MCP server spawning and IPC -->
+    <key>com.apple.security.network.server</key>
+    <true/>
+
+    <!-- Process inheritance for spawning MCP server child processes -->
+    <!-- Critical: Allows app to spawn child_process for MCP servers -->
+    <key>com.apple.security.inherit</key>
+    <true/>
+</dict>
+</plist>
