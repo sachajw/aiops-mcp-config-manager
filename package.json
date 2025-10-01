@@ -112,6 +112,7 @@
     "@react-spring/web": "^10.0.2",
     "@xyflow/react": "^12.8.4",
     "antd": "^5.11.5",
+    "axios": "^1.6.2",
     "chokidar": "^3.5.3",
     "fs-extra": "^11.1.1",
     "json5": "^2.2.3",
@@ -126,6 +127,8 @@
   "build": {
     "appId": "com.mcptools.config-manager",
     "productName": "MCP Configuration Manager",
+    "afterSign": "scripts/sign-and-notarize.js",
+    "afterAllArtifactBuild": "scripts/staple-dmg.js",
     "directories": {
       "output": "release"
     },
@@ -133,6 +136,14 @@
       "dist/**/*",
       "!dist/**/*.map",
       "package.json"
+    ],
+    "asarUnpack": [
+      "**/node_modules/axios/**/*",
+      "**/node_modules/chokidar/**/*",
+      "**/node_modules/fs-extra/**/*",
+      "**/node_modules/json5/**/*",
+      "**/node_modules/zod/**/*",
+      "**/node_modules/@iarna/**/*"
     ],
     "mac": {
       "category": "public.app-category.developer-tools",
@@ -143,18 +154,17 @@
           "x64"
         ]
       },
-      "icon": "assets/icons/icon-512.png",
+      "icon": "build/icon.icns",
       "hardenedRuntime": true,
       "gatekeeperAssess": true,
       "entitlements": "build/entitlements.mac.plist",
       "entitlementsInherit": "build/entitlements.mac.plist",
+      "identity": "Brian Dawson (2TUP433M28)",
       "signIgnore": [
         "node_modules"
       ],
       "type": "distribution",
-      "notarize": {
-        "teamId": "TEAM_ID_PLACEHOLDER"
-      }
+      "notarize": false
     },
     "win": {
       "target": "nsis",

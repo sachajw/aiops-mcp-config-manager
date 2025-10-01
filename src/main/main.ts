@@ -61,9 +61,8 @@ const createWindow = (): void => {
 
     // Determine the correct path for the renderer files
     const appPath = app.getAppPath()
-    // When built, the main.js is in dist/main, so we need to go up to find dist/renderer
-    const basePath = appPath.endsWith('dist/main') ? join(appPath, '..') : appPath
-    const rendererPath = join(basePath, 'renderer/index.html')
+    // The renderer is always at dist/renderer/index.html relative to app root
+    const rendererPath = join(appPath, 'dist/renderer/index.html')
     console.log('[Main] Trying to load renderer from:', rendererPath)
 
     mainWindow.loadFile(rendererPath).catch(async error => {
