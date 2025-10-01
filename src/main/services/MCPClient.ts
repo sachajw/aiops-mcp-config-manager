@@ -2,8 +2,10 @@
  * MCPClient - Real MCP protocol client for connecting to servers
  */
 
-import { spawn, ChildProcess } from 'child_process';
+import { spawn, ChildProcess, execSync } from 'child_process';
 import { EventEmitter } from 'events';
+import { existsSync } from 'fs';
+import { join } from 'path';
 
 export interface MCPServerConfig {
   name: string;
@@ -81,6 +83,51 @@ export class MCPClient extends EventEmitter {
   }
 
   /**
+   * Resolve the full path to an executable command
+   * This is necessary because packaged apps don't have access to system PATH
+   */
+  private resolveCommandPath(command: string): string {
+    // If it's already an absolute path, use it
+    if (command.startsWith('/') || command.startsWith('\\')) {
+      return command;
+    }
+
+    // Common executable locations
+    const commonPaths = [
+      '/usr/local/bin',
+      '/usr/bin',
+      '/bin',
+      '/opt/homebrew/bin',
+      join(process.env.HOME || '', '.nvm/versions/node/*/bin'),
+      join(process.env.HOME || '', '.local/bin')
+    ];
+
+    // Try to find the command using 'which'
+    try {
+      const result = execSync(`which ${command}`, { encoding: 'utf8' }).trim();
+      if (result && existsSync(result)) {
+        console.log(`[MCPClient] Resolved ${command} to ${result}`);
+        return result;
+      }
+    } catch (error) {
+      // 'which' failed, try common paths
+    }
+
+    // Try common paths
+    for (const basePath of commonPaths) {
+      const fullPath = join(basePath, command);
+      if (existsSync(fullPath)) {
+        console.log(`[MCPClient] Found ${command} at ${fullPath}`);
+        return fullPath;
+      }
+    }
+
+    // If not found, return original command and let spawn fail with a better error
+    console.warn(`[MCPClient] Could not resolve path for ${command}, using as-is`);
+    return command;
+  }
+
+  /**
    * Connect to the MCP server
    */
   public async connect(): Promise<void> {
@@ -97,10 +144,16 @@ export class MCPClient extends EventEmitter {
       this.metrics.retryAttempts = this.reconnectAttempts;
 
       // Spawn the server process
-      this.process = spawn(this.config.command, this.config.args || [], {
+      // Resolve the full path to the command
+      const resolvedCommand = this.resolveCommandPath(this.config.command);
+
+      console.log(`[MCPClient] Spawning ${resolvedCommand} with args:`, this.config.args);
+
+      this.process = spawn(resolvedCommand, this.config.args || [], {
         stdio: ['pipe', 'pipe', 'pipe'],
         env: { ...process.env, ...this.config.env },
-        cwd: this.config.cwd || process.cwd()
+        cwd: this.config.cwd || process.cwd(),
+        shell: false // Don't use shell to avoid PATH issues
       });
 
       // Handle process events
