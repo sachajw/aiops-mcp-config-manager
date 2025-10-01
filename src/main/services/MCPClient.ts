@@ -202,11 +202,31 @@ export class MCPClient extends EventEmitter {
 
       console.log(`[MCPClient] Spawning ${resolvedCommand} with args:`, this.config.args);
 
+      // npx requires shell to work properly (it's a shell script)
+      const needsShell = this.config.command === 'npx' || resolvedCommand.includes('npx');
+
+      // Build comprehensive PATH for spawned process
+      const spawnEnv = {
+        ...process.env,
+        ...this.config.env,
+        PATH: [
+          '/usr/local/bin',
+          '/usr/bin',
+          '/bin',
+          '/opt/homebrew/bin',
+          '/opt/homebrew/opt/node/bin',
+          process.env.HOME ? `${process.env.HOME}/.nvm/versions/node/*/bin` : '',
+          process.env.HOME ? `${process.env.HOME}/.local/bin` : '',
+          process.env.HOME ? `${process.env.HOME}/.npm-global/bin` : '',
+          process.env.PATH || ''
+        ].filter(Boolean).join(':')
+      };
+
       this.process = spawn(resolvedCommand, this.config.args || [], {
         stdio: ['pipe', 'pipe', 'pipe'],
-        env: { ...process.env, ...this.config.env },
+        env: spawnEnv,
         cwd: this.config.cwd || process.cwd(),
-        shell: false // Don't use shell to avoid PATH issues
+        shell: needsShell // Use shell for npx, direct spawn for others
       });
 
       // Handle process events
