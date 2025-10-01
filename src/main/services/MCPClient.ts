@@ -89,7 +89,11 @@ export class MCPClient extends EventEmitter {
   private resolveCommandPath(command: string): string {
     // If it's already an absolute path, use it
     if (command.startsWith('/') || command.startsWith('\\')) {
-      return command;
+      if (existsSync(command)) {
+        return command;
+      }
+      console.warn(`[MCPClient] Absolute path ${command} does not exist`);
+      throw new Error(`Command not found: ${command}`);
     }
 
     // Common executable locations
@@ -98,22 +102,38 @@ export class MCPClient extends EventEmitter {
       '/usr/bin',
       '/bin',
       '/opt/homebrew/bin',
+      '/opt/homebrew/opt/node/bin',
       join(process.env.HOME || '', '.nvm/versions/node/*/bin'),
-      join(process.env.HOME || '', '.local/bin')
+      join(process.env.HOME || '', '.local/bin'),
+      join(process.env.HOME || '', '.npm-global/bin')
     ];
 
-    // Try to find the command using 'which'
+    // Try to find the command using 'which' with full PATH
     try {
-      const result = execSync(`which ${command}`, { encoding: 'utf8' }).trim();
+      // Build a comprehensive PATH for the which command
+      const systemPath = [
+        '/usr/local/bin',
+        '/usr/bin',
+        '/bin',
+        '/opt/homebrew/bin',
+        '/opt/homebrew/opt/node/bin',
+        process.env.PATH || ''
+      ].join(':');
+
+      const result = execSync(`PATH="${systemPath}" which ${command}`, {
+        encoding: 'utf8',
+        timeout: 5000
+      }).trim();
+
       if (result && existsSync(result)) {
-        console.log(`[MCPClient] Resolved ${command} to ${result}`);
+        console.log(`[MCPClient] Resolved ${command} to ${result} via which`);
         return result;
       }
     } catch (error) {
-      // 'which' failed, try common paths
+      console.warn(`[MCPClient] 'which' command failed for ${command}:`, error instanceof Error ? error.message : String(error));
     }
 
-    // Try common paths
+    // Try common paths directly
     for (const basePath of commonPaths) {
       const fullPath = join(basePath, command);
       if (existsSync(fullPath)) {
@@ -122,9 +142,34 @@ export class MCPClient extends EventEmitter {
       }
     }
 
-    // If not found, return original command and let spawn fail with a better error
-    console.warn(`[MCPClient] Could not resolve path for ${command}, using as-is`);
-    return command;
+    // Special handling for npm/npx - they might be symlinks or shell scripts
+    if (command === 'npx' || command === 'npm' || command === 'node') {
+      // Try to find node first, then construct npx path from it
+      try {
+        const nodePath = execSync('PATH="/usr/local/bin:/usr/bin:/bin:/opt/homebrew/bin:/opt/homebrew/opt/node/bin:$PATH" which node', {
+          encoding: 'utf8',
+          timeout: 5000
+        }).trim();
+
+        if (nodePath && existsSync(nodePath)) {
+          const nodeDir = nodePath.substring(0, nodePath.lastIndexOf('/'));
+          const targetPath = join(nodeDir, command);
+
+          if (existsSync(targetPath)) {
+            console.log(`[MCPClient] Found ${command} via node location: ${targetPath}`);
+            return targetPath;
+          }
+        }
+      } catch (error) {
+        console.warn(`[MCPClient] Could not locate node to find ${command}`);
+      }
+    }
+
+    // Last resort: if not found, throw a descriptive error
+    const errorMsg = `Command '${command}' not found. Please ensure it's installed and accessible.`;
+    console.error(`[MCPClient] ${errorMsg}`);
+    console.error(`[MCPClient] Searched paths:`, commonPaths);
+    throw new Error(errorMsg);
   }
 
   /**
@@ -145,7 +190,15 @@ export class MCPClient extends EventEmitter {
 
       // Spawn the server process
       // Resolve the full path to the command
-      const resolvedCommand = this.resolveCommandPath(this.config.command);
+      let resolvedCommand: string;
+      try {
+        resolvedCommand = this.resolveCommandPath(this.config.command);
+      } catch (pathError) {
+        const errorMsg = pathError instanceof Error ? pathError.message : String(pathError);
+        console.error(`[MCPClient] Path resolution failed for ${this.config.name}:`, errorMsg);
+        this.metrics.lastError = `Command not found: ${this.config.command}`;
+        throw new Error(`Failed to resolve command '${this.config.command}': ${errorMsg}`);
+      }
 
       console.log(`[MCPClient] Spawning ${resolvedCommand} with args:`, this.config.args);
 

@@ -440,3 +440,299 @@ const config = await window.electron.invoke('config:load', 'claude-desktop', 'us
 - Use TypeScript strict mode to catch type mismatches
 - Test IPC calls with actual data, not assumptions
 - you are QA. You shoudl to fix the code, I did not ask you to fix the code. when you do you conflict iwht the deeloepr and make things harder
+
+## PM Workflow: Managing Plans, Specs, and Releases
+
+### Recently Updated Planning Files (as of 2025-09-30)
+**Most Recent Updates:**
+- `tasks.md` - Primary task tracking (updated 2025-09-29 15:45)
+- `project-status-summary.md` - Overall project status (updated 2025-09-29 11:47)
+- `context-audit-report.md` - Context management audit (updated 2025-09-29 11:47)
+- `backlog-consolidated.md` - Backlog items (updated 2025-09-29 11:47)
+- `requirements.md` - Project requirements (updated 2025-09-29 11:47)
+
+**Sprint Files (by recency):**
+1. `sprint-4-critical-fixes.md` - Current sprint
+2. `sprint-3-week-2-completion.md` - Previous completion
+3. `sprint-3-server-lifecycle-testing.md` - Testing work
+4. `sprint-plan.md` & `sprint-plan-revised.md` - Planning docs
+
+### PM Role-Specific Instructions
+
+#### When Acting as PM:
+1. **Review Planning Files**: Use `ls -lt` to check timestamps and identify stale documents
+2. **Update Sprint Plans**: Keep sprint files synchronized with actual work
+3. **Track Progress**: Monitor task completion in `tasks.md` against sprint goals
+4. **Coordinate Roles**: Create clear prompts for Developer and QA instances
+5. **Document Decisions**: Update architecture, requirements, and design docs
+
+#### Sprint Planning Workflow:
+```bash
+# Check recently modified planning files
+ls -lt .kiro/specs/mcp-config-manager/sprints/*.md | head -5
+
+# Review current sprint status
+# Read: .kiro/specs/mcp-config-manager/sprints/sprint-4-critical-fixes.md
+
+# Check task completion
+# Grep: ✅|COMPLETED in tasks.md
+
+# Update sprint progress
+# Edit sprint file with current status
+```
+
+#### Creating New Sprints:
+1. Review completed work in previous sprint
+2. Identify next priorities from requirements.md and backlog
+3. Create new sprint file: `sprint-X-theme-name.md`
+4. Define clear success criteria and deliverables
+5. Break work into developer and QA tasks
+6. Set realistic timelines based on team velocity
+
+### Developer & QA Prompt Templates
+
+#### Developer Prompt Template:
+```
+Role: Developer Instance
+Sprint: [Sprint Name]
+Focus: [Primary deliverable]
+
+Tasks:
+1. [Task ID]: [Task description with file references]
+2. [Task ID]: [Task description with acceptance criteria]
+
+Guidelines:
+- Follow TDD approach
+- Update IPC contracts immediately
+- Run type-check before marking complete
+- Commit frequently with meaningful messages
+- Update tasks.md when task completes
+
+Files to Review:
+- [List specific implementation files]
+- [Architecture/design docs if needed]
+```
+
+#### QA Prompt Template:
+```
+Role: QA Instance
+Sprint: [Sprint Name]
+Focus: [Testing scope]
+
+Test Plan:
+1. [Feature/Bug]: [Test scenarios]
+2. [Integration]: [End-to-end flows]
+3. [Regression]: [Areas to verify]
+
+Guidelines:
+- Write tests before or during development
+- Validate all IPC endpoints work
+- Check error handling and edge cases
+- Update test documentation
+- Run full test suite before sign-off
+
+Success Criteria:
+- [ ] All tests passing
+- [ ] Coverage > 80%
+- [ ] No regressions
+- [ ] Documentation updated
+```
+
+## Apple Code Signing & Distribution Workflow
+
+### Current Configuration Status
+**Package.json Build Config:**
+- **appId**: `com.mcptools.config-manager`
+- **Product Name**: `MCP Configuration Manager`
+- **Mac Targets**: DMG for arm64 and x64
+- **Hardened Runtime**: Currently DISABLED (needs fixing)
+- **Gatekeeper**: Currently bypassed (not production-ready)
+
+### Issues to Address (Sprint 5 Release Preparation):
+
+#### 🔴 Critical: Enable Hardened Runtime
+**Current State**: `"hardenedRuntime": false`
+**Required**: `"hardenedRuntime": true` for App Store and proper code signing
+**Entitlements**: `build/entitlements.mac.plist` exists but may need updates
+
+#### 🔴 Critical: Apple Developer Certificate
+**Status**: Likely missing proper signing certificate
+**Required Steps**:
+1. Obtain Apple Developer account ($99/year)
+2. Create Developer ID Application certificate
+3. Download and install certificate in Keychain
+4. Configure electron-builder with certificate identity
+
+#### 🟡 Important: Notarization
+**Status**: Not configured
+**Required**: All Mac apps outside App Store must be notarized by Apple
+**Process**:
+1. Build and sign app with hardened runtime
+2. Upload to Apple for notarization
+3. Staple notarization ticket to app
+4. Distribute to users
+
+### Developer Prompt for Code Signing Setup:
+```
+Role: Developer Instance - Release Engineering
+Task: Configure Apple Code Signing & Notarization
+
+Objective: Make MCP Configuration Manager installable on macOS without Gatekeeper warnings
+
+Environment:
+- Xcode and command-line developer tools are installed
+- Can use: codesign, security, spctl, stapler commands
+- Can validate configurations even without signing certificate
+
+Steps:
+1. **Review Current Configuration**:
+   - Check package.json build.mac settings
+   - Verify entitlements.mac.plist exists and is correct
+   - Review electron-builder documentation for macOS signing
+
+2. **Update Entitlements** (build/entitlements.mac.plist):
+   Required entitlements for our app:
+   - com.apple.security.cs.allow-unsigned-executable-memory (for Node.js)
+   - com.apple.security.cs.disable-library-validation (if using native modules)
+   - com.apple.security.network.client (for MCP server connections)
+   - com.apple.security.files.user-selected.read-write (for config files)
+   - com.apple.security.cs.allow-jit (for V8 engine)
+
+3. **Enable Hardened Runtime**:
+   - Change "hardenedRuntime": false → true in package.json
+   - Add "notarize": true configuration
+   - Configure CSC_LINK and CSC_KEY_PASSWORD environment variables
+
+4. **Validate Entitlements Syntax**:
+   - Use plutil to validate XML: plutil -lint build/entitlements.mac.plist
+   - Ensure proper plist format
+   - Check for typos in entitlement keys
+
+5. **Document Certificate Setup**:
+   - Create docs/RELEASE.md with step-by-step signing instructions
+   - Document how to obtain Developer ID certificate
+   - Explain keychain setup and certificate export
+   - Include commands to check for certificates: security find-identity -v -p codesigning
+
+6. **Test Build Configuration**:
+   - Build with: npm run electron:dist
+   - Verify signature: codesign -dv --verbose=4 "release/MCP Configuration Manager.app"
+   - Check entitlements: codesign -d --entitlements - "release/MCP Configuration Manager.app"
+   - Test with: spctl -a -vv "release/MCP Configuration Manager.app"
+
+Files to Create/Update:
+- package.json (build.mac section)
+- build/entitlements.mac.plist
+- docs/RELEASE.md (new file)
+- .github/workflows/release.yml (if using CI/CD)
+
+Success Criteria:
+- [ ] Hardened runtime enabled
+- [ ] Proper entitlements configured
+- [ ] Entitlements file validates with plutil
+- [ ] App signs successfully with test certificate
+- [ ] Documentation complete for release process
+- [ ] No Gatekeeper warnings on test machine
+```
+
+### QA Prompt for Release Validation:
+```
+Role: QA Instance - Release Testing
+Task: Validate Code Signed Application
+
+Objective: Verify signed app works correctly and installs without warnings
+
+Environment:
+- Xcode and command-line developer tools are installed
+- Available tools: codesign, security, spctl, stapler, plutil
+- Can validate configurations and test unsigned builds
+
+Test Plan:
+
+1. **Pre-Signing Configuration Validation**:
+   ```bash
+   # Validate entitlements plist syntax
+   plutil -lint build/entitlements.mac.plist
+
+   # Check for available signing identities (if any)
+   security find-identity -v -p codesigning
+
+   # Verify package.json syntax
+   cat package.json | python3 -m json.tool > /dev/null && echo "Valid JSON"
+   ```
+
+2. **Signature Verification** (after signing):
+   ```bash
+   # Verify app is properly signed
+   codesign -dv --verbose=4 "release/MCP Configuration Manager.app"
+
+   # Check for hardened runtime
+   codesign -d --verbose "release/MCP Configuration Manager.app" | grep runtime
+
+   # Verify entitlements
+   codesign -d --entitlements - "release/MCP Configuration Manager.app"
+   ```
+
+2. **Gatekeeper Testing**:
+   - Mount DMG and drag app to Applications
+   - Run: spctl -a -vv "path/to/app"
+   - Expected: Should pass or show clear notarization status
+   - Launch app and verify no security warnings
+
+3. **Functional Testing After Signing**:
+   - App launches successfully
+   - All MCP client connections work
+   - File system access (reading configs) works
+   - Network access (server connections) works
+   - No permission errors or crashes
+
+4. **Fresh Install Testing**:
+   - Test on clean macOS VM or different machine
+   - Verify first-run experience
+   - Check permission dialogs are appropriate
+   - Validate app survives OS updates
+
+5. **Notarization Testing** (if implemented):
+   ```bash
+   # Check notarization status
+   spctl -a -v "path/to/app"
+
+   # Verify stapled ticket
+   stapler validate "path/to/app"
+   ```
+
+Success Criteria:
+- [ ] App signature valid
+- [ ] No Gatekeeper warnings
+- [ ] All functionality works post-signing
+- [ ] Fresh install succeeds on test machine
+- [ ] Notarization complete (if implemented)
+- [ ] Release documentation accurate
+
+Regression Checks:
+- [ ] Visual Workspace save/load still works
+- [ ] Client detection unchanged
+- [ ] Server connections functional
+- [ ] Performance unchanged
+```
+
+### Release Checklist (PM Coordination):
+- [ ] Developer: Configure code signing
+- [ ] Developer: Enable hardened runtime
+- [ ] Developer: Create release documentation
+- [ ] QA: Validate signed build
+- [ ] QA: Test on fresh macOS install
+- [ ] PM: Review release notes
+- [ ] PM: Coordinate GitHub release
+- [ ] All: Sign off on production build
+
+### Next Sprint (Sprint 5): Release Preparation
+**Focus**: Production-ready distribution
+**Deliverables**:
+1. Proper Apple code signing configured
+2. Hardened runtime enabled
+3. Notarization process documented
+4. Release automation (optional)
+5. User-facing release notes
+
+**Timeline**: 1-2 weeks depending on certificate acquisition

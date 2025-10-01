@@ -2,8 +2,29 @@
   "mcpServers": {
     "test-server": {
       "command": "echo",
-      "args": ["hello"],
+      "args": [
+        "hello"
+      ],
       "description": "Test server for Bug-024 validation"
+    },
+    "desktop_mcp": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@wonderwhy-er/desktop-commander"
+      ],
+      "type": "local",
+      "source": "user",
+      "name": "desktop_mcp"
+    },
+    "blender": {
+      "command": "uvx",
+      "args": [
+        "blender-mcp"
+      ],
+      "type": "local",
+      "source": "user",
+      "name": "blender"
     }
   }
 }

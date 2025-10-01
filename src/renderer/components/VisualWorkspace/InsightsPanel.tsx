@@ -213,7 +213,7 @@ export const InsightsPanel: React.FC = () => {
       {/* Scrollable Content */}
       <div className="flex-1 overflow-y-auto px-3 py-2">
         {/* Quick Stats - Always visible */}
-        <div className="grid grid-cols-4 gap-2 mb-3">
+        <div className="grid grid-cols-3 gap-2 mb-3">
           {/* Tools Available */}
           <div className="bg-base-200 rounded p-2">
             <div className="flex items-center justify-between mb-1">
@@ -246,20 +246,6 @@ export const InsightsPanel: React.FC = () => {
                 style={{ width: `${Math.min((totalTokens / 1000000) * 100, 100)}%` }}
               />
             </div>
-          </div>
-
-          {/* Response Time */}
-          <div className="bg-base-200 rounded p-2">
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-xs text-base-content/60">Response</span>
-              <span className={`text-xs badge badge-xs ${
-                avgResponseTime < 100 ? 'badge-success' : avgResponseTime < 500 ? 'badge-warning' : 'badge-error'
-              }`}>
-                {avgResponseTime < 100 ? 'Fast' : avgResponseTime < 500 ? 'OK' : 'Slow'}
-              </span>
-            </div>
-            <div className="text-sm font-bold">{avgResponseTime}ms</div>
-            <div className="text-xs text-base-content/50">Avg</div>
           </div>
 
           {/* Active Connections */}

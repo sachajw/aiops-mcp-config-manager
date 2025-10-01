@@ -216,14 +216,10 @@ export const ClientDock: React.FC = () => {
       </div>
 
       {/* Quick stats */}
-      <div className="grid grid-cols-2 gap-1 mb-2">
-        <div className="bg-base-200 rounded p-1 text-center">
+      <div className="flex justify-center mb-2">
+        <div className="bg-base-200 rounded p-1 text-center flex-1">
           <div className="text-sm font-bold text-primary">{installedClients.length}</div>
           <div className="text-xs text-base-content/60">Active</div>
-        </div>
-        <div className="bg-base-200 rounded p-1 text-center">
-          <div className="text-sm font-bold text-base-content/60">{Object.keys(servers).length}</div>
-          <div className="text-xs text-base-content/60">Servers</div>
         </div>
       </div>
 
@@ -265,18 +261,6 @@ export const ClientDock: React.FC = () => {
         </div>
       )}
 
-      {/* Help text */}
-      <div className="mt-4 p-2 bg-info/10 rounded">
-        <div className="flex gap-1">
-          <svg className="w-3 h-3 text-info flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <div className="text-xs text-base-content/70">
-            <p className="font-semibold">Multi-Client Config</p>
-            <p className="text-xs">Click to switch clients or drag to canvas for multi-client setup.</p>
-          </div>
-        </div>
-      </div>
 
       {/* Client Configuration Dialog */}
       {configDialogOpen && (
