@@ -65,6 +65,10 @@ export class MCPClient extends EventEmitter {
   private readonly RETRY_DELAYS = [1000, 2000, 4000, 8000, 16000]; // Exponential backoff in ms
   private messageBuffer = ''; // Buffer for partial JSON messages
   private isUnavailable = false; // Flag to prevent further retries after max attempts
+  private lastAuthAttempt: number = 0; // Track last OAuth attempt timestamp
+  private authAttemptCount: number = 0; // Track number of OAuth attempts
+  private readonly AUTH_COOLDOWN_MS = 30000; // 30 second cooldown between auth attempts
+  private readonly MAX_AUTH_ATTEMPTS = 1; // Maximum 1 auth attempt allowed
 
   constructor(config: MCPServerConfig) {
     super();
@@ -303,9 +307,70 @@ export class MCPClient extends EventEmitter {
         }
       });
 
-      // Handle stderr for debugging
+      // Handle stderr for debugging and OAuth detection
       this.process.stderr?.on('data', (data) => {
-        console.error(`[MCPClient] ${this.config.name} stderr:`, data.toString());
+        const stderrText = data.toString();
+        console.error(`[MCPClient] ${this.config.name} stderr:`, stderrText);
+
+        // Detect OAuth/authentication URLs in stderr
+        const oauthPatterns = [
+          /https?:\/\/[^\s]*auth[^\s]*/gi,
+          /https?:\/\/[^\s]*oauth[^\s]*/gi,
+          /https?:\/\/[^\s]*login[^\s]*/gi,
+          /please\s+visit[^\n]*https?:\/\/[^\s]+/gi,
+          /authorize\s+at[^\n]*https?:\/\/[^\s]+/gi,
+        ];
+
+        let hasAuthUrl = false;
+        for (const pattern of oauthPatterns) {
+          if (pattern.test(stderrText)) {
+            hasAuthUrl = true;
+            break;
+          }
+        }
+
+        if (hasAuthUrl) {
+          console.warn(`[MCPClient] OAuth URL detected in stderr for ${this.config.name}`);
+
+          // Check if we should block this auth attempt
+          const now = Date.now();
+          const timeSinceLastAttempt = now - this.lastAuthAttempt;
+
+          if (this.authAttemptCount >= this.MAX_AUTH_ATTEMPTS) {
+            console.error(`[MCPClient] Maximum auth attempts (${this.MAX_AUTH_ATTEMPTS}) reached for ${this.config.name}. Blocking further attempts.`);
+
+            // Kill the process to prevent infinite auth loops
+            this.process?.kill('SIGTERM');
+            setTimeout(() => {
+              if (this.process && !this.process.killed) {
+                this.process.kill('SIGKILL');
+              }
+            }, 5000);
+
+            // Mark as unavailable to prevent retries
+            this.isUnavailable = true;
+            this.metrics.status = 'unavailable';
+            this.metrics.lastError = 'Authentication loop detected - server disabled';
+
+            this.emit('authError', {
+              serverName: this.config.name,
+              error: 'Authentication loop detected',
+              attempts: this.authAttemptCount
+            });
+
+            return;
+          }
+
+          if (timeSinceLastAttempt < this.AUTH_COOLDOWN_MS) {
+            console.warn(`[MCPClient] Auth attempt blocked for ${this.config.name} - cooldown period active (${this.AUTH_COOLDOWN_MS - timeSinceLastAttempt}ms remaining)`);
+            return;
+          }
+
+          // Record this auth attempt
+          this.lastAuthAttempt = now;
+          this.authAttemptCount++;
+          console.log(`[MCPClient] Auth attempt ${this.authAttemptCount}/${this.MAX_AUTH_ATTEMPTS} for ${this.config.name}`);
+        }
       });
 
       // Initialize the connection with MCP protocol
@@ -482,6 +547,10 @@ export class MCPClient extends EventEmitter {
     this.metrics.isConnected = false;
     this.metrics.status = 'disconnected';
 
+    // Reset auth tracking when disconnecting
+    this.authAttemptCount = 0;
+    this.lastAuthAttempt = 0;
+
     if (this.process) {
       this.process.kill('SIGTERM');
 
@@ -496,12 +565,48 @@ export class MCPClient extends EventEmitter {
     }
 
     // Reject all pending requests
-    this.pendingRequests.forEach(({ reject }, id) => {
+    this.pendingRequests.forEach(({ reject }) => {
       reject(new Error(`Connection closed to ${this.config.name}`));
     });
     this.pendingRequests.clear();
 
     this.emit('disconnected');
+  }
+
+  /**
+   * Force kill the server process immediately
+   * Used when removing servers from configuration
+   */
+  public forceKill(): void {
+    console.log(`[MCPClient] Force killing ${this.config.name}...`);
+
+    this.connected = false;
+    this.metrics.isConnected = false;
+    this.metrics.status = 'disconnected';
+    this.isUnavailable = true; // Prevent any reconnection attempts
+
+    if (this.process) {
+      // Try SIGTERM first
+      this.process.kill('SIGTERM');
+
+      // Then force SIGKILL after 1 second
+      setTimeout(() => {
+        if (this.process && !this.process.killed) {
+          console.log(`[MCPClient] Force killing ${this.config.name} with SIGKILL`);
+          this.process.kill('SIGKILL');
+        }
+      }, 1000);
+
+      this.process = null;
+    }
+
+    // Clear all pending operations
+    this.pendingRequests.forEach(({ reject }) => {
+      reject(new Error(`Server ${this.config.name} was forcefully terminated`));
+    });
+    this.pendingRequests.clear();
+
+    this.emit('forcedShutdown');
   }
 
   /**

@@ -141,7 +141,7 @@ export class ConnectionMonitor extends EventEmitter {
   /**
    * Stop monitoring a server connection
    */
-  public async stopMonitoring(serverId: string): Promise<void> {
+  public async stopMonitoring(serverId: string, forceKill: boolean = false): Promise<void> {
     // Clear ping interval
     const interval = this.pingIntervals.get(serverId);
     if (interval) {
@@ -149,10 +149,16 @@ export class ConnectionMonitor extends EventEmitter {
       this.pingIntervals.delete(serverId);
     }
 
-    // Disconnect MCP client
+    // Disconnect or force kill MCP client
     const client = this.mcpClients.get(serverId);
     if (client) {
-      await client.disconnect();
+      if (forceKill) {
+        // Use force kill when removing from configuration
+        client.forceKill();
+      } else {
+        // Normal disconnect
+        await client.disconnect();
+      }
       this.mcpClients.delete(serverId);
     }
 
@@ -384,7 +390,7 @@ export class ConnectionMonitor extends EventEmitter {
   public getServersNeedingRefresh(): string[] {
     const needRefresh: string[] = [];
 
-    for (const [serverId, status] of this.connections) {
+    for (const [serverId, status] of Array.from(this.connections.entries())) {
       // Check if server needs refresh based on last activity
       if (status.status === 'disconnected' ||
           (status.lastPing && Date.now() - status.lastPing.getTime() > 5 * 60 * 1000)) {

@@ -2133,15 +2133,20 @@ All Sprint 4 objectives achieved. Project is production-ready with comprehensive
   - **Related Bug**: Bug-020
   - **Sprint**: Sprint 4
 
-- [ ] **Task 178: Fix Bug-021 - Infinite Retry Loop (HIGH)**
+- [x] **Task 178: Fix Bug-021 - Infinite Retry Loop (HIGH)** ✅ QA VERIFIED
   - **Context**: figma-dev-mode server retrying endlessly after ECONNREFUSED
   - **Problem**: Floods console with "ECONNREFUSED ::1:9458" messages
   - **Impact**: Performance degradation and console spam
   - **Required**:
-    - Handle ECONNREFUSED properly in MCPClient
-    - Implement exponential backoff for retries
-    - Add maximum retry limit
-    - Properly handle server unavailability
+    - Handle ECONNREFUSED properly in MCPClient ✅
+    - Implement exponential backoff for retries ✅
+    - Add maximum retry limit ✅
+    - Properly handle server unavailability ✅
+  - **QA Verification (2025-10-01)**:
+    - Retry logic properly implemented in MCPClient.ts
+    - MAX_RETRIES = 5 with exponential backoff [1s, 2s, 4s, 8s, 16s]
+    - Server marked as 'unavailable' after max attempts
+    - No infinite loops detected
   - **Priority**: HIGH - System stability issue
   - **Related Bug**: Bug-021
   - **Sprint**: Sprint 4
@@ -2156,4 +2161,19 @@ All Sprint 4 objectives achieved. Project is production-ready with comprehensive
     - Find and fix unwanted app activations
   - **Priority**: MEDIUM - User annoyance
   - **Related Bug**: Bug-022
+  - **Sprint**: Sprint 4
+
+- [x] **Task 180: Fix Bug-027 - Fireflies OAuth Loop (CRITICAL)** ✅ 2025-01-30
+  - **Context**: Fireflies server opens 15+ browser tabs for OAuth
+  - **Problem**: Infinite OAuth authentication attempts causing browser hijacking
+  - **Impact**: User loses control of browser, privacy/security risk
+  - **Solution Implemented**:
+    - ✅ OAuth URL detection in stderr output
+    - ✅ Rate limiting: Max 1 auth attempt allowed
+    - ✅ 30-second cooldown between attempts
+    - ✅ Server process killed after max attempts
+    - ✅ forceKill() method added for immediate termination
+    - ✅ Server cleanup when removed from configuration
+  - **Priority**: CRITICAL - Security/Privacy issue
+  - **Related Bug**: Bug-027 - RESOLVED
   - **Sprint**: Sprint 4
