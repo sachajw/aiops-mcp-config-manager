@@ -15,17 +15,19 @@
   - Built performance monitoring
 
 ### Current Sprint:
-- **Sprint 4**: 🔴 Critical Bug Fixes (STARTED - January 27, 2025)
-  - **Theme**: "Fix Visual Workspace Save/Load - RELEASE BLOCKERS"
-  - **Critical Bugs (Must Fix)**:
-    - Bug-023: Save button doesn't activate after dragging nodes
-    - Bug-024: Config changes don't persist to disk
-    - Bug-025: Auto-save functionality not implemented
-    - Bug-026: Canvas state lost on page refresh
-    - Bug-021: Infinite retry loops for failed connections
-    - Bug-022: Claude Desktop launches unexpectedly
-  - **Target**: February 2, 2025 completion
-  - **Status**: Bug-023 in progress (previous fix failed QA)
+- **Sprint 5**: 🔴 Visual Workspace & Release Fixes (STARTED - February 3, 2025)
+  - **Theme**: "Production-Ready Release - Fix All Blockers"
+  - **Critical Release Blockers**:
+    - Task 184: Bug-028 - macOS Gatekeeper "app corrupted" error (NEW)
+    - Task 185: Bug-029 - GitHub release wrong icon & won't install (NEW)
+  - **Visual Workspace Bugs**:
+    - Task 181: Bug-024 - Config changes don't persist to disk
+    - Task 175: Bug-019 - Project scope doesn't load configs
+    - Task 172: Bug-018 - Project scope save inaccessible
+    - Task 171: Bug-017 - Discovery installation broken
+    - Task 170: Bug-016 - JSON Editor hides visual canvas (✅ FIXED)
+  - **Target**: February 7, 2025 completion
+  - **Status**: Release blockers discovered, need immediate attention
 
 ### Previous Sprints:
 - **Sprint 3**: ✅ Server Lifecycle Testing (COMPLETED - Week 2)

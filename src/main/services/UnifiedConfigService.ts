@@ -412,6 +412,20 @@ class UnifiedConfigService {
           // Default: update mcpServers
           finalConfig.mcpServers = config.mcpServers || config.servers;
         }
+      } else {
+        // Bug-024 Fix: When creating a new config file, ensure correct field name is used
+        console.log('[UnifiedConfigService] Creating new config file');
+
+        if (clientName === 'vscode' || clientName === 'cursor') {
+          // VS Code and Cursor use 'servers'
+          finalConfig = { servers: config.servers || config.mcpServers };
+        } else if (clientName === 'codex-cli') {
+          // Codex CLI uses 'mcp_servers'
+          finalConfig = { mcp_servers: config.mcp_servers || config.mcpServers };
+        } else {
+          // Default: use mcpServers (for claude-desktop, etc.)
+          finalConfig = { mcpServers: config.mcpServers || config.servers };
+        }
       }
       
       const content = this.formatContent(finalConfig, client.format);
@@ -420,6 +434,10 @@ class UnifiedConfigService {
         configPath,
         serverCount: Object.keys(finalConfig.mcpServers || finalConfig.servers || {}).length
       });
+
+      // Bug-024: Add detailed logging to debug save issues
+      console.log('[UnifiedConfigService] Full content being written:');
+      console.log(content);
 
       console.log('[UnifiedConfigService] Writing to file:', configPath);
       await fs.writeFile(configPath, content, 'utf-8');

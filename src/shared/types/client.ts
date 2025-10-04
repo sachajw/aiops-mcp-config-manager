@@ -26,6 +26,8 @@ export interface MCPClient {
   version?: string;
   /** Configuration file paths */
   configPaths: ConfigurationPaths;
+  /** Configuration file format (json, json5, toml, yaml) */
+  configFormat?: 'json' | 'json5' | 'jsonc' | 'toml' | 'yaml';
   /** Current client status */
   status: ClientStatus;
   /** Whether the client is currently active/running */

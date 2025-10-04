@@ -23,9 +23,13 @@ export function registerSimplifiedHandlers() {
       clientName,
       scope,
       serverCount: Object.keys(servers || {}).length,
-      servers: JSON.stringify(servers, null, 2),
+      serverKeys: Object.keys(servers || {}),
       projectDirectory
     });
+
+    // Bug-024: Add more detailed logging
+    console.log('[IPC Handler] Full servers data received:');
+    console.log(JSON.stringify(servers, null, 2));
 
     try {
       const config = configService.denormalizeServers(servers, clientName);

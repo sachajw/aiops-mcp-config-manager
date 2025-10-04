@@ -35,6 +35,7 @@ export const MCPClientSchema = z.object({
   type: z.nativeEnum(ClientType),
   version: z.string().optional(),
   configPaths: ConfigurationPathsSchema,
+  configFormat: z.enum(['json', 'json5', 'jsonc', 'toml', 'yaml']).optional(),
   status: z.nativeEnum(ClientStatus),
   isActive: z.boolean(),
   installPath: z.string().optional(),

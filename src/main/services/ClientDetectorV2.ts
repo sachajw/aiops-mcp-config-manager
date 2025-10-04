@@ -237,6 +237,22 @@ export class ClientDetectorV2 {
     // Get version if possible
     const version = await this.getClientVersion(pattern);
 
+    // Determine config format based on client type and file extension
+    let configFormat: 'json' | 'json5' | 'jsonc' | 'toml' | 'yaml' = 'json';
+    if (configPath) {
+      if (configPath.endsWith('.toml')) {
+        configFormat = 'toml';
+      } else if (configPath.endsWith('.yaml') || configPath.endsWith('.yml')) {
+        configFormat = 'yaml';
+      } else if (configPath.endsWith('.json5')) {
+        configFormat = 'json5';
+      } else if (configPath.endsWith('.jsonc')) {
+        configFormat = 'jsonc';
+      }
+    } else if (pattern.type === ClientType.CODEX && pattern.configPaths.some(p => p.endsWith('.toml'))) {
+      configFormat = 'toml'; // Codex often uses TOML
+    }
+
     const client: MCPClient = {
       id: pattern.type,
       type: pattern.type,
@@ -244,6 +260,7 @@ export class ClientDetectorV2 {
       isActive,
       status: isActive ? ClientStatus.ACTIVE : ClientStatus.INACTIVE,
       version: version || undefined,
+      configFormat,
       configPaths: {
         primary: configPath || pattern.configPaths[0],
         alternatives: pattern.configPaths.map(p => MacOSPathResolver.expandTildeInPath(p)),

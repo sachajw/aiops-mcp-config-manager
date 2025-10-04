@@ -1,5 +1,6 @@
 # ACTIVE BUGS AUDIT
 *Created: 2025-09-20*
+*Last QA Update: 2025-10-02*
 *Purpose: Single source of truth for all active bugs - NO bug is fixed until verified here*
 
 ## 🔴 VERIFICATION PROTOCOL (MANDATORY)
@@ -10,6 +11,37 @@ Before ANY bug can be marked "FIXED":
 3. **Screenshot/recording** required as proof
 4. **Update this file** with verification details
 5. **Only then** update tasks.md
+
+---
+
+## 📋 SPRINT 5 QA UPDATE (2025-10-02)
+
+### Testing Focus: Visual Workspace Save/Load
+- **Sprint**: Sprint 5 - Visual Workspace Completion
+- **Test Date**: 2025-10-02
+- **QA Tester**: QA Instance
+
+### Test Summary:
+1. **Bug-021 (Retry Logic)**: ✅ RE-VERIFIED - Working correctly
+2. **Bug-023 (Save Button)**: ⏳ PENDING - Manual test required in running app
+3. **Bug-024 (Config Persistence)**: 🔍 TESTING - Debug logging in place, needs manual verification
+4. **Bug-026 (Canvas State)**: ⏳ PENDING - localStorage implementation needs test
+
+### Test Setup Created:
+- ✅ Created `test-drag-save.sh` monitoring script
+- ✅ Verified `.claude/mcp.json` exists with test data
+- ✅ Reviewed debug logging implementation in VisualWorkspace
+- ⚠️ Playwright tests blocked (remote debugging disabled)
+
+### Manual Test Required:
+Developer should run in app with console visible:
+1. Start file monitor: `./test-drag-save.sh`
+2. Navigate to Visual Workspace
+3. Select Claude Code → Project scope
+4. Drag server from library to canvas
+5. Verify save button activates
+6. Click save and check file monitor
+7. Report console output for verification
 
 ---
 
