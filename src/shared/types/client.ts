@@ -8,8 +8,8 @@ export interface ConfigurationPaths {
   primary: string;
   /** Alternative configuration file paths */
   alternatives: string[];
-  /** Scope-specific configuration paths */
-  scopePaths: Record<ConfigScope, string>;
+  /** Scope-specific configuration paths (null if scope not supported) */
+  scopePaths: Record<ConfigScope, string | null>;
 }
 
 /**

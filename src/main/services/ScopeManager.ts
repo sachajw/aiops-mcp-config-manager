@@ -121,7 +121,12 @@ export class ScopeManager {
     // Load from each scope
     for (const scope of Object.values(ConfigScope)) {
       const scopePath = configPaths.scopePaths[scope];
-      
+
+      // Skip if scope is not supported (path is null)
+      if (!scopePath) {
+        continue;
+      }
+
       try {
         if (await FileSystemUtils.fileExists(scopePath)) {
           const parsed = await ConfigurationParser.parseConfiguration(scopePath);
@@ -177,6 +182,14 @@ export class ScopeManager {
     // Load source configuration
     const sourcePath = client.configPaths.scopePaths[fromScope];
     const targetPath = client.configPaths.scopePaths[toScope];
+
+    if (!sourcePath) {
+      throw new Error(`Scope ${fromScope} is not supported by client ${client.name}`);
+    }
+
+    if (!targetPath) {
+      throw new Error(`Scope ${toScope} is not supported by client ${client.name}`);
+    }
 
     if (!await FileSystemUtils.fileExists(sourcePath)) {
       throw new Error(`Source configuration not found at ${sourcePath}`);
@@ -300,6 +313,11 @@ export class ScopeManager {
 
     // Update the highest priority configuration with merged result
     const targetPath = client.configPaths.scopePaths[highestPriorityEntry.scope];
+
+    if (!targetPath) {
+      throw new Error(`Scope ${highestPriorityEntry.scope} is not supported by client ${client.name}`);
+    }
+
     const configResult = await ConfigurationParser.parseConfiguration(targetPath);
     
     if (configResult.success && configResult.data) {
@@ -346,7 +364,12 @@ export class ScopeManager {
     scope: ConfigScope
   ): Promise<void> {
     const configPath = client.configPaths.scopePaths[scope];
-    
+
+    // Check if scope is supported
+    if (!configPath) {
+      return; // Scope not supported by this client
+    }
+
     if (!await FileSystemUtils.fileExists(configPath)) {
       return; // Nothing to remove
     }

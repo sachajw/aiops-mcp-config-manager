@@ -43,34 +43,30 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
    - Size of loaded context files
    - Relevance of current context to active work
 
-### Current Sprint Tasks (Auto-update 2025-01-27):
-**Current Focus: Sprint 4 - Critical Visual Workspace Save/Load Fixes**
+### Current Sprint Tasks (Auto-update 2025-01-31):
+**Current Focus: Sprint 5 - Visual Workspace Completion**
 
-**✅ Recently Completed:**
-- [x] Bug-020: Performance fix - <200ms client switching (was 30+ seconds)
-- [x] Sprint 3 Week 2: Fixed 12 bugs (exceptional achievement)
-- [x] Claude Code project config path fixed (.claude/mcp.json)
+**✅ Sprint 4 Completed:**
+- [x] Task 178: Bug-021 Infinite retry loops fixed - QA VERIFIED
+- [x] Task 180: Bug-027 OAuth/Fireflies loop fixed - COMPLETED
+- [x] Task 22: Electron packaging/DMG distribution - DONE
 
-**🔴 CRITICAL PRIORITY - Visual Workspace Save/Load (RELEASE BLOCKERS):**
-- [ ] Bug-023: Save button doesn't activate after dragging nodes - PRIORITY #1
-- [ ] Bug-024: Config changes don't persist to disk
-- [ ] Bug-025: Auto-save functionality not implemented
-- [ ] Bug-026: Canvas state lost on page refresh
+**🔴 Sprint 5 CRITICAL Tasks (Visual Workspace):**
+- [ ] Task 177: Bug-020 - Performance issue (30s freeze) - Has solution
+- [ ] Task 170: Bug-016 - JSON Editor hides visual canvas
+- [ ] Task 175: Bug-019 - Project scope doesn't load configs
+- [ ] Task 172: Bug-018 - Project scope save inaccessible
+- [ ] Task 171: Bug-017 - Discovery installation broken
 
-**🟡 System Stability Issues:**
-- [ ] Bug-021: Infinite retry loops for failed connections
-- [ ] Bug-022: Claude Desktop launches unexpectedly
+**📋 Sprint 5 Status:**
+- 5 critical Visual Workspace bugs to fix
+- Target completion: February 7, 2025
+- Focus: Save/load MUST work in all scopes
+- Performance target: <2 seconds all operations
 
-**📋 Sprint 4 Status:**
-- 6 critical bugs blocking release
-- Target completion: February 2, 2025
-- Focus: Save/load system MUST work
-- Monaco Editor integration critical
-
-### Active Bugs (Updated 2025-01-27):
-- **Bug-023-026**: Visual Workspace save/load BROKEN - TOP PRIORITY
-- **Bug-021**: Infinite retry causing performance issues
-- **Bug-022**: Claude Desktop auto-launch annoyance
+### Active Bugs (Updated 2025-01-31):
+- **Bug-016-020**: Visual Workspace critical bugs - SPRINT 5 FOCUS
+- **Bug-022**: Claude Desktop auto-launch (investigation needed)
 - **Bug-007-013**: UI polish issues (lower priority)
 
 ### Context Files by Work Type:

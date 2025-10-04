@@ -23,7 +23,7 @@ export const MCPServerSchema = z.object({
 export const ConfigurationPathsSchema = z.object({
   primary: z.string().min(1, 'Primary path is required'),
   alternatives: z.array(z.string()).default([]),
-  scopePaths: z.record(z.nativeEnum(ConfigScope), z.string())
+  scopePaths: z.record(z.nativeEnum(ConfigScope), z.string().nullable())
 });
 
 /**

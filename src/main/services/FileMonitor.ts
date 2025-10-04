@@ -94,7 +94,9 @@ export class FileMonitor extends EventEmitter {
 
       // Index scope-specific paths
       for (const scopePath of Object.values(client.configPaths.scopePaths)) {
-        this.clients.set(scopePath, client);
+        if (scopePath) {
+          this.clients.set(scopePath, client);
+        }
       }
     }
 
@@ -103,7 +105,9 @@ export class FileMonitor extends EventEmitter {
     for (const client of clients) {
       pathsToWatch.add(client.configPaths.primary);
       client.configPaths.alternatives.forEach(path => pathsToWatch.add(path));
-      Object.values(client.configPaths.scopePaths).forEach(path => pathsToWatch.add(path));
+      Object.values(client.configPaths.scopePaths).forEach(path => {
+        if (path) pathsToWatch.add(path);
+      });
     }
 
     // Calculate initial checksums for existing files

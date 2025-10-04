@@ -43,7 +43,7 @@ export class MacOSPathResolver {
   static getClientConfigurationPaths(clientType: ClientType): {
     primary: string;
     alternatives: string[];
-    scopePaths: Record<ConfigScope, string>;
+    scopePaths: Record<ConfigScope, string | null>;
   } {
     const homeDir = this.getHomeDirectory();
     
@@ -53,24 +53,25 @@ export class MacOSPathResolver {
           primary: join(this.getApplicationSupportPath('Claude'), 'claude_desktop_config.json'),
           alternatives: [],
           scopePaths: {
-            [ConfigScope.GLOBAL]: '/etc/claude/claude_desktop_config.json',
-            [ConfigScope.USER]: join(homeDir, '.config', 'claude', 'claude_desktop_config.json'),
-            [ConfigScope.LOCAL]: join(process.cwd(), '.claude', 'claude_desktop_config.json'),
-            [ConfigScope.PROJECT]: join(process.cwd(), 'claude_desktop.config.json')
+            [ConfigScope.GLOBAL]: null, // Claude Desktop doesn't support global scope
+            [ConfigScope.USER]: join(this.getApplicationSupportPath('Claude'), 'claude_desktop_config.json'),
+            [ConfigScope.LOCAL]: null, // Claude Desktop doesn't support local scope
+            [ConfigScope.PROJECT]: null // Claude Desktop doesn't support project scope
           }
         };
 
       case ClientType.CLAUDE_CODE:
         return {
-          primary: join(homeDir, '.claude', 'claude_code_config.json'),
+          primary: join(homeDir, '.claude.json'), // Most reliable per official docs
           alternatives: [
-            join(homeDir, '.config', 'claude', 'claude_code_config.json')
+            join(homeDir, '.claude', 'settings.local.json'),
+            join(process.cwd(), '.mcp.json') // Project-level config
           ],
           scopePaths: {
-            [ConfigScope.GLOBAL]: '/etc/claude/claude_code_config.json',
-            [ConfigScope.USER]: join(homeDir, '.config', 'claude', 'claude_code_config.json'),
-            [ConfigScope.LOCAL]: join(process.cwd(), '.claude', 'claude_code_config.json'),
-            [ConfigScope.PROJECT]: join(process.cwd(), '.claude/mcp.json')
+            [ConfigScope.GLOBAL]: null, // Claude Code doesn't support global scope
+            [ConfigScope.USER]: join(homeDir, '.claude.json'),
+            [ConfigScope.LOCAL]: null, // Not clearly documented
+            [ConfigScope.PROJECT]: join(process.cwd(), '.mcp.json') // Project root, version-controlled
           }
         };
 
@@ -90,15 +91,15 @@ export class MacOSPathResolver {
 
       case ClientType.VS_CODE:
         return {
-          primary: join(this.getApplicationSupportPath('Code'), 'User', 'settings.json'),
+          primary: join(this.getApplicationSupportPath('Code'), 'User', 'mcp.json'), // User MCP config
           alternatives: [
-            join(homeDir, '.vscode', 'settings.json')
+            join(process.cwd(), '.vscode', 'mcp.json') // Workspace MCP config
           ],
           scopePaths: {
-            [ConfigScope.GLOBAL]: '/etc/vscode/settings.json',
-            [ConfigScope.USER]: join(this.getApplicationSupportPath('Code'), 'User', 'settings.json'),
-            [ConfigScope.LOCAL]: join(process.cwd(), '.vscode', 'settings.json'),
-            [ConfigScope.PROJECT]: join(process.cwd(), '.vscode', 'settings.json')
+            [ConfigScope.GLOBAL]: null, // VS Code doesn't use global MCP config
+            [ConfigScope.USER]: join(this.getApplicationSupportPath('Code'), 'User', 'mcp.json'), // User profile mcp.json
+            [ConfigScope.LOCAL]: null, // Not applicable for VS Code
+            [ConfigScope.PROJECT]: join(process.cwd(), '.vscode', 'mcp.json') // Workspace-specific MCP config
           }
         };
 
@@ -125,6 +126,32 @@ export class MacOSPathResolver {
             [ConfigScope.USER]: join(homeDir, '.config', 'gemini', 'config.json'),
             [ConfigScope.LOCAL]: join(process.cwd(), '.gemini', 'config.json'),
             [ConfigScope.PROJECT]: join(process.cwd(), 'gemini.config.json')
+          }
+        };
+
+      case ClientType.CURSOR:
+        return {
+          primary: join(homeDir, '.cursor', 'mcp.json'), // User config at ~/.cursor/mcp.json
+          alternatives: [
+            join(process.cwd(), '.cursor', 'mcp.json') // Project config
+          ],
+          scopePaths: {
+            [ConfigScope.GLOBAL]: null, // Cursor doesn't have system-wide config
+            [ConfigScope.USER]: join(homeDir, '.cursor', 'mcp.json'), // ~/.cursor/mcp.json for user scope
+            [ConfigScope.LOCAL]: null, // Not applicable
+            [ConfigScope.PROJECT]: join(process.cwd(), '.cursor', 'mcp.json') // Project-specific in .cursor/mcp.json
+          }
+        };
+
+      case ClientType.WINDSURF:
+        return {
+          primary: join(this.getApplicationSupportPath('Windsurf'), 'mcp_config.json'),
+          alternatives: [],
+          scopePaths: {
+            [ConfigScope.GLOBAL]: null, // Windsurf doesn't support global scope
+            [ConfigScope.USER]: join(this.getApplicationSupportPath('Windsurf'), 'mcp_config.json'),
+            [ConfigScope.LOCAL]: null, // Not documented
+            [ConfigScope.PROJECT]: null // Project scope unclear from documentation
           }
         };
 

@@ -40,8 +40,9 @@ export class ConfigurationManager {
     scope: ConfigScope
   ): Promise<Configuration | null> {
     const configPath = client.configPaths.scopePaths[scope];
-    
-    if (!await FileSystemUtils.fileExists(configPath)) {
+
+    // Check if scope is supported (path is not null)
+    if (!configPath || !await FileSystemUtils.fileExists(configPath)) {
       return null;
     }
 
@@ -70,10 +71,15 @@ export class ConfigurationManager {
     scope: ConfigScope
   ): Promise<void> {
     const configPath = client.configPaths.scopePaths[scope];
-    
+
+    // Check if scope is supported (path is not null)
+    if (!configPath) {
+      throw new Error(`Scope ${scope} is not supported by client ${client.name}`);
+    }
+
     // Ensure directory exists
     await fs.ensureDir(path.dirname(configPath));
-    
+
     // Update metadata
     config.metadata.scope = scope;
     config.metadata.sourcePath = configPath;
@@ -103,13 +109,17 @@ export class ConfigurationManager {
     let config = await this.loadConfiguration(client, scope);
     
     if (!config) {
+      const configPath = client.configPaths.scopePaths[scope];
+      if (!configPath) {
+        throw new Error(`Scope ${scope} is not supported by client ${client.name}`);
+      }
       config = {
         mcpServers: {},
         metadata: {
           lastModified: new Date(),
           version: '1.0.0',
           scope,
-          sourcePath: client.configPaths.scopePaths[scope]
+          sourcePath: configPath
         }
       };
     }
@@ -145,7 +155,7 @@ export class ConfigurationManager {
       await this.saveConfiguration(client, config, scope);
     } else {
       const configPath = client.configPaths.scopePaths[scope];
-      if (await FileSystemUtils.fileExists(configPath)) {
+      if (configPath && await FileSystemUtils.fileExists(configPath)) {
         await fs.remove(configPath);
       }
     }

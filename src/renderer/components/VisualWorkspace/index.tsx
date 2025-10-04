@@ -1073,7 +1073,7 @@ export const VisualWorkspace: React.FC = () => {
 
     serverNodes.forEach(node => {
       const serverName = String(node.data.label);
-      const serverData = node.data.server;
+      const serverData = node.data.server as MCPServer;
       if (serverData && serverName) {
         console.log(`[VisualWorkspace] ✅ Including server "${serverName}":`, {
           position: node.position,
@@ -1083,7 +1083,7 @@ export const VisualWorkspace: React.FC = () => {
         // Save server with position data
         newServers[serverName] = {
           ...serverData,
-          position: node.position // Save node position
+          // Note: position is not part of MCPServer type, stored separately
         };
       } else {
         console.warn(`[VisualWorkspace] ⚠️ Skipping node with missing data:`, {
