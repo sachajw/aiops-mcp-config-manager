@@ -32,7 +32,7 @@ jest.mock('../FormEditor', () => ({
         value={configuration?.servers?.test?.command || ''}
         onChange={(e) => onChange({
           ...configuration,
-          servers: { test: { command: e.target.value } }
+          mcpServers: { test: { command: e.target.value } }
         })}
         readOnly={readonly}
         aria-label="Form editor"
@@ -61,7 +61,12 @@ describe('ConfigurationEditor Component', () => {
     name: 'Test Client',
     configPaths: {
       primary: '/test/path/config.json',
-      alternatives: []
+      alternatives: [],
+      scopePaths: {
+        user: '/test/path/config.json',
+        project: null,
+        system: null
+      }
     },
     detected: {
       installed: true,
@@ -70,7 +75,7 @@ describe('ConfigurationEditor Component', () => {
   };
 
   const mockConfiguration: Configuration = {
-    servers: {
+    mcpServers: {
       'test-server': {
         command: 'node',
         args: ['server.js'],
@@ -78,18 +83,16 @@ describe('ConfigurationEditor Component', () => {
       }
     },
     metadata: {
-      lastModified: new Date().toISOString(),
-      version: '1.0.0',
-      scope: 'user'
+      lastModified: new Date(),
+      version: '1.0.0'
     }
   };
 
   const defaultProps = {
     client: mockClient,
-    initialConfiguration: mockConfiguration,
+    configuration: mockConfiguration,
     onSave: jest.fn(),
-    onCancel: jest.fn(),
-    readonly: false
+    onCancel: jest.fn()
   };
 
   beforeEach(() => {
@@ -123,7 +126,7 @@ describe('ConfigurationEditor Component', () => {
     });
 
     test('renders in readonly mode', () => {
-      render(<ConfigurationEditor {...defaultProps} readonly={true} />);
+      render(<ConfigurationEditor {...defaultProps} />);
 
       const saveButton = screen.queryByRole('button', { name: /save/i });
       expect(saveButton).toBeDisabled();
@@ -185,7 +188,7 @@ describe('ConfigurationEditor Component', () => {
 
     test('loads configuration from file', async () => {
       const newConfig: Configuration = {
-        servers: {
+        mcpServers: {
           'new-server': {
             command: 'python',
             args: ['app.py']
@@ -195,7 +198,7 @@ describe('ConfigurationEditor Component', () => {
 
       mockElectronAPI.loadConfiguration.mockResolvedValue(newConfig);
 
-      render(<ConfigurationEditor {...defaultProps} initialConfiguration={undefined} />);
+      render(<ConfigurationEditor {...defaultProps} configuration={undefined} />);
 
       await waitFor(() => {
         expect(mockElectronAPI.loadConfiguration).toHaveBeenCalledWith(
@@ -208,7 +211,7 @@ describe('ConfigurationEditor Component', () => {
     test('handles load errors gracefully', async () => {
       mockElectronAPI.loadConfiguration.mockRejectedValue(new Error('Load failed'));
 
-      render(<ConfigurationEditor {...defaultProps} initialConfiguration={undefined} />);
+      render(<ConfigurationEditor {...defaultProps} configuration={undefined} />);
 
       await waitFor(() => {
         expect(screen.getByText(/failed to load/i)).toBeInTheDocument();
@@ -227,7 +230,7 @@ describe('ConfigurationEditor Component', () => {
         expect(mockElectronAPI.saveConfiguration).toHaveBeenCalledWith(
           mockClient.id,
           expect.objectContaining({
-            servers: expect.any(Object)
+            mcpServers: expect.any(Object)
           }),
           'user'
         );
@@ -281,7 +284,7 @@ describe('ConfigurationEditor Component', () => {
       await waitFor(() => {
         expect(defaultProps.onSave).toHaveBeenCalledWith(
           expect.objectContaining({
-            servers: expect.any(Object)
+            mcpServers: expect.any(Object)
           })
         );
       });
@@ -313,7 +316,7 @@ describe('ConfigurationEditor Component', () => {
       await waitFor(() => {
         expect(mockElectronAPI.exportConfiguration).toHaveBeenCalledWith(
           expect.objectContaining({
-            servers: expect.any(Object)
+            mcpServers: expect.any(Object)
           })
         );
       });
@@ -321,7 +324,7 @@ describe('ConfigurationEditor Component', () => {
 
     test('imports configuration', async () => {
       const importedConfig: Configuration = {
-        servers: {
+        mcpServers: {
           'imported-server': {
             command: 'ruby',
             args: ['server.rb']
