@@ -21,7 +21,9 @@
     - Task 184: Bug-028 - macOS Gatekeeper "app corrupted" error (NEW)
     - Task 185: Bug-029 - GitHub release wrong icon & won't install (NEW)
   - **Visual Workspace Bugs**:
-    - Task 181: Bug-024 - Config changes don't persist to disk
+    - Task 186: Bug-031 - Backup files not being created (NEW CRITICAL)
+    - Task 181: Bug-024 - Config changes don't persist to disk (clarified as Bug-031)
+    - Task 187: Bug-030 - Server Library showing false connections (NEW)
     - Task 175: Bug-019 - Project scope doesn't load configs
     - Task 172: Bug-018 - Project scope save inaccessible
     - Task 171: Bug-017 - Discovery installation broken

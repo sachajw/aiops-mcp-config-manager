@@ -458,34 +458,77 @@ class UnifiedConfigService {
   }
 
   async backupConfig(clientName: string, scope: ConfigScope = 'user', projectDirectory?: string): Promise<string> {
+    console.log('[UnifiedConfigService] 🔄 BACKUP STARTED');
+    console.log('[UnifiedConfigService] Client:', clientName);
+    console.log('[UnifiedConfigService] Scope:', scope);
+    console.log('[UnifiedConfigService] Project dir:', projectDirectory);
+
     const configPath = await this.resolvePath(clientName, scope, projectDirectory);
-    
+    console.log('[UnifiedConfigService] Config path to backup:', configPath);
+
     if (!await fs.pathExists(configPath)) {
-      console.log(`[UnifiedConfigService] No config file to backup at: ${configPath}`);
+      console.log(`[UnifiedConfigService] ⚠️ No config file to backup at: ${configPath}`);
       return '';
     }
-    
+
     // Create timestamp in format: YYYY-MM-DD_HH-mm-ss
     const now = new Date();
-    const timestamp = now.getFullYear() + 
+    const timestamp = now.getFullYear() +
       '-' + String(now.getMonth() + 1).padStart(2, '0') +
       '-' + String(now.getDate()).padStart(2, '0') +
       '_' + String(now.getHours()).padStart(2, '0') +
       '-' + String(now.getMinutes()).padStart(2, '0') +
       '-' + String(now.getSeconds()).padStart(2, '0');
-    
+
     // Create backup directory in user's home
     const backupDir = path.join(os.homedir(), '.mcp-config-backups', clientName);
-    await fs.ensureDir(backupDir);
-    
+    console.log('[UnifiedConfigService] Backup directory:', backupDir);
+
+    // Bug-031: Add error handling for directory creation
+    try {
+      await fs.ensureDir(backupDir);
+      console.log('[UnifiedConfigService] ✅ Backup directory created/verified');
+
+      // Check write permissions
+      await fs.access(backupDir, fs.constants.W_OK);
+      console.log('[UnifiedConfigService] ✅ Write permissions verified');
+    } catch (error) {
+      console.error('[UnifiedConfigService] ❌ Failed to create/access backup directory:', error);
+      throw new Error(`Cannot create backup directory: ${error}`);
+    }
+
     // Create backup filename with timestamp
     const configFileName = path.basename(configPath);
     const backupFileName = `${configFileName}.backup_${timestamp}`;
     const backupPath = path.join(backupDir, backupFileName);
-    
-    // Copy the file to backup location
-    await fs.copy(configPath, backupPath);
-    console.log(`[UnifiedConfigService] Created backup at: ${backupPath}`);
+    console.log('[UnifiedConfigService] Backup path:', backupPath);
+
+    // Bug-031: Add verification after copy
+    try {
+      // Copy the file to backup location
+      await fs.copy(configPath, backupPath);
+      console.log('[UnifiedConfigService] 📝 Copy operation completed');
+
+      // Verify the backup was actually created
+      if (!await fs.pathExists(backupPath)) {
+        throw new Error('Backup file was not created despite successful copy');
+      }
+
+      const backupStats = await fs.stat(backupPath);
+      const originalStats = await fs.stat(configPath);
+
+      console.log('[UnifiedConfigService] ✅ Backup verification:');
+      console.log('  - Original size:', originalStats.size, 'bytes');
+      console.log('  - Backup size:', backupStats.size, 'bytes');
+      console.log('  - Backup created at:', backupPath);
+
+      if (backupStats.size !== originalStats.size) {
+        console.warn('[UnifiedConfigService] ⚠️ Backup size mismatch!');
+      }
+    } catch (error) {
+      console.error('[UnifiedConfigService] ❌ Backup creation FAILED:', error);
+      throw error; // Re-throw to prevent silent failure
+    }
     
     // Clean up old backups (keep only last 10)
     const backups = await fs.readdir(backupDir);

@@ -1120,7 +1120,12 @@ export const VisualWorkspace: React.FC = () => {
 
     if (result && result.success !== false) {
       console.log('[VisualWorkspace] ✅ Configuration saved successfully');
-      message.success('Configuration saved successfully');
+      // Bug-031: Show backup location if available
+      if (result.backupPath) {
+        message.success(`Configuration saved successfully! Backup created at: ${result.backupPath}`);
+      } else {
+        message.success('Configuration saved successfully');
+      }
     } else {
       console.error('[VisualWorkspace] ❌ Failed to save configuration:', result);
       message.error('Failed to save configuration');

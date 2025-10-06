@@ -415,6 +415,13 @@ export const useConfigStore = create<AppState>((set, get) => ({
       );
       console.log('[Store] Backup result:', backupResult);
 
+      // Bug-031: Show backup location to user if successful
+      if (backupResult?.backupPath) {
+        console.log('[Store] ✅ Backup created at:', backupResult.backupPath);
+      } else if (backupResult?.success === false) {
+        console.warn('[Store] ⚠️ Backup failed');
+      }
+
       // Save configuration
       console.log('[Store] 📤 Calling electronAPI.writeConfig with:');
       console.log('  - client:', activeClient);
