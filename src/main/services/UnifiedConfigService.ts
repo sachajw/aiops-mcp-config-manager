@@ -61,6 +61,8 @@ class UnifiedConfigService {
       displayName: 'Claude Desktop',
       mac: path.join(os.homedir(), 'Library', 'Application Support', 'Claude', 'claude_desktop_config.json'),
       windows: path.join(process.env.APPDATA || '', 'Claude', 'claude_desktop_config.json'),
+      // Bug-019: Add project scope support for Claude Desktop
+      project: (projectDir?: string) => path.join(projectDir || process.cwd(), '.mcp', 'claude_desktop_config.json'),
       format: 'json' as const
     },
     'claude-code': {
@@ -123,6 +125,14 @@ class UnifiedConfigService {
     
     if (clientName === 'claude-desktop') {
       const claudeClient = client as typeof this.configLocations['claude-desktop'];
+      // Bug-019: Handle project scope for Claude Desktop
+      if (scope === 'project' && claudeClient.project) {
+        const projectPath = typeof claudeClient.project === 'function'
+          ? claudeClient.project(projectDirectory)
+          : claudeClient.project;
+        console.log(`[UnifiedConfigService] Claude Desktop project path: ${projectPath}`);
+        return projectPath;
+      }
       return platform === 'win32' ? claudeClient.windows : claudeClient.mac;
     }
 
@@ -334,11 +344,17 @@ class UnifiedConfigService {
   }
 
   async readConfig(clientName: string, scope: ConfigScope = 'user', projectDirectory?: string): Promise<MCPConfig & { configPath?: string }> {
+    // Bug-019: Add comprehensive logging for project scope debugging
+    console.log('[UnifiedConfigService] 🔍 READ CONFIG CALLED:');
+    console.log('  - Client:', clientName);
+    console.log('  - Scope:', scope);
+    console.log('  - Project Dir:', projectDirectory);
+
     try {
       // If project scope is requested but no directory provided, return empty config
       if (scope === 'project' && !projectDirectory) {
-        console.log(`[UnifiedConfigService] Project scope requested but no projectDirectory provided`);
-        return { 
+        console.log(`[UnifiedConfigService] ⚠️ Project scope requested but no projectDirectory provided`);
+        return {
           configPath: undefined,
           servers: {},
           mcpServers: {}
@@ -346,7 +362,7 @@ class UnifiedConfigService {
       }
 
       const configPath = await this.resolvePath(clientName, scope, projectDirectory);
-      console.log(`[UnifiedConfigService] Reading config for ${clientName} from: ${configPath}`);
+      console.log(`[UnifiedConfigService] 📂 Resolved config path: ${configPath}`);
       
       if (!await fs.pathExists(configPath)) {
         console.log(`[UnifiedConfigService] Config file does not exist: ${configPath}`);
