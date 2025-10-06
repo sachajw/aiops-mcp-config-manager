@@ -4,12 +4,7 @@
  */
 
 import { useEffect, useState, useCallback } from 'react';
-
-declare global {
-  interface Window {
-    electronAPI: any;
-  }
-}
+import type { ElectronAPI } from '@/shared/types/electron';
 
 interface PersistenceAPI {
   get: (category: string, key?: string) => Promise<any>;

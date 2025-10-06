@@ -33,7 +33,7 @@ export class PersistenceHandler extends BaseHandler {
     );
 
     // Set data in a category
-    this.handle<[string, string, any], void>(
+    this.handle<[string, string, any], { success: boolean; error?: string }>(
       'set',
       async (_, category: string, key: string, value: any) => {
         console.log(`[PersistenceHandler] Setting data in ${category}/${key}`);
@@ -48,7 +48,7 @@ export class PersistenceHandler extends BaseHandler {
     );
 
     // Delete data from a category
-    this.handle<[string, string], void>(
+    this.handle<[string, string], { success: boolean; error?: string }>(
       'delete',
       async (_, category: string, key: string) => {
         console.log(`[PersistenceHandler] Deleting ${category}/${key}`);
@@ -63,7 +63,7 @@ export class PersistenceHandler extends BaseHandler {
     );
 
     // Clear entire category
-    this.handle<[string], void>(
+    this.handle<[string], { success: boolean; error?: string }>(
       'clear',
       async (_, category: string) => {
         console.log(`[PersistenceHandler] Clearing category ${category}`);
@@ -93,7 +93,7 @@ export class PersistenceHandler extends BaseHandler {
     );
 
     // Create backup
-    this.handle<[], string>(
+    this.handle<[], { success: boolean; backupPath?: string; error?: string }>(
       'backup',
       async () => {
         console.log('[PersistenceHandler] Creating backup');
@@ -108,7 +108,7 @@ export class PersistenceHandler extends BaseHandler {
     );
 
     // Restore from backup
-    this.handle<[string], void>(
+    this.handle<[string], { success: boolean; error?: string }>(
       'restore',
       async (_, backupPath: string) => {
         console.log('[PersistenceHandler] Restoring from backup:', backupPath);
@@ -123,12 +123,12 @@ export class PersistenceHandler extends BaseHandler {
     );
 
     // Export database to file
-    this.handle<[string], void>(
+    this.handle<[string], { success: boolean; error?: string }>(
       'export',
       async (_, exportPath: string) => {
         console.log('[PersistenceHandler] Exporting to:', exportPath);
         try {
-          await persistenceService.exportToFile(exportPath);
+          await persistenceService.export(exportPath);
           return { success: true };
         } catch (error) {
           console.error('[PersistenceHandler] Failed to export:', error);
@@ -138,12 +138,12 @@ export class PersistenceHandler extends BaseHandler {
     );
 
     // Import database from file
-    this.handle<[string], void>(
+    this.handle<[string], { success: boolean; error?: string }>(
       'import',
       async (_, importPath: string) => {
         console.log('[PersistenceHandler] Importing from:', importPath);
         try {
-          await persistenceService.importFromFile(importPath);
+          await persistenceService.import(importPath);
           return { success: true };
         } catch (error) {
           console.error('[PersistenceHandler] Failed to import:', error);
@@ -153,7 +153,7 @@ export class PersistenceHandler extends BaseHandler {
     );
 
     // Migrate localStorage data
-    this.handle<[Record<string, any>], void>(
+    this.handle<[Record<string, any>], { success: boolean; error?: string }>(
       'migrate',
       async (_, data: Record<string, any>) => {
         console.log('[PersistenceHandler] Migrating localStorage data');

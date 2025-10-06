@@ -4,7 +4,7 @@
  * Replaces localStorage with a file-based JSON database
  */
 
-import * from 'fs-extra';
+import * as fs from 'fs-extra';
 import * as path from 'path';
 import { app } from 'electron';
 
@@ -30,6 +30,8 @@ export class PersistenceService {
   private readonly SAVE_DEBOUNCE_MS = 1000;
   private readonly MAX_BACKUPS = 10;
   private readonly BACKUP_RETENTION_DAYS = 10;
+  private initialized = false;
+  private initPromise: Promise<void> | null = null;
 
   private constructor() {
     // Get app data path
@@ -39,9 +41,6 @@ export class PersistenceService {
 
     // Initialize with empty database
     this.db = this.createEmptyDatabase();
-
-    // Load database on startup
-    this.loadDatabase();
   }
 
   public static getInstance(): PersistenceService {
@@ -49,6 +48,15 @@ export class PersistenceService {
       PersistenceService.instance = new PersistenceService();
     }
     return PersistenceService.instance;
+  }
+
+  public async initialize(): Promise<void> {
+    if (this.initialized) return;
+    if (this.initPromise) return this.initPromise;
+
+    this.initPromise = this.loadDatabase();
+    await this.initPromise;
+    this.initialized = true;
   }
 
   private createEmptyDatabase(): DatabaseSchema {
@@ -70,6 +78,10 @@ export class PersistenceService {
     try {
       console.log('[PersistenceService] Loading database from:', this.dbPath);
 
+      // Ensure directory exists
+      await fs.ensureDir(path.dirname(this.dbPath));
+      await fs.ensureDir(this.backupDir);
+
       if (await fs.pathExists(this.dbPath)) {
         const data = await fs.readFile(this.dbPath, 'utf-8');
         const parsed = JSON.parse(data);
@@ -79,7 +91,8 @@ export class PersistenceService {
         console.log('[PersistenceService] Database loaded successfully');
       } else {
         console.log('[PersistenceService] No existing database, creating new one');
-        await this.saveDatabase();
+        // Save immediately without debouncing for initial creation
+        await this.saveDatabaseImmediate();
       }
     } catch (error) {
       console.error('[PersistenceService] Failed to load database:', error);
@@ -87,7 +100,27 @@ export class PersistenceService {
       await this.backupCorruptedDatabase();
       // Start with fresh database
       this.db = this.createEmptyDatabase();
-      await this.saveDatabase();
+      await this.saveDatabaseImmediate();
+    }
+  }
+
+  private async saveDatabaseImmediate(): Promise<void> {
+    try {
+      console.log('[PersistenceService] Saving database to disk (immediate)');
+
+      // Update last modified
+      this.db.lastModified = Date.now();
+
+      // Ensure directory exists
+      await fs.ensureDir(path.dirname(this.dbPath));
+
+      // Use writeJson for consistency with tests
+      await fs.writeJson(this.dbPath, this.db, { spaces: 2 });
+
+      console.log('[PersistenceService] Database saved successfully');
+    } catch (error) {
+      console.error('[PersistenceService] Failed to save database:', error);
+      throw error;
     }
   }
 
@@ -131,10 +164,8 @@ export class PersistenceService {
         // Ensure directory exists
         await fs.ensureDir(path.dirname(this.dbPath));
 
-        // Write atomically (write to temp file then rename)
-        const tempPath = `${this.dbPath}.tmp`;
-        await fs.writeFile(tempPath, JSON.stringify(this.db, null, 2));
-        await fs.rename(tempPath, this.dbPath);
+        // Use writeJson for consistency
+        await fs.writeJson(this.dbPath, this.db, { spaces: 2 });
 
         console.log('[PersistenceService] Database saved successfully');
       } catch (error) {
@@ -214,41 +245,60 @@ export class PersistenceService {
   // Public API
 
   public async get(category: keyof DatabaseSchema, key?: string): Promise<any> {
+    await this.initialize();
     if (key) {
-      return this.db[category]?.[key];
+      const categoryData = this.db[category];
+      if (typeof categoryData === 'object' && categoryData !== null && !Array.isArray(categoryData)) {
+        return (categoryData as Record<string, any>)[key];
+      }
+      return undefined;
     }
     return this.db[category];
   }
 
   public async set(category: keyof DatabaseSchema, key: string, value: any): Promise<void> {
-    if (!this.db[category]) {
-      this.db[category] = {};
+    await this.initialize();
+    const categoryData = this.db[category];
+
+    // Ensure the category is a Record type
+    if (!categoryData || typeof categoryData !== 'object' || Array.isArray(categoryData)) {
+      (this.db as any)[category] = {};
     }
-    this.db[category][key] = value;
+
+    if (typeof this.db[category] === 'object' && !Array.isArray(this.db[category])) {
+      (this.db[category] as Record<string, any>)[key] = value;
+    }
+
     await this.saveDatabase();
   }
 
   public async delete(category: keyof DatabaseSchema, key: string): Promise<void> {
-    if (this.db[category]) {
-      delete this.db[category][key];
+    await this.initialize();
+    const categoryData = this.db[category];
+    if (typeof categoryData === 'object' && categoryData !== null && !Array.isArray(categoryData)) {
+      delete (categoryData as Record<string, any>)[key];
       await this.saveDatabase();
     }
   }
 
   public async clear(category: keyof DatabaseSchema): Promise<void> {
-    this.db[category] = {};
+    await this.initialize();
+    (this.db as any)[category] = {};
     await this.saveDatabase();
   }
 
   public async getAll(): Promise<DatabaseSchema> {
+    await this.initialize();
     return { ...this.db };
   }
 
   public async createBackup(): Promise<string> {
+    await this.initialize();
     return this.backupDatabase();
   }
 
   public async restoreFromBackup(backupPath: string): Promise<void> {
+    await this.initialize();
     try {
       console.log('[PersistenceService] Restoring from backup:', backupPath);
 
@@ -305,7 +355,58 @@ export class PersistenceService {
 
   // Migration helpers for localStorage data
 
+  // Alias methods for backward compatibility
+  public async backup(): Promise<string> {
+    return this.createBackup();
+  }
+
+  public async restore(backupPath: string): Promise<void> {
+    return this.restoreFromBackup(backupPath);
+  }
+
+  public async migrate(data: Record<string, any>): Promise<void> {
+    return this.migrateFromLocalStorage(data);
+  }
+
+  public async export(filePath: string): Promise<void> {
+    await this.initialize();
+    await fs.ensureDir(path.dirname(filePath));
+    await fs.writeJson(filePath, this.db, { spaces: 2 });
+    console.log('[PersistenceService] Database exported to:', filePath);
+  }
+
+  public async import(filePath: string): Promise<void> {
+    await this.initialize();
+    const data = await fs.readFile(filePath, 'utf-8');
+    const imported = JSON.parse(data);
+    this.db = this.migrateDatabase(imported);
+    await this.saveDatabase();
+    console.log('[PersistenceService] Database imported from:', filePath);
+  }
+
+  public async getInfo(): Promise<any> {
+    await this.initialize();
+    return {
+      version: this.db.version,
+      categories: Object.keys(this.db).filter(key => key !== 'version' && key !== 'lastModified' && key !== 'backups'),
+      lastModified: this.db.lastModified,
+      backups: this.db.backups.length,
+      size: JSON.stringify(this.db).length
+    };
+  }
+
+
+  // Getter methods for paths
+  public getDbPath(): string {
+    return this.dbPath;
+  }
+
+  public getBackupDir(): string {
+    return this.backupDir;
+  }
+
   public async migrateFromLocalStorage(data: Record<string, any>): Promise<void> {
+    await this.initialize();
     console.log('[PersistenceService] Migrating localStorage data');
 
     // Map localStorage keys to database categories
@@ -333,14 +434,6 @@ export class PersistenceService {
     }
 
     console.log('[PersistenceService] Migration complete');
-  }
-
-  public getDbPath(): string {
-    return this.dbPath;
-  }
-
-  public getBackupDir(): string {
-    return this.backupDir;
   }
 }
 
