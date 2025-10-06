@@ -1100,22 +1100,12 @@ export const VisualWorkspace: React.FC = () => {
 
     // CRITICAL: Replace entire server configuration with canvas state
     console.log('[VisualWorkspace] 🔄 Calling setServers() to update store...');
-    setServers(newServers);
+    setServers(newServers);  // Still update UI state for immediate feedback
 
-    // Small delay to ensure state is updated
-    console.log('[VisualWorkspace] ⏳ Waiting 100ms for state update...');
-    await new Promise(resolve => setTimeout(resolve, 100));
-
-    // Verify state was actually updated
-    const storeState = useConfigStore.getState();
-    console.log('[VisualWorkspace] 🔍 STORE STATE AFTER setServers:');
-    console.log(`  - Servers in store: ${Object.keys(storeState.servers).length}`);
-    console.log(`  - Store isDirty: ${storeState.isDirty}`);
-    console.log(`  - Store servers:`, JSON.stringify(storeState.servers, null, 2));
-
-    // Call saveConfig to persist to disk
-    console.log('[VisualWorkspace] 💾 Calling saveConfig() to persist to disk...');
-    const result = await saveConfig();
+    // Bug-032 Fix: Pass servers directly to saveConfig instead of relying on async state
+    console.log('[VisualWorkspace] 💾 Calling saveConfig() with servers directly...');
+    console.log(`  - Passing ${Object.keys(newServers).length} servers to saveConfig`);
+    const result = await saveConfig(newServers);
     console.log('[VisualWorkspace] 📨 saveConfig() returned:', JSON.stringify(result, null, 2));
 
     if (result && result.success !== false) {
@@ -1188,13 +1178,10 @@ export const VisualWorkspace: React.FC = () => {
         console.log('[JsonEditor] Server count:', Object.keys(parsed.mcpServers).length);
 
         // Update store
-        setServers(parsed.mcpServers);
+        setServers(parsed.mcpServers);  // Still update UI state for immediate feedback
 
-        // CRITICAL: Wait for store update, then persist to disk
-        await new Promise(resolve => setTimeout(resolve, 100));
-
-        // Persist to disk via saveConfig
-        const result = await saveConfig();
+        // Bug-032 Fix: Pass servers directly to saveConfig instead of relying on async state
+        const result = await saveConfig(parsed.mcpServers);
 
         if (result && result.success !== false) {
           setHasUnsavedJsonChanges(false);
