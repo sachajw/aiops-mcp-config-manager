@@ -121,6 +121,21 @@ contextBridge.exposeInMainWorld('electronAPI', {
   loadSettings: () => ipcRenderer.invoke('settings:load'),
   saveSettings: (settings: any) => ipcRenderer.invoke('settings:save', settings),
   resetSettings: () => ipcRenderer.invoke('settings:reset'),
-  getSettingsPath: () => ipcRenderer.invoke('settings:getPath')
+  getSettingsPath: () => ipcRenderer.invoke('settings:getPath'),
+
+  // Persistence methods
+  persistence: {
+    get: (category: string, key?: string) => ipcRenderer.invoke('persistence:get', category, key),
+    set: (category: string, key: string, value: any) => ipcRenderer.invoke('persistence:set', category, key, value),
+    delete: (category: string, key: string) => ipcRenderer.invoke('persistence:delete', category, key),
+    clear: (category: string) => ipcRenderer.invoke('persistence:clear', category),
+    getAll: () => ipcRenderer.invoke('persistence:getAll'),
+    backup: () => ipcRenderer.invoke('persistence:backup'),
+    restore: (backupPath: string) => ipcRenderer.invoke('persistence:restore', backupPath),
+    export: (exportPath: string) => ipcRenderer.invoke('persistence:export', exportPath),
+    import: (importPath: string) => ipcRenderer.invoke('persistence:import', importPath),
+    migrate: (data: Record<string, any>) => ipcRenderer.invoke('persistence:migrate', data),
+    info: () => ipcRenderer.invoke('persistence:info')
+  }
 })
 

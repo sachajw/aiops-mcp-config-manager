@@ -1,7 +1,24 @@
 # ACTIVE BUGS AUDIT
 *Created: 2025-09-20*
-*Last QA Update: 2025-10-02*
+*Last Update: 2025-10-06 (Sprint 6 Day 1)*
 *Purpose: Single source of truth for all active bugs - NO bug is fixed until verified here*
+
+## 📋 SPRINT 6 DAY 1 UPDATE (2025-10-06)
+
+### Day 1 Bug Fixes Complete:
+1. **Bug-032 (Save Race Condition)**: ✅ ALREADY FIXED - Code was already passing servers directly to saveConfig()
+2. **Bug-033 (Metrics Cache Clearing)**: ✅ FIXED - Removed unnecessary cache clearing on client switch
+3. **Bug-034 (Performance Panel)**: ✅ FIXED - Removed fallback to stale servers from store
+
+### Changes Applied:
+- **VisualWorkspace/index.tsx**: Removed metrics cache clearing on client switch
+- **InsightsPanel.tsx**: Removed fallback to store servers, now only uses active client config
+- **InsightsPanel.tsx**: Added totalServers tracking to show accurate server count
+
+### Next Tasks (Day 2-4):
+- Task 203: Unified Persistence Layer (replacing localStorage with JSON database)
+- Task 204: File-based Logging System (with rotation and crash reports)
+- Task 205: Remove Hardcoded System Paths (for portability)
 
 ## 🔴 VERIFICATION PROTOCOL (MANDATORY)
 

@@ -13,6 +13,7 @@ import { CatalogHandler } from './CatalogHandler';
 import { ConnectionHandler } from './ConnectionHandler';
 import { MCPHandler } from './MCPHandler';
 import { SettingsHandler } from './SettingsHandler';
+import { PersistenceHandler } from './PersistenceHandler';
 
 // Store handler instances for cleanup
 const handlers: BaseHandler[] = [];
@@ -34,6 +35,7 @@ export function registerAllHandlers(): void {
     new ConnectionHandler(),   // connection:*
     new MCPHandler(),         // mcp:*
     new SettingsHandler(),     // settings:*
+    new PersistenceHandler(), // persistence:*
   ];
 
   // Register each handler

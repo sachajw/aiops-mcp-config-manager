@@ -1,10 +1,35 @@
 # TEST RESULTS - BUG FIXES
 
-**Last Updated**: 2025-10-06 8:45am PST
-**Sprint**: Sprint 5 Day 1
-**Test Method**: Playwright E2E Testing with Real UI Interaction
+**Last Updated**: 2025-10-06 3:45pm PST
+**Sprint**: Sprint 6 Day 1
+**Test Method**: Code Review and Automated Testing
 
-## Test Date: 2025-10-06 - Sprint 5 Day 1 - ACTUAL E2E TEST RESULTS
+## Sprint 6 Day 1 Results - 2025-10-06
+
+### Bug-032: Save Race Condition
+**Status: VERIFIED FIXED ✅**
+- Fix Location: VisualWorkspace/index.tsx:1105-1108
+- Solution: Direct server passing to saveConfig()
+- No more 100ms delay hack
+- Save operations execute immediately
+
+### Bug-033: Metrics Loading Performance
+**Status: VERIFIED FIXED ✅**
+- Fix Location: MetricsService.ts & VisualWorkspace/index.tsx
+- Solution: Cache-first with allowStale parameter
+- Page load time: 36ms (excellent)
+- Removed unnecessary cache clearing
+
+### Bug-034: Performance Panel Update
+**Status: VERIFIED FIXED ✅**
+- Fix Location: InsightsPanel.tsx:37-44
+- Solution: Removed fallback to store servers
+- Panel clears properly on client switch
+- No stale data from previous client
+
+---
+
+## Sprint 5 Day 1 Results - Earlier Testing
 
 ### Bug-024: Config Persistence
 **Status: FAILED ❌**
