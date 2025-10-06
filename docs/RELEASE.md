@@ -1,4 +1,4 @@
-# MCP Configuration Manager - Release Guide
+ # MCP Configuration Manager - Release Guide
 
 This guide covers building, code signing, and releasing MCP Configuration Manager for macOS distribution.
 

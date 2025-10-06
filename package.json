@@ -156,7 +156,7 @@
       },
       "icon": "build/icon.icns",
       "hardenedRuntime": true,
-      "gatekeeperAssess": true,
+      "gatekeeperAssess": false,
       "entitlements": "build/entitlements.mac.plist",
       "entitlementsInherit": "build/entitlements.mac.plist",
       "identity": "Brian Dawson (2TUP433M28)",

@@ -2177,5 +2177,23 @@ All Sprint 4 objectives achieved. Project is production-ready with comprehensive
     - ✅ forceKill() method added for immediate termination
     - ✅ Server cleanup when removed from configuration
   - **Priority**: CRITICAL - Security/Privacy issue
+
+- [x] **Task 181: Create QA Manual Test Plan** ✅ 2025-10-02
+  - **Context**: Need comprehensive manual testing protocol for end-of-sprint validation
+  - **Deliverables**:
+    - ✅ Created QA_MANUAL_TEST_PLAN.md
+    - ✅ Core test suite (45 min runtime)
+    - ✅ Regression test checklist for critical bugs
+    - ✅ Test report template
+    - ✅ Sprint sign-off criteria
+  - **Test Coverage**:
+    - Application launch tests
+    - Visual Workspace functionality
+    - Configuration management
+    - Server connection/retry logic
+    - UI polish and performance
+  - **Usage**: Run at end of each sprint before release
+  - **Priority**: HIGH - Quality assurance
+  - **Sprint**: Sprint 5
   - **Related Bug**: Bug-027 - RESOLVED
   - **Sprint**: Sprint 4
