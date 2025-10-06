@@ -1307,10 +1307,10 @@ export const VisualWorkspace: React.FC = () => {
             />
           </div>
 
-          {/* Center - Canvas */}
-          <div className="flex-1 relative overflow-hidden">
-            {/* Canvas Header Bar */}
-            <div className="absolute top-0 left-0 right-0 bg-base-100 border-b border-base-300 px-3 py-2 z-10 flex items-center justify-between">
+          {/* Center - Canvas - Bug-018: Fixed layout to prevent cutoff in project scope */}
+          <div className="flex-1 flex flex-col overflow-hidden">
+            {/* Canvas Header Bar - Bug-018: Using flex layout instead of absolute positioning */}
+            <div className="bg-base-100 border-b border-base-300 px-3 py-2 z-20 flex items-center justify-between flex-shrink-0">
               <h2 className="text-sm font-semibold">
                 {activeClient ? `${activeClient} Configuration` : 'Select a Client'}
               </h2>
@@ -1369,9 +1369,10 @@ export const VisualWorkspace: React.FC = () => {
               </div>
             </div>
 
+            {/* Bug-018: Canvas container using flex-1 to fill available space */}
             <ReactFlowProvider>
               <div
-                className={`transition-all duration-300 ${
+                className={`flex-1 relative transition-all duration-300 ${
                   isDragging && isOverCanvas ? 'drop-zone-hover' : ''
                 } ${
                   isDragging && !isOverCanvas ? 'drop-zone-active' : ''
@@ -1379,17 +1380,9 @@ export const VisualWorkspace: React.FC = () => {
                 id="react-flow-wrapper"
                 ref={setCanvasDropRef}
                 style={{
-                  position: 'absolute',
-                  top: '40px',
-                  left: 0,
-                  right: 0,
-                  bottom: showJsonEditor
+                  marginBottom: showJsonEditor
                     ? `${(isJsonEditorCollapsed ? 32 : jsonEditorHeight) + (showInsights ? 150 : 0)}px`
-                    : showInsights ? '150px' : '0',
-                  width: '100%',
-                  height: showJsonEditor
-                    ? `calc(100% - ${40 + (isJsonEditorCollapsed ? 32 : jsonEditorHeight) + (showInsights ? 150 : 0)}px)`
-                    : `calc(100% - ${40 + (showInsights ? 150 : 0)}px)`
+                    : showInsights ? '150px' : '0'
                 }}
               >
                 <ReactFlow

@@ -71,8 +71,9 @@ const ServerCard: React.FC<ServerCardProps> = ({
       <CardHeader
         title={name}
         badge={
+          // Bug-030: Fix misleading "Active" status - only show for installed servers
           installed
-            ? { text: 'Active', variant: 'success' }
+            ? { text: 'Installed', variant: 'success' }
             : source === 'official'
             ? { text: 'Official', variant: 'info' }
             : source === 'user'

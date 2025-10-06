@@ -7,12 +7,11 @@ import { registerAllHandlers } from './ipc/handlers'
 import { registerSimplifiedHandlers } from './ipc/simplifiedHandlers'
 import { registerDiscoveryHandlers } from './ipc/discoveryHandlers'
 
-// Temporarily disable remote debugging to avoid startup issues
 // Enable remote debugging in dev mode BEFORE app is used
-// if (process.env.NODE_ENV === 'development' || process.argv.includes('--dev')) {
-//   app.commandLine.appendSwitch('remote-debugging-port', '9222')
-//   console.log('[Main] Remote debugging enabled on port 9222')
-// }
+if (process.env.NODE_ENV === 'development' || process.argv.includes('--dev')) {
+  app.commandLine.appendSwitch('remote-debugging-port', '9222')
+  console.log('[Main] Remote debugging enabled on port 9222')
+}
 
 let mainWindow: BrowserWindow | null = null
 

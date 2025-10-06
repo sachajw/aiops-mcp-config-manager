@@ -279,7 +279,14 @@ export const useDiscoveryStore = create<DiscoveryState>((set, get) => ({
     const state = get();
     if (!state.catalog) return [];
 
-    let servers = [...state.catalog.servers];
+    // Bug-017: Deduplicate servers to prevent duplicate React keys
+    const uniqueServersMap = new Map<string, typeof state.catalog.servers[0]>();
+    state.catalog.servers.forEach(server => {
+      if (server.id && !uniqueServersMap.has(server.id)) {
+        uniqueServersMap.set(server.id, server);
+      }
+    });
+    let servers = Array.from(uniqueServersMap.values());
 
     // Apply search filter
     if (state.filter.searchText) {
