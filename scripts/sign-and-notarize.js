@@ -167,7 +167,7 @@ async function notarizeApp(appPath) {
 }
 
 // This function is called by electron-builder's afterSign hook
-exports.default = async function(context) {
+exports.default = async function (context) {
   const { electronPlatformName, appOutDir } = context;
 
   if (electronPlatformName !== 'darwin') {
