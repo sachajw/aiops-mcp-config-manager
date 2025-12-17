@@ -5,10 +5,10 @@ import type { ElectronAPI } from '../shared/types/electron'
 
 // Expose protected methods that allow the renderer process to use
 // the ipcRenderer without exposing the entire object
-contextBridge.exposeInMainWorld('electronAPI', {
+const api = {
   // Simplified API methods
   detectClients: () => ipcRenderer.invoke('config:detect'),
-  readConfig: (clientName: string, scope: string, projectDirectory?: string) => 
+  readConfig: (clientName: string, scope: string, projectDirectory?: string) =>
     ipcRenderer.invoke('config:read', clientName, scope, projectDirectory),
   writeConfig: (clientName: string, scope: string, servers: any, projectDirectory?: string) =>
     ipcRenderer.invoke('config:write', clientName, scope, servers, projectDirectory),
@@ -18,7 +18,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke('shell:showItemInFolder', filePath),
   selectDirectory: () =>
     ipcRenderer.invoke('dialog:selectDirectory'),
-    
+
   // Original API methods (keep for backward compatibility)
   // App methods
   getVersion: () => ipcRenderer.invoke('app:getVersion'),
@@ -137,5 +137,18 @@ contextBridge.exposeInMainWorld('electronAPI', {
     migrate: (data: Record<string, any>) => ipcRenderer.invoke('persistence:migrate', data),
     info: () => ipcRenderer.invoke('persistence:info')
   }
-})
+}
+
+// Expose protected methods
+if (process.contextIsolated) {
+  try {
+    contextBridge.exposeInMainWorld('electronAPI', api)
+  } catch (error) {
+    console.error('Failed to expose electronAPI via contextBridge:', error)
+  }
+} else {
+  // Insecure mode (TEST_MODE=true) - expose directly to window
+  // @ts-ignore
+  window.electronAPI = api
+}
 

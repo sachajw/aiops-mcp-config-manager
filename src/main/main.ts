@@ -7,11 +7,7 @@ import { registerAllHandlers } from './ipc/handlers'
 import { registerSimplifiedHandlers } from './ipc/simplifiedHandlers'
 import { registerDiscoveryHandlers } from './ipc/discoveryHandlers'
 
-// Enable remote debugging in dev mode BEFORE app is used
-if (process.env.NODE_ENV === 'development' || process.argv.includes('--dev')) {
-  app.commandLine.appendSwitch('remote-debugging-port', '9222')
-  console.log('[Main] Remote debugging enabled on port 9222')
-}
+// Remote debugging is enabled via Playwright's electron.launch() automatically
 
 let mainWindow: BrowserWindow | null = null
 
@@ -19,21 +15,27 @@ const createWindow = (): void => {
   console.log('[Main] Creating window...')
   console.log('[Main] __dirname:', __dirname)
   console.log('[Main] isDev():', isDev())
-  
+
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
     minWidth: 1000,
     minHeight: 700,
     webPreferences: {
-      nodeIntegration: false,
-      contextIsolation: true,
+      nodeIntegration: process.env.TEST_MODE === 'true',
+      contextIsolation: process.env.TEST_MODE !== 'true',
       preload: join(__dirname, 'preload.js'),
       zoomFactor: 1.0
     },
     titleBarStyle: 'default',
     show: false,
     title: 'My MCP Manager'
+  })
+
+  console.log('[Main] WebPreferences:', {
+    nodeIntegration: process.env.TEST_MODE === 'true',
+    contextIsolation: process.env.TEST_MODE !== 'true',
+    testMode: process.env.TEST_MODE
   })
 
   // Add error handling for renderer loading
@@ -134,10 +136,27 @@ app.whenReady().then(async () => {
   // Register discovery handlers (separate from InstallationHandler until migration complete)
   registerDiscoveryHandlers()
 
-  // Prefetch metrics for all installed servers on startup
-  // This runs in background and doesn't block app startup
+  // Prefetch metrics for all installed servers on startup (if enabled)
+  // Bug-022 fix: This is now disabled by default to prevent OAuth triggers
   setTimeout(async () => {
     try {
+      // Check settings to see if prefetch is enabled
+      const { join } = await import('path')
+      const fs = await import('fs-extra')
+      const settingsPath = join(app.getPath('userData'), 'app-settings.json')
+
+      let prefetchEnabled = false // Default to disabled
+      if (await fs.pathExists(settingsPath)) {
+        const settings = await fs.readJson(settingsPath)
+        prefetchEnabled = settings?.sync?.prefetchMetricsOnStartup === true
+      }
+
+      if (!prefetchEnabled) {
+        console.log('[Main] Metrics prefetch disabled (settings.sync.prefetchMetricsOnStartup = false)')
+        console.log('[Main] To enable, go to Settings > Sync > "Prefetch metrics on startup"')
+        return
+      }
+
       console.log('[Main] Starting metrics prefetch for all installed servers...')
       const { container } = await import('./container')
       const metricsService = container.getMetricsService()

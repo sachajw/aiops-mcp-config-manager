@@ -1,0 +1,371 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Light Mode</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.0.4/reset.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.0.4/reveal.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.0.4/theme/white.min.css">
+    
+    <style>
+        
+            @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+            :root { --accent: #2563eb; --accent-2: #475569; --bg-dark: #ffffff; --glass-bg: rgba(241, 245, 249, 0.9); --border-color: #cbd5e1; }
+            .reveal { font-family: 'Roboto', sans-serif; background-color: var(--bg-dark); color: #1e293b; }
+            .reveal h1, .reveal h2, .reveal h3 { font-family: 'Roboto', sans-serif; color: #0f172a; }
+            .glass-panel { background: #f8fafc !important; border: 1px solid #e2e8f0 !important; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important; color: #334155; }
+            .reveal ul li { border-left: 3px solid var(--accent); color: #334155; }
+            .home-button { color: #475569 !important; border-color: #cbd5e1 !important; background: #f1f5f9 !important; }
+            .home-button:hover { background: #e2e8f0 !important; color: #1e293b !important; }
+        
+        
+        .glass-panel {
+            background: var(--glass-bg);
+            border: 1px solid var(--border-color);
+            backdrop-filter: blur(5px);
+            padding: 2rem;
+            border-radius: 8px;
+        }
+        
+        .split-layout {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+        
+        .reveal ul li {
+            margin-bottom: 1rem;
+            padding-left: 1rem;
+        }
+
+        /* Home Button */
+        .home-button {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            z-index: 1000;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            backdrop-filter: blur(5px);
+            font-weight: bold;
+        }
+
+        .home-button:hover {
+            background: var(--accent);
+            color: var(--bg-dark);
+            box-shadow: 0 0 15px var(--accent);
+        }
+    </style>
+</head>
+<body>
+    
+    <a href="index.html" class="home-button">Esc: Home</a>
+
+    <div class="reveal">
+        <div class="slides">
+            <section>
+                <h1 class="r-fit-text">Light Mode</h1>
+            </section>
+            
+            
+                <section data-background-image="staging/light_mode/images/image1.png" data-background-size="contain" data-background-color="var(--bg-dark)">
+                </section>
+                
+                <section data-background-image="staging/light_mode/images/image2.png" data-background-size="contain" data-background-color="var(--bg-dark)">
+                </section>
+                
+                <section>
+                    <div class="image-grid">
+                        <div class="grid-item"><img src="staging/light_mode/images/image2.png"></div><div class="grid-item"><img src="staging/light_mode/images/image3.png"></div>
+                    </div>
+                </section>
+                
+                <section>
+                    <div class="image-grid">
+                        <div class="grid-item"><img src="staging/light_mode/images/image2.png"></div><div class="grid-item"><img src="staging/light_mode/images/image4.png"></div><div class="grid-item"><img src="staging/light_mode/images/image5.png"></div>
+                    </div>
+                </section>
+                
+                <section>
+                    <div class="image-grid">
+                        <div class="grid-item"><img src="staging/light_mode/images/image2.png"></div><div class="grid-item"><img src="staging/light_mode/images/image6.png"></div><div class="grid-item"><img src="staging/light_mode/images/image5.png"></div><div class="grid-item"><img src="staging/light_mode/images/image7.png"></div>
+                    </div>
+                </section>
+                
+            <section>
+                
+                <div class="split-layout">
+                    <div style="flex: 1;">
+                        <img src="" style="border-radius: 12px; box-shadow: 0 0 20px rgba(0,0,0,0.5); max-height: 60vh;">
+                    </div>
+                    <div style="flex: 1;" class="glass-panel">
+                        <ul></ul>
+                    </div>
+                </div>
+            </section>
+            
+                <section data-background-image="staging/light_mode/images/image8.png" data-background-size="contain" data-background-color="var(--bg-dark)">
+                </section>
+                
+                <section>
+                    <div class="image-grid">
+                        <div class="grid-item"><img src="staging/light_mode/images/image9.png"></div><div class="grid-item"><img src="staging/light_mode/images/image10.png"></div>
+                    </div>
+                </section>
+                
+                <section>
+                    <div class="image-grid">
+                        <div class="grid-item"><img src="staging/light_mode/images/image11.png"></div><div class="grid-item"><img src="staging/light_mode/images/image9.png"></div><div class="grid-item"><img src="staging/light_mode/images/image12.png"></div>
+                    </div>
+                </section>
+                
+            <section>
+                
+                <div class="split-layout">
+                    <div style="flex: 1;">
+                        <img src="" style="border-radius: 12px; box-shadow: 0 0 20px rgba(0,0,0,0.5); max-height: 60vh;">
+                    </div>
+                    <div style="flex: 1;" class="glass-panel">
+                        <ul></ul>
+                    </div>
+                </div>
+            </section>
+            
+                <section data-background-image="staging/light_mode/images/image13.png" data-background-size="contain" data-background-color="var(--bg-dark)">
+                </section>
+                
+                <section>
+                    <div class="image-grid">
+                        <div class="grid-item"><img src="staging/light_mode/images/image14.png"></div><div class="grid-item"><img src="staging/light_mode/images/image15.png"></div>
+                    </div>
+                </section>
+                
+                <section>
+                    <div class="image-grid">
+                        <div class="grid-item"><img src="staging/light_mode/images/image16.png"></div><div class="grid-item"><img src="staging/light_mode/images/image17.png"></div><div class="grid-item"><img src="staging/light_mode/images/image18.png"></div>
+                    </div>
+                </section>
+                
+            <section>
+                
+                <div class="split-layout">
+                    <div style="flex: 1;">
+                        <img src="" style="border-radius: 12px; box-shadow: 0 0 20px rgba(0,0,0,0.5); max-height: 60vh;">
+                    </div>
+                    <div style="flex: 1;" class="glass-panel">
+                        <ul></ul>
+                    </div>
+                </div>
+            </section>
+            
+                <section data-background-image="staging/light_mode/images/image19.png" data-background-size="contain" data-background-color="var(--bg-dark)">
+                </section>
+                
+                <section>
+                    <div class="image-grid">
+                        <div class="grid-item"><img src="staging/light_mode/images/image20.png"></div><div class="grid-item"><img src="staging/light_mode/images/image21.png"></div>
+                    </div>
+                </section>
+                
+                <section>
+                    <div class="image-grid">
+                        <div class="grid-item"><img src="staging/light_mode/images/image22.png"></div><div class="grid-item"><img src="staging/light_mode/images/image23.png"></div><div class="grid-item"><img src="staging/light_mode/images/image24.png"></div>
+                    </div>
+                </section>
+                
+                <section>
+                    <div class="image-grid">
+                        <div class="grid-item"><img src="staging/light_mode/images/image25.png"></div><div class="grid-item"><img src="staging/light_mode/images/image26.png"></div><div class="grid-item"><img src="staging/light_mode/images/image27.png"></div><div class="grid-item"><img src="staging/light_mode/images/image28.png"></div>
+                    </div>
+                </section>
+                
+                <section>
+                    <div class="image-grid">
+                        <div class="grid-item"><img src="staging/light_mode/images/image29.png"></div><div class="grid-item"><img src="staging/light_mode/images/image30.png"></div><div class="grid-item"><img src="staging/light_mode/images/image31.png"></div><div class="grid-item"><img src="staging/light_mode/images/image32.png"></div><div class="grid-item"><img src="staging/light_mode/images/image33.png"></div>
+                    </div>
+                </section>
+                
+            <section>
+                
+                <div class="split-layout">
+                    <div style="flex: 1;">
+                        <img src="" style="border-radius: 12px; box-shadow: 0 0 20px rgba(0,0,0,0.5); max-height: 60vh;">
+                    </div>
+                    <div style="flex: 1;" class="glass-panel">
+                        <ul></ul>
+                    </div>
+                </div>
+            </section>
+            
+                <section data-background-image="staging/light_mode/images/image34.png" data-background-size="contain" data-background-color="var(--bg-dark)">
+                </section>
+                
+                <section>
+                    <div class="image-grid">
+                        <div class="grid-item"><img src="staging/light_mode/images/image35.png"></div><div class="grid-item"><img src="staging/light_mode/images/image36.png"></div>
+                    </div>
+                </section>
+                
+                <section>
+                    <div class="image-grid">
+                        <div class="grid-item"><img src="staging/light_mode/images/image37.png"></div><div class="grid-item"><img src="staging/light_mode/images/image38.png"></div><div class="grid-item"><img src="staging/light_mode/images/image36.png"></div>
+                    </div>
+                </section>
+                
+                <section>
+                    <div class="image-grid">
+                        <div class="grid-item"><img src="staging/light_mode/images/image39.png"></div><div class="grid-item"><img src="staging/light_mode/images/image40.png"></div><div class="grid-item"><img src="staging/light_mode/images/image41.png"></div>
+                    </div>
+                </section>
+                
+            <section>
+                
+                <div class="split-layout">
+                    <div style="flex: 1;">
+                        <img src="" style="border-radius: 12px; box-shadow: 0 0 20px rgba(0,0,0,0.5); max-height: 60vh;">
+                    </div>
+                    <div style="flex: 1;" class="glass-panel">
+                        <ul></ul>
+                    </div>
+                </div>
+            </section>
+            
+                <section>
+                    <div class="image-grid">
+                        <div class="grid-item"><img src="staging/light_mode/images/image42.png"></div><div class="grid-item"><img src="staging/light_mode/images/image43.png"></div><div class="grid-item"><img src="staging/light_mode/images/image44.png"></div>
+                    </div>
+                </section>
+                
+                <section>
+                    <div class="image-grid">
+                        <div class="grid-item"><img src="staging/light_mode/images/image45.png"></div><div class="grid-item"><img src="staging/light_mode/images/image46.png"></div><div class="grid-item"><img src="staging/light_mode/images/image47.png"></div>
+                    </div>
+                </section>
+                
+                <section data-background-image="staging/light_mode/images/image48.png" data-background-size="contain" data-background-color="var(--bg-dark)">
+                </section>
+                
+                <section>
+                    <div class="image-grid">
+                        <div class="grid-item"><img src="staging/light_mode/images/image48.png"></div><div class="grid-item"><img src="staging/light_mode/images/image49.png"></div>
+                    </div>
+                </section>
+                
+                <section>
+                    <div class="image-grid">
+                        <div class="grid-item"><img src="staging/light_mode/images/image48.png"></div><div class="grid-item"><img src="staging/light_mode/images/image50.png"></div><div class="grid-item"><img src="staging/light_mode/images/image51.png"></div>
+                    </div>
+                </section>
+                
+                <section>
+                    <div class="image-grid">
+                        <div class="grid-item"><img src="staging/light_mode/images/image48.png"></div><div class="grid-item"><img src="staging/light_mode/images/image52.png"></div><div class="grid-item"><img src="staging/light_mode/images/image53.png"></div><div class="grid-item"><img src="staging/light_mode/images/image54.png"></div>
+                    </div>
+                </section>
+                
+            <section>
+                
+                <div class="split-layout">
+                    <div style="flex: 1;">
+                        <img src="" style="border-radius: 12px; box-shadow: 0 0 20px rgba(0,0,0,0.5); max-height: 60vh;">
+                    </div>
+                    <div style="flex: 1;" class="glass-panel">
+                        <ul></ul>
+                    </div>
+                </div>
+            </section>
+            
+                <section data-background-image="staging/light_mode/images/image55.png" data-background-size="contain" data-background-color="var(--bg-dark)">
+                </section>
+                
+                <section>
+                    <div class="image-grid">
+                        <div class="grid-item"><img src="staging/light_mode/images/image56.png"></div><div class="grid-item"><img src="staging/light_mode/images/image57.png"></div>
+                    </div>
+                </section>
+                
+                <section>
+                    <div class="image-grid">
+                        <div class="grid-item"><img src="staging/light_mode/images/image58.png"></div><div class="grid-item"><img src="staging/light_mode/images/image59.png"></div><div class="grid-item"><img src="staging/light_mode/images/image60.png"></div>
+                    </div>
+                </section>
+                
+            <section>
+                
+                <div class="split-layout">
+                    <div style="flex: 1;">
+                        <img src="" style="border-radius: 12px; box-shadow: 0 0 20px rgba(0,0,0,0.5); max-height: 60vh;">
+                    </div>
+                    <div style="flex: 1;" class="glass-panel">
+                        <ul></ul>
+                    </div>
+                </div>
+            </section>
+            
+            <section>
+                
+                <div class="split-layout">
+                    <div style="flex: 1;">
+                        <img src="" style="border-radius: 12px; box-shadow: 0 0 20px rgba(0,0,0,0.5); max-height: 60vh;">
+                    </div>
+                    <div style="flex: 1;" class="glass-panel">
+                        <ul></ul>
+                    </div>
+                </div>
+            </section>
+            
+                <section data-background-image="staging/light_mode/images/image61.png" data-background-size="contain" data-background-color="var(--bg-dark)">
+                </section>
+                
+                <section>
+                    <div class="image-grid">
+                        <div class="grid-item"><img src="staging/light_mode/images/image62.png"></div><div class="grid-item"><img src="staging/light_mode/images/image63.png"></div>
+                    </div>
+                </section>
+                
+            <section>
+                
+                <div class="split-layout">
+                    <div style="flex: 1;">
+                        <img src="" style="border-radius: 12px; box-shadow: 0 0 20px rgba(0,0,0,0.5); max-height: 60vh;">
+                    </div>
+                    <div style="flex: 1;" class="glass-panel">
+                        <ul></ul>
+                    </div>
+                </div>
+            </section>
+            
+            <section>
+                
+                <div class="split-layout">
+                    <div style="flex: 1;">
+                        <img src="" style="border-radius: 12px; box-shadow: 0 0 20px rgba(0,0,0,0.5); max-height: 60vh;">
+                    </div>
+                    <div style="flex: 1;" class="glass-panel">
+                        <ul></ul>
+                    </div>
+                </div>
+            </section>
+            
+            
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.0.4/reveal.min.js"></script>
+    <script>
+        Reveal.initialize({
+            hash: true,
+            transition: 'slide',
+            backgroundTransition: 'fade',
+        });
+    </script>
+</body>
+</html>
+    

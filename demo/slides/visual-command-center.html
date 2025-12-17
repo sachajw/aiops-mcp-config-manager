@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>MCP Config Manager: Visual Command Center</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.0.4/reset.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.0.4/reveal.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.0.4/theme/black.min.css" id="theme">
+
+    <!-- Highlight.js Theme -->
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #3b82f6;
+            /* Blue 500 */
+            --accent: #8b5cf6;
+            /* Violet 500 */
+            --success: #10b981;
+            /* Emerald 500 */
+            --danger: #ef4444;
+            /* Red 500 */
+            --bg-dark: #0f172a;
+            /* Slate 900 */
+            --glass-bg: rgba(30, 41, 59, 0.7);
+            --glass-border: rgba(148, 163, 184, 0.2);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        /* Base Override */
+        .reveal {
+            font-family: 'Inter', sans-serif;
+            color: var(--text-main);
+            background-color: var(--bg-dark);
+        }
+
+        /* Background Gradient for all slides */
+        .reveal .slides section {
+            background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.15), transparent 40%),
+                radial-gradient(circle at bottom left, rgba(139, 92, 246, 0.15), transparent 40%);
+        }
+
+        /* Typography */
+        .reveal h1,
+        .reveal h2,
+        .reveal h3,
+        .reveal h4 {
+            font-family: 'Inter', sans-serif;
+            text-transform: none;
+            letter-spacing: -0.02em;
+        }
+
+        .reveal h1 {
+            background: linear-gradient(135deg, #60a5fa 0%, #c084fc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+        }
+
+        .reveal h2 {
+            color: #e2e8f0;
+            font-weight: 700;
+        }
+
+        .reveal pre code {
+            font-family: 'JetBrains Mono', monospace;
+            background: #1e293b;
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            font-size: 1.1em;
+            line-height: 1.4;
+            padding: 20px;
+        }
+
+        /* Glass Cards */
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            margin: 1rem 0;
+        }
+
+        /* Utility Classes */
+        .text-gradient {
+            background: linear-gradient(135deg, #60a5fa 0%, #c084fc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .text-sm {
+            font-size: 0.7em !important;
+        }
+
+        .text-xs {
+            font-size: 0.5em !important;
+        }
+
+        .text-muted {
+            color: var(--text-muted);
+        }
+
+        .flex-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .flex-col {
+            flex: 1;
+        }
+
+        .metric-value {
+            font-size: 3.5em;
+            font-weight: 800;
+            color: var(--primary);
+            line-height: 1;
+        }
+
+        .metric-label {
+            font-size: 0.8em;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Animations */
+        .floating {
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+
+            100% {
+                transform: translateY(0px);
+            }
+        }
+
+        .reveal blockquote {
+            background: rgba(59, 130, 246, 0.1);
+            border-left: 4px solid var(--primary);
+            color: #e2e8f0;
+            padding: 1rem;
+            font-style: italic;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="reveal">
+        <div class="slides">
+
+            <!-- Slide 1: Title -->
+            <section data-transition="zoom">
+                <div class="glass-card floating" style="display: inline-block; padding: 4rem;">
+                    <h1>MCP Config Manager</h1>
+                    <h3 style="color: var(--text-muted);">The Visual Command Center</h3>
+                    <div style="margin-top: 3rem; font-size: 0.8em; opacity: 0.8;">
+                        Wait, what do you mean "Visual"?
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slide 2: What is MCP? -->
+            <section>
+                <h2>What is the Model Context Protocol?</h2>
+                <div class="flex-row" style="margin-top: 2rem;">
+                    <div class="flex-col" style="text-align: left;">
+                        <p class="fragment fade-up">An open standard connecting AI assistants to systems directly.</p>
+                        <ul style="font-size: 0.8em; margin-top: 1.5rem;">
+                            <li class="fragment fade-up">Think <strong>"USB-C for AI Applications"</strong></li>
+                            <li class="fragment fade-up">Decouples the <span style="color: var(--accent)">Model</span>
+                                from the <span style="color: var(--primary)">Context</span></li>
+                            <li class="fragment fade-up">Standardized access to:
+                                <ul>
+                                    <li>Data (files, databases)</li>
+                                    <li>Tools (functions, APIs)</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="flex-col">
+                        <div class="glass-card fragment zoom-in">
+                            <div style="font-size: 4em;">🔌</div>
+                            <div>Universal Connector</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slide 3: The Problem -->
+            <section>
+                <h2>The Growth Creates <span style="color: var(--danger)">Configuration Hell</span></h2>
+                <div class="flex-row">
+                    <div class="flex-col" style="flex: 1.5;">
+                        <pre><code class="json" data-trim data-line-numbers="1-12|3-9">// claude_desktop_config.json
+{
+  "mcpServers": {
+    "git": {
+      "command": "npx",
+      "args": ["-y", "mcp-git"],
+      "type": "local"
+    }
+  }
+}</code></pre>
+                        <div class="fragment fade-up" style="font-size: 0.7em; margin-top: 1rem; color: var(--danger);">
+                            ⚠ JSON Logic Errors<br>
+                            ⚠ Syntax Typos<br>
+                            ⚠ Path Issues
+                        </div>
+                    </div>
+                    <div class="flex-col">
+                        <blockquote class="text-sm fragment fade-right">
+                            "As you adopt more AI tools, you have to manage more configuration files."
+                        </blockquote>
+                        <div class="glass-card fragment fade-up"
+                            style="background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.3);">
+                            <strong>One file down, six to go...</strong><br>
+                            <span class="text-xs text-muted">VS Code, Cursor, Windsurf...</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slide 4: The Context Economy -->
+            <section>
+                <h2>Master the "Context Economy"</h2>
+                <p class="text-sm text-muted">Every active server consumes your model's context window.</p>
+
+                <div class="flex-row" style="margin-top: 2rem;">
+                    <div class="flex-col glass-card">
+                        <div class="metric-value">0</div>
+                        <div class="metric-label">Insights</div>
+                        <div class="text-xs text-muted" style="margin-top: 10px;">Blind Spots</div>
+                    </div>
+                    <div class="flex-col glass-card">
+                        <div class="metric-value" style="color: var(--danger);">20k+</div>
+                        <div class="metric-label">Tokens</div>
+                        <div class="text-xs text-muted" style="margin-top: 10px;">Per Request</div>
+                    </div>
+                    <div class="flex-col glass-card" style="border-color: var(--primary);">
+                        <div class="metric-value">4/6</div>
+                        <div class="metric-label">Active Tools</div>
+                        <div class="text-xs text-muted" style="margin-top: 10px;">Optimized</div>
+                    </div>
+                </div>
+                <div class="fragment fade-up"
+                    style="margin-top: 2rem; font-size: 0.8em; background: rgba(59, 130, 246, 0.15); padding: 1rem; border-radius: 8px;">
+                    <strong>The Solution:</strong> Live performance insights to make informed decisions.
+                </div>
+            </section>
+
+            <!-- Slide 5: Tailor Your AI -->
+            <section>
+                <h2>Instantly Tailor Your AI</h2>
+                <p class="text-sm">Create different server profiles for different phases.</p>
+
+                <div class="flex-row" style="align-items: stretch; margin-top: 2rem;">
+                    <!-- Phase 1 -->
+                    <div class="flex-col glass-card fragment fade-right" style="border-left: 4px solid var(--accent);">
+                        <h4 style="color: var(--accent);">Phase 1: Planning 🧠</h4>
+                        <div class="text-xs text-muted" style="margin-bottom: 1rem;">Client: Claude Desktop</div>
+                        <ul style="font-size: 0.7em; list-style: none; margin: 0; padding: 0;">
+                            <li
+                                style="padding: 0.5rem; background: rgba(255,255,255,0.05); margin-bottom: 4px; border-radius: 4px;">
+                                ✅ google-slides</li>
+                            <li
+                                style="padding: 0.5rem; background: rgba(255,255,255,0.05); margin-bottom: 4px; border-radius: 4px;">
+                                ✅ google-docs</li>
+                            <li
+                                style="padding: 0.5rem; background: rgba(255,255,255,0.05); margin-bottom: 4px; border-radius: 4px;">
+                                ✅ jira-server</li>
+                            <li style="padding: 0.5rem; opacity: 0.3;">❌ git-mcp</li>
+                        </ul>
+                    </div>
+
+                    <!-- Arrow -->
+                    <div style="font-size: 2em; color: var(--text-muted); padding: 0 1rem;">➡</div>
+
+                    <!-- Phase 2 -->
+                    <div class="flex-col glass-card fragment fade-left" style="border-left: 4px solid var(--primary);">
+                        <h4 style="color: var(--primary);">Phase 2: Building 🛠</h4>
+                        <div class="text-xs text-muted" style="margin-bottom: 1rem;">Client: VS Code</div>
+                        <ul style="font-size: 0.7em; list-style: none; margin: 0; padding: 0;">
+                            <li style="padding: 0.5rem; opacity: 0.3;">❌ google-slides</li>
+                            <li
+                                style="padding: 0.5rem; background: rgba(255,255,255,0.05); margin-bottom: 4px; border-radius: 4px;">
+                                ✅ git-mcp</li>
+                            <li
+                                style="padding: 0.5rem; background: rgba(255,255,255,0.05); margin-bottom: 4px; border-radius: 4px;">
+                                ✅ filesystem</li>
+                            <li
+                                style="padding: 0.5rem; background: rgba(255,255,255,0.05); margin-bottom: 4px; border-radius: 4px;">
+                                ✅ playwright</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slide 6: Meta/Dev -->
+            <section>
+                <h2>We Built This <span class="text-gradient">WITH</span> MCP</h2>
+                <p class="text-sm">And we built it <span style="font-style: italic;">using</span> these very management
+                    principles.</p>
+
+                <div class="glass-card" style="text-align: left; margin-top: 2rem;">
+                    <div class="flex-row">
+                        <div class="flex-col">
+                            <h4>Key Tool: <code style="color: #fca5a5;">figma-dev-mode</code></h4>
+                        </div>
+                        <div class="flex-col">
+                            <pre><code class="json" style="font-size: 0.6em;">"figma-dev-mode": {
+  "command": "npx",
+  "args": ["-y", "mcp-remote"]
+}</code></pre>
+                        </div>
+                    </div>
+                    <hr style="border-color: var(--glass-border); margin: 1.5rem 0;">
+                    <p style="font-size: 0.8em;">
+                        Allowed our AI coding agent to <strong style="color: var(--success);">"see"</strong> design
+                        requirements directly, inspect components, and write code to match the spec pixel-perfectly.
+                    </p>
+                </div>
+            </section>
+
+            <!-- Slide 7: Demo -->
+            <section data-background-gradient="linear-gradient(45deg, #000 0%, #1e293b 100%)">
+                <h1 class="text-gradient" style="font-size: 4em;">DEMO</h1>
+                <p>Let's see it in action.</p>
+                <div style="margin-top: 3rem;">
+                    <button
+                        style="background: var(--primary); color: white; border: none; padding: 1rem 2rem; border-radius: 8px; font-size: 1.2em; cursor: pointer;">
+                        Launch App
+                    </button>
+                    <div style="margin-top: 20px;">
+                        <a href="index.html"
+                            style="color: var(--text-muted); font-size: 0.8em; text-decoration: none;">← Back to
+                            Library</a>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.0.4/reveal.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.0.4/plugin/highlight/highlight.min.js"></script>
+    <script>
+        Reveal.initialize({
+            hash: true,
+            plugins: [RevealHighlight],
+            controls: true,
+            progress: true,
+            center: true,
+            transition: 'slide',
+            backgroundTransition: 'fade',
+            width: 1200,
+            height: 800,
+            margin: 0.1,
+        });
+    </script>
+</body>
+
+</html>

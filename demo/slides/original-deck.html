@@ -1,0 +1,616 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>MCP Config Manager Demo</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.0.4/reset.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.0.4/reveal.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.0.4/theme/simple.min.css"
+        id="theme">
+
+    <!-- Theme used for syntax highlighted code -->
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.0.4/plugin/highlight/monokai.min.css">
+
+    <style>
+        /* Custom Theme Adjustments */
+        :root {
+            --primary: #2563eb;
+            --secondary: #475569;
+            --bg-gradient: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        }
+
+        /* Standard Reveal.js Overrides via Variables */
+        .reveal {
+            --r-main-font: 'Inter', sans-serif;
+            --r-heading-font: 'Inter', sans-serif;
+            --r-main-color: #1e293b;
+            --r-heading-color: #0f172a;
+            --r-background-color: #fff;
+            --r-link-color: var(--primary);
+            --r-selection-color: var(--primary);
+        }
+
+        /* Dark Mode: Simply override the variables! */
+        html.dark .reveal {
+            --r-main-color: #f1f5f9;
+            --r-heading-color: #f8fafc;
+            --r-background-color: #0f172a;
+            background-color: #0f172a !important;
+            /* Force background update */
+        }
+
+        /* Specific Element Tweaks */
+        .reveal h1,
+        .reveal h2,
+        .reveal h3,
+        .reveal h4 {
+            text-transform: none;
+        }
+
+        .reveal h1 {
+            color: var(--primary);
+        }
+
+        html.dark .reveal h1 {
+            color: #60a5fa;
+        }
+
+        /* Lighter blue in dark mode */
+
+        .reveal .slides {
+            text-align: left;
+        }
+
+        .reveal .slides section>* {
+            margin-left: 0;
+            margin-right: 0;
+        }
+
+        .container {
+            display: flex;
+            align-items: flex-start;
+            gap: 40px;
+        }
+
+        .col {
+            flex: 1;
+        }
+
+        .text-sm {
+            font-size: 0.7em;
+        }
+
+        .text-xs {
+            font-size: 0.5em;
+            color: #64748b;
+        }
+
+        code {
+            color: #d63384;
+            font-family: 'Fira Code', monospace;
+        }
+
+        .fragment.blur {
+            filter: blur(5px);
+        }
+
+        .fragment.blur.visible {
+            filter: none;
+        }
+
+        /* Slide Backgrounds */
+        section[data-background-gradient] h1 {
+            color: var(--primary);
+        }
+
+        /* Typography & Spacing Updates */
+        .reveal h1,
+        .reveal h2,
+        .reveal h3,
+        .reveal h4 {
+            margin-top: 0;
+            margin-bottom: 0.5em;
+        }
+
+        .reveal p,
+        .reveal ul,
+        .reveal ol {
+            font-size: 0.85em;
+        }
+
+        /* Smaller text vs headlines */
+        .reveal li {
+            margin-bottom: 0.8em;
+        }
+
+        /* Increased spacing between bullets */
+        .reveal ul ul {
+            font-size: 0.9em;
+        }
+
+        /* Dark Mode Styles */
+        /* Force Background on Dark Mode Title Slide via CSS override of Reveal's bg element */
+        html.dark .slide-background.title-slide-bg {
+            background: #0f172a !important;
+        }
+
+        html.dark section[data-background-gradient] {
+            background: none !important;
+        }
+
+        /* Fallback */
+
+        html.dark .text-xs {
+            color: #94a3b8;
+        }
+
+        html.dark .subtitle {
+            color: #cbd5e1 !important;
+        }
+
+        /* Override light mode grey */
+        html.dark blockquote {
+            border-left-color: #60a5fa;
+            color: #cbd5e1;
+        }
+
+        /* Footer for Title Slide */
+        .title-footer {
+            margin-top: 60px;
+            /* Use margin instead of absolute bottom to prevent overlap */
+            text-align: center;
+            font-size: 0.4em;
+            opacity: 0.6;
+            color: inherit;
+        }
+
+        /* Utility Classes (Replaces Inline Styles) */
+        .text-center {
+            text-align: center;
+        }
+
+        .text-accent-pink {
+            color: #d63384;
+        }
+
+        .text-accent-red {
+            color: #ef4444;
+            font-weight: bold;
+        }
+
+        .mt-20 {
+            margin-top: 20px;
+        }
+
+        .mt-40 {
+            margin-top: 40px;
+        }
+
+        .mt-50 {
+            margin-top: 50px;
+        }
+
+        /* Dark Mode Utility Overrides */
+        html.dark .text-accent-pink {
+            color: #f472b6;
+        }
+
+        /* Lighter pink */
+        html.dark .text-accent-red {
+            color: #f87171;
+        }
+
+        /* Lighter red */
+
+        /* Card & Box Styles (Refactored from Inline) */
+        .stat-card {
+            background: #e0f2fe;
+            padding: 20px;
+            border-radius: 8px;
+            border: 2px solid #3b82f6;
+            text-align: center;
+        }
+
+        .phase-card {
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .phase-blue {
+            background: #e3f2fd;
+        }
+
+        .phase-purple {
+            background: #f3e5f5;
+        }
+
+        /* Dark Mode Card Overrides */
+        html.dark .stat-card {
+            background: #1e293b;
+            /* Dark Slate */
+            border-color: #60a5fa;
+            /* Blue 400 */
+        }
+
+        html.dark .phase-blue {
+            background: #1e3a8a;
+            /* Dark Blue */
+            color: #e0f2fe;
+            /* Light Blue Text */
+        }
+
+        html.dark .phase-purple {
+            background: #581c87;
+            /* Dark Purple */
+            color: #f3e7ff;
+            /* Light Purple Text */
+        }
+
+        /* Image Standardization */
+        .content-image {
+            display: block;
+            max-width: 100%;
+            max-height: 500px;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            /* Prevents squashing */
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            margin: 0 auto;
+        }
+
+        /* Layout Standardization */
+        .split-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            align-items: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="reveal">
+        <div class="slides">
+
+            <!-- Title Slide -->
+            <section class="title-slide" data-state="title-slide-bg"
+                data-background-gradient="linear-gradient(to bottom right, #f7f7f7, #e0e0e0)">
+                <h1 class="r-fit-text text-center mb-20">MCP Config Manager</h1>
+                <h3 class="subtitle text-center">The Visual Command Center for AI Tools</h3>
+                <p class="text-center mt-50" style="font-size: 0.8em;">
+                    Simplifying the <span style="color: #2563eb; font-weight: bold;">Model Context Protocol</span>
+                    Ecosystem
+                </p>
+                <div class="title-footer">Made with Google Antigravity</div>
+            </section>
+
+            <!-- What is MCP? -->
+            <section>
+                <h2>What is MCP?</h2>
+                <p class="text-sm">The <strong>Model Context Protocol (MCP)</strong> is an open standard that connects
+                    AI assistants to systems directly.</p>
+                <div class="split-layout mt-40">
+                    <div class="col">
+                        <ul>
+                            <li class="fragment">Think "USB-C for AI Applications"</li>
+                            <li class="fragment">Standardized way for AIs to access <strong>Data</strong> (files,
+                                databases) and <strong>Tools</strong> (functions, APIs).</li>
+                            <li class="fragment">Decouples the <em>Model</em> from the <em>Context</em>.</li>
+                        </ul>
+                    </div>
+                    <!-- Architecture Diagram -->
+                    <div class="col">
+                        <img class="content-image" src="assets/mcp_architecture.png" alt="MCP Architecture">
+                    </div>
+                </div>
+            </section>
+
+            <!-- State of MCP Ecosystem -->
+            <section>
+                <h2>State of MCP</h2>
+                <div class="text-sm">
+                    <p>Since its launch in <strong>Nov 2024</strong> by Anthropic, the ecosystem has exploded.</p>
+                    <ul>
+                        <li class="fragment"><strong>2025 Milestones</strong>:
+                            <ul>
+                                <li>OAuth 2.1 Authorization Framework (Security 🔒)</li>
+                                <li>Streamable HTTP & Binary/Audio Support 🎧</li>
+                                <li>MCP Registry Launch (Discovery 🔍)</li>
+                            </ul>
+                        </li>
+                        <li class="fragment"><strong>Adoption</strong>:
+                            <ul>
+                                <li>Integrated into Microsoft Copilot Studio, Claude, and more.</li>
+                                <li>Donated to the <strong>Linux Foundation</strong> (Agentic AI Foundation).</li>
+                            </ul>
+                        </li>
+                        <li class="fragment"><strong>Projection</strong>: $1.8B market by end of 2025.</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- The Problem -->
+            <section>
+                <h2>Why Do We Need a Manager?</h2>
+                <h4 class="text-accent-pink">The "Configuration Hell"</h4>
+                <div class="container">
+                    <div class="col">
+                        <pre><code class="json" data-trim data-noescape>
+// claude_desktop_config.json
+{
+  "mcpServers": {
+    "git": { ... }
+  }
+}
+                    </code></pre>
+                        <p class="text-xs" style="text-align: center;">One file down, 6 to go...</p>
+                    </div>
+                    <div class="col text-sm">
+                        <ul>
+                            <li class="fragment"><strong>3 Different Claude Configs:</strong>
+                                <ul>
+                                    <li>Claude Desktop</li>
+                                    <li>Claude Code (CLI)</li>
+                                    <li>Claude for VS Code</li>
+                                </ul>
+                            </li>
+                            <li class="fragment"><strong>Plus The Rest:</strong>
+                                <ul>
+                                    <li>Cursor, Windsurf, Kiro</li>
+                                    <li>Antigravity, Gemini</li>
+                                </ul>
+                            </li>
+                            <li class="fragment text-accent-red">It Gets Complicated. Fast.
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- The Solution -->
+            <section>
+                <h2>Enter MCP Config Manager</h2>
+                <div class="split-layout">
+                    <div class="col text-sm">
+                        <p>A unified, visual interface for your AI tools.</p>
+                        <ul>
+                            <li class="fragment"><strong>Visual Validation</strong>: No more JSON syntax errors.</li>
+                            <li class="fragment"><strong>Cross-Client Sync</strong>: Write once, update Claude & VS
+                                Code.</li>
+                            <li class="fragment"><strong>Server Library</strong>: Discover & install with one click.
+                            </li>
+                            <li class="fragment"><strong>Live Monitoring</strong>: See real-time checks and status.</li>
+                        </ul>
+                    </div>
+                    <div class="col fragment">
+                        <!-- Static Preview -->
+                        <img class="content-image" src="assets/app-preview.png" alt="Demo Preview">
+                        <p class="text-xs" style="text-align: center;">(Demo UI)</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- New: The Context Economy -->
+            <section>
+                <h2>The Context Economy</h2>
+                <p class="text-sm">MCP servers provide power, but they consume <strong>Content Window</strong>.</p>
+                <div class="container">
+                    <div class="col text-sm">
+                        <h4>The Cost of Context</h4>
+                        <ul>
+                            <li class="fragment">Every connected server adds system prompts and tool definitions.</li>
+                            <li class="fragment"><strong>Too Many Servers</strong> = Slower inference & higher cost.
+                            </li>
+                            <li class="fragment"><strong>Solution:</strong> Toggle servers On/Off instantly based on
+                                task.</li>
+                        </ul>
+                    </div>
+                    <div class="col" style="display: flex; justify-content: center; align-items: center;">
+                        <div class="stat-card">
+                            <h1 style="margin: 0; font-size: 3em; color: #2563eb;">24k</h1>
+                            <p style="margin: 0; color: #475569;">Tokens / Request</p>
+                            <p class="text-xs" style="margin-top: 10px;">with 5 active servers</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Project History: The Problem -->
+            <section>
+                <h2>The Origin Story</h2>
+                <div class="container">
+                    <div class="col text-sm">
+                        <h4>The Pain Point</h4>
+                        <ul>
+                            <li><strong>Manual Config Hell</strong>: Editing JSON for Claude, VS Code, Gemini...</li>
+                            <li><strong>Inconsistency</strong>: Config drift between tools.</li>
+                            <li><strong>Syntax Errors</strong>: One missed comma breaks the whole agent.</li>
+                        </ul>
+                        <blockquote class="text-sm"
+                            style="margin-top: 20px; border-left: 4px solid #007bff; padding-left: 10px; font-style: italic;">
+                            "I needed a unified graphical interface to stop wrestling with JSON files."
+                        </blockquote>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Development Transition -->
+            <section>
+                <h2>A Tale of Two Agents</h2>
+                <p class="text-sm">We used different AI agents for different phases of development.</p>
+                <div class="container">
+                    <div class="col fragment">
+                        <div class="phase-card phase-blue">
+                            <h5>Phase 1: Planning 🧠</h5>
+                            <p class="text-xs"><strong>Claude Desktop</strong></p>
+                            <ul class="text-xs">
+                                <li>Strategy & PRD</li>
+                                <li>Market Analysis</li>
+                                <li>Architecture Design</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col fragment">
+                        <div class="phase-card phase-purple">
+                            <h5>Phase 2: Building 🛠️</h5>
+                            <p class="text-xs"><strong>Claude Code / VS Code</strong></p>
+                            <ul class="text-xs">
+                                <li>Writing TypeScript</li>
+                                <li>File Sys Ops</li>
+                                <li>Iterative Testing</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- New: MCP in Testing (Refined) -->
+            <section>
+                <h2>MCP Beyond Config: Testing</h2>
+                <p class="text-sm">We use <strong>Playwright MCP</strong> to give AI agents "eyes" on our test results.
+                </p>
+                <div class="split-layout">
+                    <div class="col text-sm">
+                        <h5>Intelligent Diagnosis</h5>
+                        <ul>
+                            <li class="fragment">run <code>npm test:e2e</code> via MCP.</li>
+                            <li class="fragment">Agent sees the failure + screenshot.</li>
+                            <li class="fragment"><strong>Result:</strong> Self-healing tests.</li>
+                        </ul>
+                    </div>
+                    <div class="col">
+                        <img class="content-image" src="assets/test-failure.png" alt="Test Failure Screenshot">
+                    </div>
+                </div>
+            </section>
+
+            <!-- New: MCP in Work Tracking -->
+            <section>
+                <h2>MCP for Work Tracking</h2>
+                <p class="text-sm">Connecting Requirements to Code.</p>
+                <div class="container">
+                    <div class="col text-sm">
+                        <pre><code class="json" data-trim>
+// .mcp.json (Expanded)
+{
+  "jira-server": {
+    "command": "npx",
+    "args": ["-y", "mcp-jira"],
+    "env": { "JIRA_API_TOKEN": "..." }
+  }
+}
+                    </code></pre>
+                    </div>
+                    <div class="col">
+                        <h5>Work Item Integration</h5>
+                        <ul>
+                            <li class="fragment">Fetch "Acceptance Criteria" from Jira/Linear.</li>
+                            <li class="fragment">Generate implementation plan based on the ticket.</li>
+                            <li class="fragment">Update ticket status upon PR creation.</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Demo Transition -->
+            <section data-background-color="#111">
+                <h1 class="text-center" style="color: #fff;">Let's See It In Action</h1>
+                <p class="text-center" style="color: #ccc;">Live Demo</p>
+            </section>
+
+            <!-- Meta: Development -->
+            <section>
+                <h2>Built WITH MCP</h2>
+                <p class="text-sm">We practiced what we preach. This project was built using MCP servers.</p>
+                <div class="container">
+                    <div class="col">
+                        <h5>Tools Used:</h5>
+                        <ul>
+                            <li class="fragment"><strong>Figma Dev Mode</strong>: To inspect designs directly in the
+                                IDE.</li>
+                            <li class="fragment"><strong>Filesystem & Git</strong>: Standard context servers.</li>
+                        </ul>
+                    </div>
+                    <div class="col text-sm">
+                        <pre><code class="json" data-trim>
+// .mcp.json (Actual Project Config)
+{
+  "mcpServers": {
+    "figma-dev-mode": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "..."],
+      "type": "local"
+    }
+  }
+}
+                   </code></pre>
+                        <p class="text-xs">This allowed the AI coding agent to "see" the design requirements clearly.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <section>
+                <h1>Q & A</h1>
+                <p>Thank you!</p>
+                <p class="text-sm"><a
+                        href="https://github.com/itsocialist/mcp-config-manager">github.com/itsocialist/mcp-config-manager</a>
+                </p>
+            </section>
+
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.0.4/reveal.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.0.4/plugin/highlight/highlight.min.js"></script>
+    <script>
+        Reveal.initialize({
+            hash: true,
+            plugins: [RevealHighlight],
+            controls: true,
+            progress: true,
+            center: true,
+            transition: 'slide',
+            width: 1200,
+            height: 900
+        });
+
+        // Dark Mode Toggle Logic
+        const toggleDarkMode = () => {
+            document.documentElement.classList.toggle('dark');
+            const isDark = document.documentElement.classList.contains('dark');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        };
+
+        // Init Theme
+        if (localStorage.getItem('theme') === 'dark') {
+            document.documentElement.classList.add('dark');
+        }
+
+        // Add Toggle Button
+        const btn = document.createElement('button');
+        btn.innerText = '🌙/☀️';
+        btn.style.position = 'fixed';
+        btn.style.bottom = '20px';
+        btn.style.left = '20px';
+        btn.style.zIndex = '1000';
+        btn.style.padding = '10px';
+        btn.style.borderRadius = '50%';
+        btn.style.border = 'none';
+        btn.style.background = 'var(--primary)';
+        btn.style.color = '#fff';
+        btn.style.cursor = 'pointer';
+        btn.onclick = toggleDarkMode;
+        document.body.appendChild(btn);
+    </script>
+</body>
+
+</html>
+```
