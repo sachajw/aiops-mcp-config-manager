@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run electron:dist:*)",
+      "Bash(npm install:*)",
+      "Bash(CSC_IDENTITY_AUTO_DISCOVERY=false npm run electron:pack)",
+      "Bash(npm run electron:pack:*)",
+      "Bash(/bin/rm:*)",
+      "Bash(/bin/cp -R \"release/mac-arm64/MCP Configuration Manager.app\" \"/Applications/\")",
+      "Bash(/bin/ls:*)",
+      "Bash(xattr -cr:*)"
+    ]
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "playwright-test"
+  ]
+}
