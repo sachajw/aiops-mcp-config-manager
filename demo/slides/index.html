@@ -250,6 +250,28 @@
             color: #f3e7ff;
             /* Light Purple Text */
         }
+
+        /* Image Standardization */
+        .content-image {
+            display: block;
+            max-width: 100%;
+            max-height: 500px;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            /* Prevents squashing */
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            margin: 0 auto;
+        }
+
+        /* Layout Standardization */
+        .split-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            align-items: center;
+        }
     </style>
 </head>
 
@@ -274,7 +296,7 @@
                 <h2>What is MCP?</h2>
                 <p class="text-sm">The <strong>Model Context Protocol (MCP)</strong> is an open standard that connects
                     AI assistants to systems directly.</p>
-                <div class="container mt-40">
+                <div class="split-layout mt-40">
                     <div class="col">
                         <ul>
                             <li class="fragment">Think "USB-C for AI Applications"</li>
@@ -283,10 +305,9 @@
                             <li class="fragment">Decouples the <em>Model</em> from the <em>Context</em>.</li>
                         </ul>
                     </div>
-                    <!-- Architecture Diagram with r-stretch -->
-                    <div class="col" style="display: flex; justify-content: center; align-items: center;">
-                        <img class="r-stretch" src="assets/mcp_architecture.png" alt="MCP Architecture"
-                            style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); object-fit: contain; width: 100%; height: auto; max-height: 450px;">
+                    <!-- Architecture Diagram -->
+                    <div class="col">
+                        <img class="content-image" src="assets/mcp_architecture.png" alt="MCP Architecture">
                     </div>
                 </div>
             </section>
@@ -356,7 +377,7 @@
             <!-- The Solution -->
             <section>
                 <h2>Enter MCP Config Manager</h2>
-                <div class="container">
+                <div class="split-layout">
                     <div class="col text-sm">
                         <p>A unified, visual interface for your AI tools.</p>
                         <ul>
@@ -369,14 +390,9 @@
                         </ul>
                     </div>
                     <div class="col fragment">
-                        <div class="col fragment">
-                            <div class="col fragment">
-                                <!-- Static Preview (GIF Todo) -->
-                                <img src="assets/app-preview.png" alt="Demo Preview"
-                                    style="width: 100%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
-                                <p class="text-xs" style="text-align: center;">(Demo UI)</p>
-                            </div>
-                        </div>
+                        <!-- Static Preview -->
+                        <img class="content-image" src="assets/app-preview.png" alt="Demo Preview">
+                        <p class="text-xs" style="text-align: center;">(Demo UI)</p>
                     </div>
                 </div>
             </section>
@@ -460,7 +476,7 @@
                 <h2>MCP Beyond Config: Testing</h2>
                 <p class="text-sm">We use <strong>Playwright MCP</strong> to give AI agents "eyes" on our test results.
                 </p>
-                <div class="container">
+                <div class="split-layout">
                     <div class="col text-sm">
                         <h5>Intelligent Diagnosis</h5>
                         <ul>
@@ -470,8 +486,7 @@
                         </ul>
                     </div>
                     <div class="col">
-                        <img src="assets/test-failure.png" alt="Test Failure Screenshot"
-                            style="max-height: 250px; border: 1px solid #ddd; border-radius: 4px;">
+                        <img class="content-image" src="assets/test-failure.png" alt="Test Failure Screenshot">
                     </div>
                 </div>
             </section>
