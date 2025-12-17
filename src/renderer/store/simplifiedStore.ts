@@ -44,7 +44,7 @@ interface AppState {
   deleteServer: (name: string) => void;
   toggleServer: (name: string) => void;
   enableServer: (name: string, enabled: boolean) => void;
-  saveConfig: () => Promise<{ success: boolean; backupPath?: string } | null>;
+  saveConfig: (serversToSave?: Record<string, MCPServer>) => Promise<{ success: boolean; backupPath?: string } | null>;
   resetState: () => void;
   loadCatalog: () => Promise<void>;
   saveCatalog: () => Promise<void>;
@@ -384,8 +384,11 @@ export const useConfigStore = create<AppState>((set, get) => ({
   },
 
   // Save configuration back to file
-  saveConfig: async () => {
+  saveConfig: async (serversToSave?: Record<string, MCPServer>) => {
     const { activeClient, activeScope, servers, projectDirectory } = get();
+
+    // Use provided servers or fall back to state servers
+    const finalServers = serversToSave || servers;
 
     console.log('═══════════════════════════════════════════════════════');
     console.log('[Store] 💾 SAVE CONFIG STARTED');
@@ -393,9 +396,10 @@ export const useConfigStore = create<AppState>((set, get) => ({
     console.log('[Store] Active client:', activeClient);
     console.log('[Store] Active scope:', activeScope);
     console.log('[Store] Project directory:', projectDirectory);
-    console.log('[Store] Number of servers to save:', Object.keys(servers).length);
-    console.log('[Store] Server names:', Object.keys(servers));
-    console.log('[Store] Full servers object:', JSON.stringify(servers, null, 2));
+    console.log('[Store] Using provided servers:', !!serversToSave);
+    console.log('[Store] Number of servers to save:', Object.keys(finalServers).length);
+    console.log('[Store] Server names:', Object.keys(finalServers));
+    console.log('[Store] Full servers object:', JSON.stringify(finalServers, null, 2));
 
     if (!activeClient) {
       console.error('[Store] ❌ No client selected, aborting save');
@@ -426,14 +430,14 @@ export const useConfigStore = create<AppState>((set, get) => ({
       console.log('[Store] 📤 Calling electronAPI.writeConfig with:');
       console.log('  - client:', activeClient);
       console.log('  - scope:', activeScope);
-      console.log('  - servers count:', Object.keys(servers).length);
-      console.log('  - servers:', JSON.stringify(servers, null, 2));
+      console.log('  - servers count:', Object.keys(finalServers).length);
+      console.log('  - servers:', JSON.stringify(finalServers, null, 2));
       console.log('  - projectDir:', activeScope === 'project' ? projectDirectory : 'N/A');
 
       const result = await electronAPI.writeConfig(
         activeClient,
         activeScope,
-        servers as any,
+        finalServers as any,
         activeScope === 'project' ? (projectDirectory || undefined) : undefined
       );
 

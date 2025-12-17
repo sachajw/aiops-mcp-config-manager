@@ -1,0 +1,232 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>MCP Technical Deep Dive</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.0.4/reset.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.0.4/reveal.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.0.4/theme/white.min.css">
+    
+    <style>
+        
+            @import url('https://fonts.googleapis.com/css2?family=Mountains+of+Christmas:wght@400;700&family=Lato:wght@400;700&display=swap');
+            :root { --accent: #ff0000; --accent-2: #00ff00; --bg-dark: #0f172a; --glass-bg: rgba(255, 255, 255, 0.95); --border-color: #ff0000; }
+            .reveal { font-family: 'Lato', sans-serif; color: #1e293b; }
+            .reveal h1, .reveal h2, .reveal h3 { font-family: 'Mountains of Christmas', cursive; color: #d60000; text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.8); }
+            .glass-panel { background: var(--glass-bg) !important; border: 2px solid #d60000 !important; box-shadow: 0 0 15px rgba(255, 0, 0, 0.3) !important; border-radius: 16px !important; color: #0f172a; }
+            .reveal ul li { border-left: 4px solid #008000; padding-left: 10px; color: #0f172a; }
+            
+            /* Snow Effect */
+            .snow-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; overflow: hidden; }
+            .snow { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-image: radial-gradient(4px 4px at 50% 50%, white, transparent), radial-gradient(6px 6px at 100% 50%, white, transparent), radial-gradient(3px 3px at 50% 100%, white, transparent); background-size: 200px 200px; animation: snow 10s linear infinite; opacity: 0.8; }
+            @keyframes snow { 0% { background-position: 0px 0px, 0px 0px, 0px 0px; } 100% { background-position: 500px 1000px, 400px 400px, 300px 300px; } }
+        
+        
+        .glass-panel {
+            background: var(--glass-bg);
+            border: 1px solid var(--border-color);
+            backdrop-filter: blur(5px);
+            padding: 2rem;
+            border-radius: 8px;
+        }
+        
+        .split-layout {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+        
+        .reveal ul li {
+            margin-bottom: 1rem;
+            padding-left: 1rem;
+        }
+
+        /* Home Button */
+        .home-button {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            z-index: 1000;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            backdrop-filter: blur(5px);
+            font-weight: bold;
+        }
+
+        .home-button:hover {
+            background: var(--accent);
+            color: var(--bg-dark);
+            box-shadow: 0 0 15px var(--accent);
+        }
+    </style>
+</head>
+<body>
+    
+        <div id="snow-layer" class="snow-container"><div class="snow"></div></div>
+        <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: url('christmas_bg.png') no-repeat center center fixed; background-size: cover; z-index: -1;"></div>
+        <button id="snow-toggle" style="position: fixed; top: 20px; right: 20px; z-index: 1001; background: transparent; border: none; font-size: 24px; cursor: pointer; opacity: 0.7; transition: opacity 0.3s;" title="Toggle Snow">❄️</button>
+        <script>
+            document.getElementById('snow-toggle').addEventListener('click', function() {
+                var snow = document.getElementById('snow-layer');
+                if (snow.style.opacity === '0') {
+                    snow.style.opacity = '1';
+                    this.style.opacity = '0.7';
+                } else {
+                    snow.style.opacity = '0';
+                    this.style.opacity = '0.3';
+                }
+            });
+            document.getElementById('snow-toggle').addEventListener('mouseenter', function() {
+                this.style.opacity = '1';
+            });
+            document.getElementById('snow-toggle').addEventListener('mouseleave', function() {
+                if (document.getElementById('snow-layer').style.opacity !== '0') {
+                    this.style.opacity = '0.7';
+                } else {
+                    this.style.opacity = '0.3';
+                }
+            });
+        </script>
+        
+    <a href="index.html" class="home-button">Esc: Home</a>
+
+    <div class="reveal">
+        <div class="slides">
+            <section>
+                <h1 class="r-fit-text">MCP Technical Deep Dive</h1>
+            </section>
+            
+            
+                <section data-background-image="staging/technical_deck/images/image1.jpg" data-background-size="contain" data-background-color="transparent">
+                </section>
+                
+            <section>
+                <h3 style="color: var(--accent); margin-bottom: 20px;">Configuration as Code</h3>
+                <div class="split-layout">
+                    <div style="flex: 1;">
+                        <img src="staging/technical_deck/images/image2.jpg" style="border-radius: 12px; box-shadow: 0 0 20px rgba(0,0,0,0.5); max-height: 60vh;">
+                    </div>
+                    <div style="flex: 1;" class="glass-panel">
+                        <ul><li>Define your toolchain in standard JSON.</li><li>Version control your server settings.</li></ul>
+                    </div>
+                </div>
+            </section>
+            
+                <section data-background-image="staging/technical_deck/images/image3.jpg" data-background-size="contain" data-background-color="transparent">
+                </section>
+                
+                <section data-background-image="staging/technical_deck/images/image4.jpg" data-background-size="contain" data-background-color="transparent">
+                </section>
+                
+                <section data-background-image="staging/technical_deck/images/image5.jpg" data-background-size="contain" data-background-color="transparent">
+                </section>
+                
+                <section data-background-image="staging/technical_deck/images/image6.jpg" data-background-size="contain" data-background-color="transparent">
+                </section>
+                
+                <section data-background-image="staging/technical_deck/images/image7.jpg" data-background-size="contain" data-background-color="transparent">
+                </section>
+                
+            <section>
+                <h3 style="color: var(--accent); margin-bottom: 20px;">Single Source of Truth</h3>
+                <div class="split-layout">
+                    <div style="flex: 1;">
+                        
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; max-height: 60vh; overflow-y: auto;">
+                        <div style="text-align: center;"><img src="staging/technical_deck/images/image9.jpg" style="border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); max-height: 25vh; max-width: 100%;"></div><div style="text-align: center;"><img src="staging/technical_deck/images/image8.jpg" style="border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); max-height: 25vh; max-width: 100%;"></div><div style="text-align: center;"><img src="staging/technical_deck/images/image10.png" style="border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); max-height: 25vh; max-width: 100%;"></div>
+                    </div>
+                    
+                    </div>
+                    <div style="flex: 1;" class="glass-panel">
+                        <ul><li>`config.json` drives the MCP server behavior.</li><li>Changes propagate instantly across all connected clients (IDE, CLI, Agent).</li><li>Eliminates environment drift.</li></ul>
+                    </div>
+                </div>
+            </section>
+            
+                <section data-background-image="staging/technical_deck/images/image11.jpg" data-background-size="contain" data-background-color="transparent">
+                </section>
+                
+                <section data-background-image="staging/technical_deck/images/image12.jpg" data-background-size="contain" data-background-color="transparent">
+                </section>
+                
+                <section data-background-image="staging/technical_deck/images/image13.jpg" data-background-size="contain" data-background-color="transparent">
+                </section>
+                
+            <section>
+                <h3 style="color: var(--accent); margin-bottom: 20px;">Modular Toolchain</h3>
+                <div class="split-layout">
+                    <div style="flex: 1;">
+                        
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; max-height: 60vh; overflow-y: auto;">
+                        <div style="text-align: center;"><img src="staging/technical_deck/images/image15.jpg" style="border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); max-height: 25vh; max-width: 100%;"></div><div style="text-align: center;"><img src="staging/technical_deck/images/image14.jpg" style="border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); max-height: 25vh; max-width: 100%;"></div><div style="text-align: center;"><img src="staging/technical_deck/images/image18.jpg" style="border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); max-height: 25vh; max-width: 100%;"></div><div style="text-align: center;"><img src="staging/technical_deck/images/image17.jpg" style="border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); max-height: 25vh; max-width: 100%;"></div><div style="text-align: center;"><img src="staging/technical_deck/images/image16.jpg" style="border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); max-height: 25vh; max-width: 100%;"></div>
+                    </div>
+                    
+                    </div>
+                    <div style="flex: 1;" class="glass-panel">
+                        <ul><li>Extend capabilities via standardized MCP Protocol.</li><li>Pluggable architecture for custom tools and resources.</li></ul>
+                    </div>
+                </div>
+            </section>
+            
+            <section>
+                <h2 class="r-fit-text">Architecture Overview</h2>
+                <div class="glass-panel">
+                    <ul style="list-style: none;"><li class="fragment fade-up">Client-Server Model over Stdio</li><li class="fragment fade-up">JSON-RPC 2.0 Transport</li><li class="fragment fade-up">Schema-based Validation</li></ul>
+                </div>
+            </section>
+            
+                <section data-background-image="staging/technical_deck/images/image19.jpg" data-background-size="contain" data-background-color="transparent">
+                </section>
+                
+            <section>
+                
+                <div class="split-layout">
+                    <div style="flex: 1;">
+                        
+                    </div>
+                    <div style="flex: 1;" class="glass-panel">
+                        <ul></ul>
+                    </div>
+                </div>
+            </section>
+            
+                <section data-background-image="staging/technical_deck/images/image20.jpg" data-background-size="contain" data-background-color="transparent">
+                </section>
+                
+                <section data-background-image="staging/technical_deck/images/image21.jpg" data-background-size="contain" data-background-color="transparent">
+                </section>
+                
+                <section data-background-image="staging/technical_deck/images/image22.jpg" data-background-size="contain" data-background-color="transparent">
+                </section>
+                
+                <section data-background-image="staging/technical_deck/images/image23.jpg" data-background-size="contain" data-background-color="transparent">
+                </section>
+                
+                <section data-background-image="staging/technical_deck/images/image24.jpg" data-background-size="contain" data-background-color="transparent">
+                </section>
+                
+                <section data-background-image="staging/technical_deck/images/image25.jpg" data-background-size="contain" data-background-color="transparent">
+                </section>
+                
+            
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.0.4/reveal.min.js"></script>
+    <script>
+        Reveal.initialize({
+            hash: true,
+            transition: 'slide',
+            backgroundTransition: 'fade',
+        });
+    </script>
+</body>
+</html>
+    

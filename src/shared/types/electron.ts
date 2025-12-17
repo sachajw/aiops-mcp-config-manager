@@ -46,6 +46,21 @@ export interface ElectronAPI {
   showItemInFolder: (filePath: string) => Promise<void>;
   getCurrentWorkingDirectory: () => Promise<string>;
 
+  // Persistence operations
+  persistence: {
+    get: (category: string, key?: string) => Promise<any>;
+    set: (category: string, key: string, value: any) => Promise<{ success: boolean; error?: string }>;
+    delete: (category: string, key: string) => Promise<{ success: boolean; error?: string }>;
+    clear: (category: string) => Promise<{ success: boolean; error?: string }>;
+    getAll: () => Promise<any>;
+    backup: () => Promise<{ success: boolean; backupPath?: string; error?: string }>;
+    restore: (backupPath: string) => Promise<{ success: boolean; error?: string }>;
+    export: (exportPath: string) => Promise<{ success: boolean; error?: string }>;
+    import: (importPath: string) => Promise<{ success: boolean; error?: string }>;
+    migrate: (data: Record<string, any>) => Promise<{ success: boolean; error?: string }>;
+    info: () => Promise<any>;
+  };
+
   // Metrics operations
   getTotalMetrics: (serverNames: string[]) => Promise<{
     totalTokens: number;

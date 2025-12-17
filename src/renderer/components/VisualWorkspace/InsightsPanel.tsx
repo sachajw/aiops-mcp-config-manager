@@ -2,12 +2,12 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useConfigStore } from '@/renderer/store/simplifiedStore';
 
 export const InsightsPanel: React.FC = () => {
-  const { servers, activeClient, activeScope } = useConfigStore();
+  const { activeClient, activeScope } = useConfigStore();
   const [height, setHeight] = useState(150); // Default height
   const [isResizing, setIsResizing] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [showDetails, setShowDetails] = useState(false); // Progressive disclosure
-  const [metrics, setMetrics] = useState({ totalTokens: 0, totalTools: 0, avgResponseTime: 0, connectedCount: 0 });
+  const [metrics, setMetrics] = useState({ totalTokens: 0, totalTools: 0, avgResponseTime: 0, connectedCount: 0, totalServers: 0 });
   const panelRef = useRef<HTMLDivElement>(null);
 
   // Fetch real metrics from servers
@@ -34,19 +34,12 @@ export const InsightsPanel: React.FC = () => {
         }
       }
 
-      // Fallback to store servers if direct config loading failed
-      if (serverNames.length === 0) {
-        serverNames = Object.keys(servers);
-        // Try to get configs from store servers
-        Object.entries(servers).forEach(([name, server]) => {
-          serverConfigs[name] = server;
-        });
-        console.log('[InsightsPanel] Falling back to store servers:', serverNames);
-      }
+      // No fallback - if we can't load the active client's config, show zero metrics
+      // This prevents showing metrics from the wrong client when switching between clients
 
       if (serverNames.length === 0) {
         console.log('[InsightsPanel] No servers found anywhere, setting zero metrics');
-        setMetrics({ totalTokens: 0, totalTools: 0, avgResponseTime: 0, connectedCount: 0 });
+        setMetrics({ totalTokens: 0, totalTools: 0, avgResponseTime: 0, connectedCount: 0, totalServers: 0 });
         return;
       }
 
@@ -106,7 +99,8 @@ export const InsightsPanel: React.FC = () => {
           totalTokens,
           totalTools,
           avgResponseTime: responseCount > 0 ? Math.round(totalResponseTime / responseCount) : 0,
-          connectedCount
+          connectedCount,
+          totalServers: serverNames.length
         };
         console.log('[InsightsPanel] Calculated total metrics:', newMetrics);
         setMetrics(newMetrics);
@@ -117,9 +111,9 @@ export const InsightsPanel: React.FC = () => {
     };
 
     fetchMetrics();
-  }, [servers, activeClient, activeScope]);
+  }, [activeClient, activeScope]);
 
-  const { totalTokens, totalTools, avgResponseTime, connectedCount } = metrics;
+  const { totalTokens, totalTools, avgResponseTime, connectedCount, totalServers } = metrics;
   const activeConnections = connectedCount;
 
   // Handle resize
@@ -254,9 +248,9 @@ export const InsightsPanel: React.FC = () => {
               <span className="text-xs text-base-content/60">Active</span>
               <span className="text-xs badge badge-info badge-xs">Live</span>
             </div>
-            <div className="text-sm font-bold">{activeConnections}/{Object.keys(servers).length || 10}</div>
+            <div className="text-sm font-bold">{activeConnections}/{totalServers > 0 ? totalServers : '—'}</div>
             <div className="flex gap-0.5 mt-1">
-              {[...Array(Math.min(Object.keys(servers).length || 10, 10))].map((_, i) => (
+              {[...Array(Math.min(totalServers || 0, 10))].map((_, i) => (
                 <div
                   key={i}
                   className={`h-1 flex-1 rounded ${
@@ -271,26 +265,6 @@ export const InsightsPanel: React.FC = () => {
         {/* Detailed View - Progressive Disclosure */}
         {showDetails && (
           <>
-            {/* Token Distribution */}
-            <div className="bg-base-200 rounded p-2 mb-3">
-              <h4 className="text-xs font-semibold mb-2">Token Distribution</h4>
-              <div className="space-y-1">
-                {Object.entries(servers).slice(0, 5).map(([name, server]) => (
-                  <div key={name} className="flex items-center justify-between">
-                    <span className="text-xs truncate flex-1">{name}</span>
-                    <div className="flex items-center gap-1">
-                      <div className="w-16 bg-base-300 rounded-full h-1">
-                        <div
-                          className="bg-info h-1 rounded-full"
-                          style={{ width: `0%` }}
-                        />
-                      </div>
-                      <span className="text-xs text-base-content/60">—</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
 
             {/* Connection Health */}
             <div className="bg-base-200 rounded p-2 mb-3">

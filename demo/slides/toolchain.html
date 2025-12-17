@@ -1,0 +1,141 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Toolchain Command Center</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.0.4/reset.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.0.4/reveal.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.0.4/theme/black.min.css">
+    
+    <style>
+        
+            @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+            :root { --accent: #60a5fa; --accent-2: #93c5fd; --bg-dark: #172554; --glass-bg: rgba(23, 37, 84, 0.8); --border-color: #60a5fa; }
+            .reveal { font-family: 'Share+Tech+Mono', monospace; background-color: var(--bg-dark); color: #dbeafe; background-image: radial-gradient(#60a5fa 1px, transparent 1px); background-size: 20px 20px; }
+            .reveal h1, .reveal h2, .reveal h3 { font-family: 'Share+Tech+Mono', monospace; color: var(--accent); text-transform: uppercase; border-bottom: 2px solid var(--accent); display: inline-block; }
+            .glass-panel { border: 2px solid var(--accent) !important; border-radius: 0 !important; box-shadow: none !important; background: rgba(30, 58, 138, 0.9) !important; }
+            .reveal ul li { list-style-type: square; border-left: none; }
+        
+        
+        .glass-panel {
+            background: var(--glass-bg);
+            border: 1px solid var(--border-color);
+            backdrop-filter: blur(5px);
+            padding: 2rem;
+            border-radius: 8px;
+        }
+        
+        .split-layout {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+        
+        .reveal ul li {
+            margin-bottom: 1rem;
+            padding-left: 1rem;
+        }
+
+        /* Home Button */
+        .home-button {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            z-index: 1000;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            backdrop-filter: blur(5px);
+            font-weight: bold;
+        }
+
+        .home-button:hover {
+            background: var(--accent);
+            color: var(--bg-dark);
+            box-shadow: 0 0 15px var(--accent);
+        }
+    </style>
+</head>
+<body>
+    
+    <a href="index.html" class="home-button">Esc: Home</a>
+
+    <div class="reveal">
+        <div class="slides">
+            <section>
+                <h1 class="r-fit-text">Toolchain Command Center</h1>
+            </section>
+            
+            
+                <section data-background-image="staging/toolchain/images/image1.jpg" data-background-size="contain" data-background-color="var(--bg-dark)">
+                </section>
+                
+                <section data-background-image="staging/toolchain/images/image2.jpg" data-background-size="contain" data-background-color="var(--bg-dark)">
+                </section>
+                
+                <section data-background-image="staging/toolchain/images/image3.jpg" data-background-size="contain" data-background-color="var(--bg-dark)">
+                </section>
+                
+                <section data-background-image="staging/toolchain/images/image4.jpg" data-background-size="contain" data-background-color="var(--bg-dark)">
+                </section>
+                
+                <section data-background-image="staging/toolchain/images/image5.jpg" data-background-size="contain" data-background-color="var(--bg-dark)">
+                </section>
+                
+                <section data-background-image="staging/toolchain/images/image6.jpg" data-background-size="contain" data-background-color="var(--bg-dark)">
+                </section>
+                
+                <section data-background-image="staging/toolchain/images/image7.jpg" data-background-size="contain" data-background-color="var(--bg-dark)">
+                </section>
+                
+                <section data-background-image="staging/toolchain/images/image8.jpg" data-background-size="contain" data-background-color="var(--bg-dark)">
+                </section>
+                
+                <section data-background-image="staging/toolchain/images/image9.jpg" data-background-size="contain" data-background-color="var(--bg-dark)">
+                </section>
+                
+            <section>
+                
+                <div class="split-layout">
+                    <div style="flex: 1;">
+                        <img src="" style="border-radius: 12px; box-shadow: 0 0 20px rgba(0,0,0,0.5); max-height: 60vh;">
+                    </div>
+                    <div style="flex: 1;" class="glass-panel">
+                        <ul></ul>
+                    </div>
+                </div>
+            </section>
+            
+            <section>
+                
+                <div class="split-layout">
+                    <div style="flex: 1;">
+                        <img src="" style="border-radius: 12px; box-shadow: 0 0 20px rgba(0,0,0,0.5); max-height: 60vh;">
+                    </div>
+                    <div style="flex: 1;" class="glass-panel">
+                        <ul></ul>
+                    </div>
+                </div>
+            </section>
+            
+            
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.0.4/reveal.min.js"></script>
+    <script>
+        Reveal.initialize({
+            hash: true,
+            transition: 'slide',
+            backgroundTransition: 'fade',
+        });
+    </script>
+</body>
+</html>
+    

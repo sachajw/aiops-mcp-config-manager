@@ -82,7 +82,7 @@ test.describe('Visual Workspace - Save/Load Config Tests', () => {
       await page.screenshot({ path: '/tmp/save_test_initial_state.png' });
 
       // Look for config file path indicator on the page
-      const configPathElements = await page.locator('text*="/", text*=".json", text*="config"').all();
+      const configPathElements = await page.locator(':has-text("/"):has-text(".json"), :has-text("config.json")').all();
 
       if (configPathElements.length > 0) {
         for (const element of configPathElements) {
@@ -227,7 +227,7 @@ test.describe('Visual Workspace - Save/Load Config Tests', () => {
       }
 
       // Check for auto-save indicator
-      const autoSaveElements = await page.locator('text*="auto", text*="Auto", .auto-save').all();
+      const autoSaveElements = await page.locator(':has-text("auto"), :has-text("Auto"), .auto-save').all();
       for (const element of autoSaveElements) {
         const text = await element.textContent();
         console.log(`Auto-save indicator: "${text}"`);

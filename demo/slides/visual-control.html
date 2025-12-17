@@ -1,0 +1,164 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Visual Control</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.0.4/reset.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.0.4/reveal.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.0.4/theme/black.min.css">
+    
+    <style>
+        
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+            :root { --accent: #3b82f6; --accent-2: #2563eb; --bg-dark: #1e293b; --glass-bg: rgba(30, 41, 59, 0.9); --border-color: rgba(59, 130, 246, 0.3); }
+            .reveal { font-family: 'Inter', sans-serif; background-color: var(--bg-dark); color: #f8fafc; }
+            .reveal h1, .reveal h2, .reveal h3 { font-family: 'Inter', sans-serif; font-weight: 800; color: var(--accent); }
+            .reveal ul li { border-left: 4px solid var(--accent); }
+        
+        
+        .glass-panel {
+            background: var(--glass-bg);
+            border: 1px solid var(--border-color);
+            backdrop-filter: blur(5px);
+            padding: 2rem;
+            border-radius: 8px;
+        }
+        
+        .split-layout {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+        
+        .reveal ul li {
+            margin-bottom: 1rem;
+            padding-left: 1rem;
+        }
+
+        /* Home Button */
+        .home-button {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            z-index: 1000;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            backdrop-filter: blur(5px);
+            font-weight: bold;
+        }
+
+        .home-button:hover {
+            background: var(--accent);
+            color: var(--bg-dark);
+            box-shadow: 0 0 15px var(--accent);
+        }
+    </style>
+</head>
+<body>
+    
+    <a href="index.html" class="home-button">Esc: Home</a>
+
+    <div class="reveal">
+        <div class="slides">
+            <section>
+                <h1 class="r-fit-text">Visual Control</h1>
+            </section>
+            
+            
+            <section>
+                
+                <div class="split-layout">
+                    <div style="flex: 1;">
+                        <img src="" style="border-radius: 12px; box-shadow: 0 0 20px rgba(0,0,0,0.5); max-height: 60vh;">
+                    </div>
+                    <div style="flex: 1;" class="glass-panel">
+                        <ul></ul>
+                    </div>
+                </div>
+            </section>
+            
+                <section data-background-image="staging/visual_control/images/image3.jpg" data-background-size="contain" data-background-color="var(--bg-dark)">
+                </section>
+                
+            <section>
+                
+                <div class="split-layout">
+                    <div style="flex: 1;">
+                        <img src="" style="border-radius: 12px; box-shadow: 0 0 20px rgba(0,0,0,0.5); max-height: 60vh;">
+                    </div>
+                    <div style="flex: 1;" class="glass-panel">
+                        <ul></ul>
+                    </div>
+                </div>
+            </section>
+            
+                <section data-background-image="staging/visual_control/images/image4.jpg" data-background-size="contain" data-background-color="var(--bg-dark)">
+                </section>
+                
+                <section data-background-image="staging/visual_control/images/image5.jpg" data-background-size="contain" data-background-color="var(--bg-dark)">
+                </section>
+                
+                <section data-background-image="staging/visual_control/images/image6.jpg" data-background-size="contain" data-background-color="var(--bg-dark)">
+                </section>
+                
+                <section data-background-image="staging/visual_control/images/image7.jpg" data-background-size="contain" data-background-color="var(--bg-dark)">
+                </section>
+                
+                <section data-background-image="staging/visual_control/images/image8.jpg" data-background-size="contain" data-background-color="var(--bg-dark)">
+                </section>
+                
+                <section data-background-image="staging/visual_control/images/image9.jpg" data-background-size="contain" data-background-color="var(--bg-dark)">
+                </section>
+                
+            <section>
+                
+                <div class="split-layout">
+                    <div style="flex: 1;">
+                        <img src="" style="border-radius: 12px; box-shadow: 0 0 20px rgba(0,0,0,0.5); max-height: 60vh;">
+                    </div>
+                    <div style="flex: 1;" class="glass-panel">
+                        <ul></ul>
+                    </div>
+                </div>
+            </section>
+            
+                <section data-background-image="staging/visual_control/images/image10.jpg" data-background-size="contain" data-background-color="var(--bg-dark)">
+                </section>
+                
+            <section>
+                
+                <div class="split-layout">
+                    <div style="flex: 1;">
+                        <img src="" style="border-radius: 12px; box-shadow: 0 0 20px rgba(0,0,0,0.5); max-height: 60vh;">
+                    </div>
+                    <div style="flex: 1;" class="glass-panel">
+                        <ul></ul>
+                    </div>
+                </div>
+            </section>
+            
+                <section data-background-image="staging/visual_control/images/image11.jpg" data-background-size="contain" data-background-color="var(--bg-dark)">
+                </section>
+                
+            
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.0.4/reveal.min.js"></script>
+    <script>
+        Reveal.initialize({
+            hash: true,
+            transition: 'slide',
+            backgroundTransition: 'fade',
+        });
+    </script>
+</body>
+</html>
+    

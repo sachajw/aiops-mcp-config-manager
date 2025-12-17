@@ -27,6 +27,7 @@ import { useConfigStore } from '@/renderer/store/simplifiedStore';
 import { useSettingsStore } from '@/renderer/store/settingsStore';
 import { MCPServer } from '@/main/services/UnifiedConfigService';
 import JsonEditor from '../editor/JsonEditor';
+import { setPersistenceValue, getPersistenceValue } from '@/renderer/hooks/usePersistence';
 
 // Define node types for React Flow
 const nodeTypes = {
@@ -165,52 +166,56 @@ export const VisualWorkspace: React.FC = () => {
   const metricsCache = React.useRef<Map<string, { data: any; timestamp: number }>>(new Map());
   const METRICS_CACHE_TTL = 5 * 60 * 1000; // 5 minutes cache TTL
 
-  // Bug-026: Save canvas state to localStorage whenever nodes/edges change
+  // Bug-026: Save canvas state to persistence layer whenever nodes/edges change
   useEffect(() => {
     if (nodes.length > 0) {
-      const storageKey = `visualWorkspace_${activeClient}_nodes`;
-      localStorage.setItem(storageKey, JSON.stringify(nodes));
-      console.log(`[VisualWorkspace] 💾 Saved ${nodes.length} nodes to localStorage for ${activeClient}`);
+      const storageKey = `${activeClient}_nodes`;
+      setPersistenceValue('canvas', storageKey, nodes).then(() => {
+        console.log(`[VisualWorkspace] 💾 Saved ${nodes.length} nodes to persistence for ${activeClient}`);
+      });
     }
   }, [nodes, activeClient]);
 
   useEffect(() => {
     if (edges.length > 0) {
-      const storageKey = `visualWorkspace_${activeClient}_edges`;
-      localStorage.setItem(storageKey, JSON.stringify(edges));
-      console.log(`[VisualWorkspace] 💾 Saved ${edges.length} edges to localStorage for ${activeClient}`);
+      const storageKey = `${activeClient}_edges`;
+      setPersistenceValue('canvas', storageKey, edges).then(() => {
+        console.log(`[VisualWorkspace] 💾 Saved ${edges.length} edges to persistence for ${activeClient}`);
+      });
     }
   }, [edges, activeClient]);
 
-  // Bug-026: Restore canvas state from localStorage on mount
+  // Bug-026: Restore canvas state from persistence layer on mount
   useEffect(() => {
     if (!activeClient || activeClient === 'catalog') return;
 
-    const nodesKey = `visualWorkspace_${activeClient}_nodes`;
-    const edgesKey = `visualWorkspace_${activeClient}_edges`;
+    const restoreCanvas = async () => {
+      const nodesKey = `${activeClient}_nodes`;
+      const edgesKey = `${activeClient}_edges`;
 
-    const savedNodes = localStorage.getItem(nodesKey);
-    const savedEdges = localStorage.getItem(edgesKey);
+      const savedNodes = await getPersistenceValue('canvas', nodesKey, null);
+      const savedEdges = await getPersistenceValue('canvas', edgesKey, null);
 
-    if (savedNodes) {
-      try {
-        const parsedNodes = JSON.parse(savedNodes);
-        console.log(`[VisualWorkspace] 📦 Restored ${parsedNodes.length} nodes from localStorage for ${activeClient}`);
-        setNodes(parsedNodes);
-      } catch (error) {
-        console.error('[VisualWorkspace] Failed to restore nodes from localStorage:', error);
+      if (savedNodes) {
+        try {
+          console.log(`[VisualWorkspace] 📦 Restored ${savedNodes.length} nodes from persistence for ${activeClient}`);
+          setNodes(savedNodes);
+        } catch (error) {
+          console.error('[VisualWorkspace] Failed to restore nodes from persistence:', error);
+        }
       }
-    }
 
-    if (savedEdges) {
-      try {
-        const parsedEdges = JSON.parse(savedEdges);
-        console.log(`[VisualWorkspace] 📦 Restored ${parsedEdges.length} edges from localStorage for ${activeClient}`);
-        setEdges(parsedEdges);
-      } catch (error) {
-        console.error('[VisualWorkspace] Failed to restore edges from localStorage:', error);
+      if (savedEdges) {
+        try {
+          console.log(`[VisualWorkspace] 📦 Restored ${savedEdges.length} edges from persistence for ${activeClient}`);
+          setEdges(savedEdges);
+        } catch (error) {
+          console.error('[VisualWorkspace] Failed to restore edges from persistence:', error);
+        }
       }
-    }
+    };
+
+    restoreCanvas();
   }, []); // Only run once on mount
 
   // Auto-save effect - triggers 30s after last change
@@ -321,14 +326,10 @@ export const VisualWorkspace: React.FC = () => {
     }
   }, [clients, activeScope]);
 
-  // Clear metrics cache when active client changes to force fresh data
-  React.useEffect(() => {
-    if (activeClient) {
-      console.log(`[VisualWorkspace] Active client changed to ${activeClient}, clearing metrics cache`);
-      // Clear all cached metrics when client changes
-      metricsCache.current.clear();
-    }
-  }, [activeClient]);
+  // Note: We do NOT clear metrics cache when switching clients
+  // Server metrics (tools, tokens) are properties of the servers themselves,
+  // not client-specific. We only need to update when servers are added/removed
+  // or their connection status changes.
 
   // Function to fetch metrics with optional force refresh
   const fetchMetrics = async (forceRefresh = false) => {
@@ -1100,22 +1101,12 @@ export const VisualWorkspace: React.FC = () => {
 
     // CRITICAL: Replace entire server configuration with canvas state
     console.log('[VisualWorkspace] 🔄 Calling setServers() to update store...');
-    setServers(newServers);
+    setServers(newServers);  // Still update UI state for immediate feedback
 
-    // Small delay to ensure state is updated
-    console.log('[VisualWorkspace] ⏳ Waiting 100ms for state update...');
-    await new Promise(resolve => setTimeout(resolve, 100));
-
-    // Verify state was actually updated
-    const storeState = useConfigStore.getState();
-    console.log('[VisualWorkspace] 🔍 STORE STATE AFTER setServers:');
-    console.log(`  - Servers in store: ${Object.keys(storeState.servers).length}`);
-    console.log(`  - Store isDirty: ${storeState.isDirty}`);
-    console.log(`  - Store servers:`, JSON.stringify(storeState.servers, null, 2));
-
-    // Call saveConfig to persist to disk
-    console.log('[VisualWorkspace] 💾 Calling saveConfig() to persist to disk...');
-    const result = await saveConfig();
+    // Bug-032 Fix: Pass servers directly to saveConfig instead of relying on async state
+    console.log('[VisualWorkspace] 💾 Calling saveConfig() with servers directly...');
+    console.log(`  - Passing ${Object.keys(newServers).length} servers to saveConfig`);
+    const result = await saveConfig(newServers);
     console.log('[VisualWorkspace] 📨 saveConfig() returned:', JSON.stringify(result, null, 2));
 
     if (result && result.success !== false) {
@@ -1188,13 +1179,10 @@ export const VisualWorkspace: React.FC = () => {
         console.log('[JsonEditor] Server count:', Object.keys(parsed.mcpServers).length);
 
         // Update store
-        setServers(parsed.mcpServers);
+        setServers(parsed.mcpServers);  // Still update UI state for immediate feedback
 
-        // CRITICAL: Wait for store update, then persist to disk
-        await new Promise(resolve => setTimeout(resolve, 100));
-
-        // Persist to disk via saveConfig
-        const result = await saveConfig();
+        // Bug-032 Fix: Pass servers directly to saveConfig instead of relying on async state
+        const result = await saveConfig(parsed.mcpServers);
 
         if (result && result.success !== false) {
           setHasUnsavedJsonChanges(false);
