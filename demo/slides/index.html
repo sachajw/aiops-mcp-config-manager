@@ -40,6 +40,8 @@
             --r-main-color: #f1f5f9;
             --r-heading-color: #f8fafc;
             --r-background-color: #0f172a;
+            background-color: #0f172a !important;
+            /* Force background update */
         }
 
         /* Specific Element Tweaks */
@@ -204,6 +206,50 @@
         }
 
         /* Lighter red */
+
+        /* Card & Box Styles (Refactored from Inline) */
+        .stat-card {
+            background: #e0f2fe;
+            padding: 20px;
+            border-radius: 8px;
+            border: 2px solid #3b82f6;
+            text-align: center;
+        }
+
+        .phase-card {
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .phase-blue {
+            background: #e3f2fd;
+        }
+
+        .phase-purple {
+            background: #f3e5f5;
+        }
+
+        /* Dark Mode Card Overrides */
+        html.dark .stat-card {
+            background: #1e293b;
+            /* Dark Slate */
+            border-color: #60a5fa;
+            /* Blue 400 */
+        }
+
+        html.dark .phase-blue {
+            background: #1e3a8a;
+            /* Dark Blue */
+            color: #e0f2fe;
+            /* Light Blue Text */
+        }
+
+        html.dark .phase-purple {
+            background: #581c87;
+            /* Dark Purple */
+            color: #f3e7ff;
+            /* Light Purple Text */
+        }
     </style>
 </head>
 
@@ -351,8 +397,7 @@
                         </ul>
                     </div>
                     <div class="col" style="display: flex; justify-content: center; align-items: center;">
-                        <div
-                            style="background: #e0f2fe; padding: 20px; border-radius: 8px; border: 2px solid #3b82f6; text-align: center;">
+                        <div class="stat-card">
                             <h1 style="margin: 0; font-size: 3em; color: #2563eb;">24k</h1>
                             <p style="margin: 0; color: #475569;">Tokens / Request</p>
                             <p class="text-xs" style="margin-top: 10px;">with 5 active servers</p>
@@ -386,7 +431,7 @@
                 <p class="text-sm">We used different AI agents for different phases of development.</p>
                 <div class="container">
                     <div class="col fragment">
-                        <div style="background: #e3f2fd; padding: 15px; border-radius: 8px;">
+                        <div class="phase-card phase-blue">
                             <h5>Phase 1: Planning 🧠</h5>
                             <p class="text-xs"><strong>Claude Desktop</strong></p>
                             <ul class="text-xs">
@@ -397,7 +442,7 @@
                         </div>
                     </div>
                     <div class="col fragment">
-                        <div style="background: #f3e5f5; padding: 15px; border-radius: 8px;">
+                        <div class="phase-card phase-purple">
                             <h5>Phase 2: Building 🛠️</h5>
                             <p class="text-xs"><strong>Claude Code / VS Code</strong></p>
                             <ul class="text-xs">
