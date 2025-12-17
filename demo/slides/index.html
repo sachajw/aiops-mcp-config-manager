@@ -88,6 +88,41 @@
         section[data-background-gradient] h1 {
             color: var(--primary);
         }
+
+        /* Dark Mode Styles */
+        html.dark .reveal {
+            background: #0f172a;
+            color: #f1f5f9;
+        }
+
+        html.dark .reveal h1 {
+            color: #60a5fa;
+        }
+
+        /* Blue-400 */
+        html.dark .reveal h2,
+        html.dark .reveal h3,
+        html.dark .reveal h4 {
+            color: #e2e8f0;
+        }
+
+        html.dark .reveal code {
+            background: #1e293b;
+            color: #f472b6;
+        }
+
+        html.dark section[data-background-gradient] {
+            background: linear-gradient(to bottom right, #1e293b, #0f172a) !important;
+        }
+
+        html.dark .text-xs {
+            color: #94a3b8;
+        }
+
+        html.dark blockquote {
+            border-left-color: #60a5fa;
+            color: #cbd5e1;
+        }
     </style>
 </head>
 
@@ -160,24 +195,29 @@
 // claude_desktop_config.json
 {
   "mcpServers": {
-    "git": {
-      "command": "npx",
-      "arg": [ // <--- TYPO! Should be "args"
-        "-y", 
-        "@modelcontextprotocol/server-git"
-      ]
-    }
+    "git": { ... }
   }
 }
                     </code></pre>
-                        <p class="text-xs" style="text-align: center;">Wait, why is my server not showing up?</p>
+                        <p class="text-xs" style="text-align: center;">One file down, 6 to go...</p>
                     </div>
                     <div class="col text-sm">
                         <ul>
-                            <li class="fragment">Manual JSON editing 📝</li>
-                            <li class="fragment">Silent failures (typos, paths) ❌</li>
-                            <li class="fragment">Fragmented configs (VS Code, Claude, Cursor...) 🧩</li>
-                            <li class="fragment">Zero visibility into server health 👻</li>
+                            <li class="fragment"><strong>3 Different Claude Configs:</strong>
+                                <ul>
+                                    <li>Claude Desktop</li>
+                                    <li>Claude Code (CLI)</li>
+                                    <li>Claude for VS Code</li>
+                                </ul>
+                            </li>
+                            <li class="fragment"><strong>Plus The Rest:</strong>
+                                <ul>
+                                    <li>Cursor, Windsurf, Kiro</li>
+                                    <li>Antigravity, Gemini</li>
+                                </ul>
+                            </li>
+                            <li class="fragment" style="color: #ef4444; font-weight: bold;">It Gets Complicated. Fast.
+                            </li>
                         </ul>
                     </div>
                 </div>
@@ -202,6 +242,32 @@
                         <div
                             style="background: #eee; padding: 20px; border-radius: 10px; text-align: center; font-weight: bold; color: #333;">
                             [ DEMO PREVIEW ]
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- New: The Context Economy -->
+            <section>
+                <h2>The Context Economy</h2>
+                <p class="text-sm">MCP servers provide power, but they consume <strong>Content Window</strong>.</p>
+                <div class="container">
+                    <div class="col text-sm">
+                        <h4>The Cost of Context</h4>
+                        <ul>
+                            <li class="fragment">Every connected server adds system prompts and tool definitions.</li>
+                            <li class="fragment"><strong>Too Many Servers</strong> = Slower inference & higher cost.
+                            </li>
+                            <li class="fragment"><strong>Solution:</strong> Toggle servers On/Off instantly based on
+                                task.</li>
+                        </ul>
+                    </div>
+                    <div class="col" style="display: flex; justify-content: center; align-items: center;">
+                        <div
+                            style="background: #e0f2fe; padding: 20px; border-radius: 8px; border: 2px solid #3b82f6; text-align: center;">
+                            <h1 style="margin: 0; font-size: 3em; color: #2563eb;">24k</h1>
+                            <p style="margin: 0; color: #475569;">Tokens / Request</p>
+                            <p class="text-xs" style="margin-top: 10px;">with 5 active servers</p>
                         </div>
                     </div>
                 </div>
@@ -363,9 +429,40 @@
             controls: true,
             progress: true,
             center: true,
-            transition: 'slide'
+            transition: 'slide',
+            width: 1200,
+            height: 900
         });
+
+        // Dark Mode Toggle Logic
+        const toggleDarkMode = () => {
+            document.documentElement.classList.toggle('dark');
+            const isDark = document.documentElement.classList.contains('dark');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        };
+
+        // Init Theme
+        if (localStorage.getItem('theme') === 'dark') {
+            document.documentElement.classList.add('dark');
+        }
+
+        // Add Toggle Button
+        const btn = document.createElement('button');
+        btn.innerText = '🌙/☀️';
+        btn.style.position = 'fixed';
+        btn.style.bottom = '20px';
+        btn.style.left = '20px';
+        btn.style.zIndex = '1000';
+        btn.style.padding = '10px';
+        btn.style.borderRadius = '50%';
+        btn.style.border = 'none';
+        btn.style.background = 'var(--primary)';
+        btn.style.color = '#fff';
+        btn.style.cursor = 'pointer';
+        btn.onclick = toggleDarkMode;
+        document.body.appendChild(btn);
     </script>
 </body>
 
 </html>
+```
