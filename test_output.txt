@@ -1,0 +1,106 @@
+Starting Full User Test Suite...
+
+Running 6 tests using 1 worker
+
+
+=== Test 1: Client Selection ===
+Internal error: step id not found: fixture@131Internal error: step id not found: fixture@131
+  ✘  1 [working] › e2e/full-user-suite.spec.ts:70:9 › MCP Configuration Manager - Full User Suite › 1. Client Selection (5.0s)
+  -  2 [working] › e2e/full-user-suite.spec.ts:93:9 › MCP Configuration Manager - Full User Suite › 2. Add Server (CRUD - Create)
+  -  3 [working] › e2e/full-user-suite.spec.ts:135:9 › MCP Configuration Manager - Full User Suite › 3. Edit Server (CRUD - Update)
+  -  4 [working] › e2e/full-user-suite.spec.ts:166:9 › MCP Configuration Manager - Full User Suite › 4. Profiles (Save/Load)
+  -  5 [working] › e2e/full-user-suite.spec.ts:189:9 › MCP Configuration Manager - Full User Suite › 5. Delete Server (CRUD - Delete)
+  -  6 [working] › e2e/full-user-suite.spec.ts:215:9 › MCP Configuration Manager - Full User Suite › 6. Visual Workspace Navigation
+
+=== Test 1: Client Selection ===
+Internal error: step id not found: fixture@131Internal error: step id not found: fixture@131
+  ✘  7 [working] › e2e/full-user-suite.spec.ts:70:9 › MCP Configuration Manager - Full User Suite › 1. Client Selection (retry #1) (5.0s)
+  -  8 [working] › e2e/full-user-suite.spec.ts:93:9 › MCP Configuration Manager - Full User Suite › 2. Add Server (CRUD - Create) (retry #1)
+  -  9 [working] › e2e/full-user-suite.spec.ts:135:9 › MCP Configuration Manager - Full User Suite › 3. Edit Server (CRUD - Update) (retry #1)
+  -  10 [working] › e2e/full-user-suite.spec.ts:166:9 › MCP Configuration Manager - Full User Suite › 4. Profiles (Save/Load) (retry #1)
+  -  11 [working] › e2e/full-user-suite.spec.ts:189:9 › MCP Configuration Manager - Full User Suite › 5. Delete Server (CRUD - Delete) (retry #1)
+  -  12 [working] › e2e/full-user-suite.spec.ts:215:9 › MCP Configuration Manager - Full User Suite › 6. Visual Workspace Navigation (retry #1)
+
+
+  1) [working] › e2e/full-user-suite.spec.ts:70:9 › MCP Configuration Manager - Full User Suite › 1. Client Selection 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m()[22m failed
+
+    Locator:  locator('select').first()
+    Expected: visible
+    Received: hidden
+    Timeout:  5000ms
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for locator('select').first()[22m
+    [2m    9 × locator resolved to <select>…</select>[22m
+    [2m      - unexpected value "hidden"[22m
+
+
+      71 |         console.log('\n=== Test 1: Client Selection ===');
+      72 |         const clientDropdown = window.locator('select').first();
+    > 73 |         await expect(clientDropdown).toBeVisible();
+         |                                      ^
+      74 |
+      75 |         const options = await clientDropdown.locator('option').allInnerTexts();
+      76 |         console.log('Available clients:', options);
+        at /Users/briandawson/workspace/mcp-config-manager/e2e/full-user-suite.spec.ts:73:38
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/full-user-suite-MCP-Config-ded7c-er-Suite-1-Client-Selection-working/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/full-user-suite-MCP-Config-ded7c-er-Suite-1-Client-Selection-working/test-failed-2.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/full-user-suite-MCP-Config-ded7c-er-Suite-1-Client-Selection-working/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m()[22m failed
+
+    Locator:  locator('select').first()
+    Expected: visible
+    Received: hidden
+    Timeout:  5000ms
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for locator('select').first()[22m
+    [2m    9 × locator resolved to <select>…</select>[22m
+    [2m      - unexpected value "hidden"[22m
+
+
+      71 |         console.log('\n=== Test 1: Client Selection ===');
+      72 |         const clientDropdown = window.locator('select').first();
+    > 73 |         await expect(clientDropdown).toBeVisible();
+         |                                      ^
+      74 |
+      75 |         const options = await clientDropdown.locator('option').allInnerTexts();
+      76 |         console.log('Available clients:', options);
+        at /Users/briandawson/workspace/mcp-config-manager/e2e/full-user-suite.spec.ts:73:38
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/full-user-suite-MCP-Config-ded7c-er-Suite-1-Client-Selection-working-retry1/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/full-user-suite-MCP-Config-ded7c-er-Suite-1-Client-Selection-working-retry1/test-failed-2.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/full-user-suite-MCP-Config-ded7c-er-Suite-1-Client-Selection-working-retry1/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/full-user-suite-MCP-Config-ded7c-er-Suite-1-Client-Selection-working-retry1/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/full-user-suite-MCP-Config-ded7c-er-Suite-1-Client-Selection-working-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    [working] › e2e/full-user-suite.spec.ts:70:9 › MCP Configuration Manager - Full User Suite › 1. Client Selection 
+  5 did not run
+❌ Some user tests failed.

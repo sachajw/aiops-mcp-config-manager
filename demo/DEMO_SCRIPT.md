@@ -20,11 +20,11 @@
 **Slide 4: The Configuration Hell**
 "But there's a problem. Managing these connections manually is painful. JSON errors, no validation, and every AI client needs its own copy of the config. It's a mess."
 
-**Slide 4: The Origin Story**
-"This project started from a real frustration. I was drowning in manual JSON edits across 5 different AI clients. I needed a single source of truth."
+**Slide 4: The Configuration Complexity**
+"It's not just one file anymore. Claude has 3 different configs (Desktop, CLI, VS Code extension). Then you have Cursor, Windsurf, Kiro, Antigravity... it gets complicated fast."
 
-**Slide 5: A Tale of Two Agents**
-"We actually used different agents for different phases. Claude Desktop for the high-level strategy and PRD, and then VS Code agents for the heavy lifting of TypeScript and file operations."
+**Slide 5: The Context Economy**
+"And remember, every server you add costs tokens. It eats into your context window. We let you track token usage and toggle servers on/off instantly, so you're only paying for what you need."
 
 **Slide 6: Enter MCP Config Manager**
 "That's why we built this tool. It's a visual command center for your MCP servers. Let's see it in action."
